@@ -1,17 +1,38 @@
-# Talmood BandScheduler
+# VGI Lab Scheduler
 
-탈무드 밴드 프로젝트와 합주 일정을 관리하는 웹 앱입니다.
+연구실 전체 일정·미팅 조율 시스템. Talmood BandScheduler의 실시간 스케줄링 엔진을 기반으로 리팩터링했습니다.
 
-- 서비스: https://binhaim.github.io/Talmood-BandScheduler/
-- 데이터: Firebase Realtime Database
-- 배포: GitHub Pages
+- 데이터: Firebase Realtime Database (`vgi/` 네임스페이스)
+- 단일 `index.html` vanilla JS 앱 · 실시간 동기화
 
-## 멤버 캘린더 구독
+## 핵심 흐름
 
-메인 화면에서 멤버를 선택하면 휴지통에 없는 모든 프로젝트의 해당 멤버 일정을 고정 `.ics` URL로 구독할 수 있습니다. [Pages 배포 워크플로](.github/workflows/deploy-pages.yml)가 약 10분마다 Firebase 데이터를 읽어 구독 파일을 다시 생성합니다. 캘린더 앱의 실제 반영 시점은 서비스별 구독 갱신 주기에 따릅니다.
+1. **학기 시작 (관리자)** — Members 탭에서 멤버 등록, 학기 생성·활성화
+2. **반복 일정 입력 (각자 1회)** — Availability 탭에서 학기 동안 매주 반복되는 안 되는 시간을 한 번만 입력
+3. **평소** — 출장·휴가·학회는 예외 일정으로 그때그때 추가
+4. **미팅 잡기** — Meetings 탭에서 참여자·길이·후보 기간 선택 → 가능 시간 자동 계산 (반복 일정 + 예외 + 확정 일정 + 장소 충돌 반영) → 클릭으로 확정 → Lab Calendar에 등록
 
-```sh
-npm ci
-npm test
-npm run generate:feeds -- --output _site/calendars
+## Firebase 스키마
+
 ```
+vgi/
+  settings/        { activeSemester, slotMinutes, dayStart, dayEnd }
+  members/{mid}    { name, email, role, active, ts }
+  semesters/{sid}  { name, startDate, endDate, ts }
+  availability/{sid}/{mid}/{d0..d6}/{HH:MM}: true   # 주간 반복 불가 슬롯
+  exceptions/{xid} { mid, title, type, allDay, start|startDate, end|endDate, ts }
+  projects/{pid}   { name, members:{mid:true}, ts }
+  meetings/{mtid}  { title, type, participants, durationMin, rangeStart, rangeEnd,
+                     projectId, location, description, status, confirmedEventId?, ... }
+  events/{evid}    { title, type, start, end, participants, projectId, location, meetingId?, ts }
+```
+
+- availability는 프로젝트가 아니라 **member × semester** 전역 데이터
+- 모든 참조는 이름 문자열이 아닌 **memberId** 기준
+- 반복 미팅은 v2 — events에 rrule 필드를 추가하는 방식으로 확장 가능하게 설계
+
+## 남은 작업
+
+- [ ] 새 GitHub 저장소 연결 + Pages 배포 (현재 git remote 없음)
+- [ ] 개인 구독 .ics 피드 생성기(`calendar/`)와 배포 워크플로를 새 스키마(memberId 기반)로 포팅
+- [ ] (선택) 연구실 전용 Firebase 프로젝트 분리 — `firebaseConfig`와 `DB_ROOT`만 교체
