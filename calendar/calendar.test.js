@@ -6,195 +6,219 @@ import test from "node:test";
 import ICAL from "ical.js";
 import {
   buildMemberCalendar,
-  buildMemberIntervals,
-  listLinkedMembers,
-  memberFeedKey,
-  normalizeMemberName,
+  buildMemberItems,
+  feedKeyOf,
+  listFeedMembers,
 } from "./calendar.js";
 import { generateCalendarFeeds } from "./generate.js";
 
-const index = {
-  ACTIVE1: { name: "첫 프로젝트", createdAt: 1 },
-  ACTIVE2: { name: "둘째 프로젝트", createdAt: 2 },
-  TRASHED: { name: "휴지통 프로젝트", trashedAt: 3 },
+/* 실제 앱이 쓰는 모양 그대로: 시각은 절대 epoch ms, 종일은 "YYYY-MM-DD" 문자열 */
+const HOUR_MS = 60 * 60 * 1000;
+const LAB_MEETING_START = Date.UTC(2026, 8, 10, 5, 0); // 2026-09-10 14:00 KST
+const SEMINAR_START = Date.UTC(2026, 8, 14, 2, 0); // 2026-09-14 11:00 KST
+const CHECKUP_START = Date.UTC(2026, 8, 11, 1, 0); // 2026-09-11 10:00 KST
+
+const members = {
+  m_habin: { name: "임하빈", active: true, ts: 1 },
+  m_jaeho: { name: "이재호", active: true, ts: 2 },
+  m_alum: { name: "졸업생", active: false, ts: 3 },
 };
 
-const projects = {
-  ACTIVE1: {
-    config: {
-      name: "첫 프로젝트",
-      slotMinutes: 60,
-      people: {
-        u1: { name: "김혜원" },
-        u2: { name: "다른 멤버" },
-        idle: { name: "미연결 멤버" },
-      },
-      groups: { g1: { members: { u1: true, u2: true } } },
-      songs: { s1: { name: "첫 곡" }, s2: { name: "다른 곡" } },
-      matrix: { s1: { u1: true }, s2: { u2: true } },
-    },
-    schedule: {
-      s1: {
-        "2026-08-13|13:00": true,
-        "2026-08-13|14:00": true,
-        "2026-08-13|18:00": "e",
-      },
-      s2: { "2026-08-13|16:00": true },
-    },
+const projects = { p_percep: { name: "Perception" } };
+
+const events = {
+  ev_lab: {
+    title: "랩 미팅",
+    type: "meeting",
+    start: LAB_MEETING_START,
+    end: LAB_MEETING_START + HOUR_MS,
+    participants: { m_habin: true, m_jaeho: true },
+    projectId: "p_percep",
+    location: "세미나실",
+    ts: 10,
   },
-  ACTIVE2: {
-    config: {
-      name: "둘째 프로젝트",
-      slotMinutes: 30,
-      people: { another: { name: "김혜원" } },
-      groups: { g2: { members: { another: true } } },
-      songs: { late: { name: "심야 곡" } },
-      matrix: { late: { another: true } },
-    },
-    schedule: { late: { "2026-08-13|25:00": true, "2026-08-13|25:30": true } },
+  ev_seminar: {
+    title: "논문 세미나",
+    type: "seminar",
+    start: SEMINAR_START,
+    end: SEMINAR_START + 2 * HOUR_MS,
+    participants: { m_jaeho: true },
+    projectId: "",
+    location: "",
+    ts: 11,
   },
-  TRASHED: {
-    config: {
-      name: "휴지통 프로젝트",
-      people: { u1: { name: "김혜원" } },
-      songs: { gone: { name: "삭제된 곡" } },
-      matrix: { gone: { u1: true } },
-    },
-    schedule: { gone: { "2026-08-13|12:00": true } },
+  ev_broken: {
+    title: "시간이 뒤집힌 일정",
+    type: "other",
+    start: LAB_MEETING_START,
+    end: LAB_MEETING_START,
+    participants: { m_habin: true },
+    ts: 12,
   },
 };
 
-test("normalizes member names without exposing case differences", () => {
-  assert.equal(normalizeMemberName("  김혜원  "), "김혜원");
-  assert.equal(normalizeMemberName("ALICE"), "alice");
-  assert.equal(memberFeedKey(" ALICE "), "YWxpY2U");
-  assert.match(memberFeedKey("김혜원"), /^[A-Za-z0-9_-]+$/);
-});
+const exceptions = {
+  x_eccv: {
+    mid: "m_habin",
+    title: "ECCV",
+    type: "travel",
+    allDay: true,
+    startDate: "2026-09-07",
+    endDate: "2026-09-09",
+    ts: 20,
+  },
+  x_checkup: {
+    mid: "m_habin",
+    title: "건강검진",
+    type: "personal",
+    allDay: false,
+    start: CHECKUP_START,
+    end: CHECKUP_START + 3 * HOUR_MS,
+    ts: 21,
+  },
+  x_jaeho: {
+    mid: "m_jaeho",
+    title: "휴가",
+    type: "vacation",
+    allDay: true,
+    startDate: "2026-09-21",
+    endDate: "2026-09-25",
+    ts: 22,
+  },
+};
 
-test("lists only linked members from active projects", () => {
+const data = { members, events, exceptions, projects };
+
+test("피드 키는 memberId 그대로이고, 비활성 멤버도 목록에 남는다", () => {
+  assert.equal(feedKeyOf("m_habin"), "m_habin");
+  assert.equal(feedKeyOf("a/b"), "");
+  assert.equal(feedKeyOf(""), "");
   assert.deepEqual(
-    listLinkedMembers({ index, projects }).map((member) => member.displayName),
-    ["김혜원", "다른 멤버"],
+    listFeedMembers(members).map((member) => [member.mid, member.displayName]),
+    [["m_jaeho", "이재호"], ["m_habin", "임하빈"], ["m_alum", "졸업생"]],
   );
 });
 
-test("collects only the selected member's active-project intervals", () => {
-  const result = buildMemberIntervals({ index, projects, member: "김혜원" });
+test("본인이 참여자인 확정 일정과 본인 예외만 모은다", () => {
+  const result = buildMemberItems({ ...data, mid: "m_habin" });
   assert.equal(result.memberFound, true);
-  assert.equal(result.displayName, "김혜원");
-  assert.equal(result.intervals.length, 3);
+  assert.equal(result.displayName, "임하빈");
   assert.deepEqual(
-    result.intervals.map((event) => [event.songName, event.ext, event.end - event.start]),
+    result.items.map((item) => [item.id, item.allDay, item.summary]),
     [
-      ["첫 곡", false, 2 * 60 * 60 * 1000],
-      ["첫 곡", true, 60 * 60 * 1000],
-      ["심야 곡", false, 60 * 60 * 1000],
+      ["x_eccv", true, "[출장] ECCV"],
+      ["ev_lab", false, "랩 미팅 · Perception"],
+      ["x_checkup", false, "[개인] 건강검진"],
     ],
   );
-  assert.equal(result.intervals.some((event) => event.songName === "삭제된 곡"), false);
-  assert.equal(result.intervals.some((event) => event.songName === "다른 곡"), false);
+  assert.equal(result.items.some((item) => item.id === "ev_seminar"), false);
+  assert.equal(result.items.some((item) => item.id === "ev_broken"), false);
+  assert.equal(result.items.some((item) => item.id === "x_jaeho"), false);
 });
 
-test("generates a parseable UTC subscription calendar", () => {
+test("구독 가능한 .ics를 만들고 종일/시각 일정을 정확히 표현한다", () => {
   const result = buildMemberCalendar({
-    index,
-    projects,
-    member: "김혜원",
-    feedUrl: "https://example.com/memberCalendar?member=%EA%B9%80%ED%98%9C%EC%9B%90",
-    generatedAt: Date.UTC(2026, 7, 12, 0, 0),
+    ...data,
+    mid: "m_habin",
+    feedUrl: "https://binhaim.github.io/VGI-Scheduler/calendars/m_habin.ics",
+    generatedAt: Date.UTC(2026, 8, 1, 0, 0),
   });
   assert.ok(result);
   assert.equal(result.eventCount, 3);
-  assert.doesNotMatch(result.body, /다른 멤버|미연결 멤버|삭제된 곡/);
+  assert.doesNotMatch(result.body, /논문 세미나|이재호 휴가|시간이 뒤집힌/);
+
+  /* 종일 예외: 9/7~9/9 → DTEND는 배타적이므로 9/10 */
+  assert.match(result.body, /DTSTART;VALUE=DATE:20260907/);
+  assert.match(result.body, /DTEND;VALUE=DATE:20260910/);
 
   const calendar = new ICAL.Component(ICAL.parse(result.body));
-  assert.equal(calendar.getFirstPropertyValue("x-wr-calname"), "김혜원 전체 합주 시간표");
-  const events = calendar.getAllSubcomponents("vevent").map((component) => new ICAL.Event(component));
-  assert.equal(events.length, 3);
-  assert.equal(events[0].summary, "첫 곡 · 첫 프로젝트");
-  assert.equal(events[0].startDate.toJSDate().toISOString(), "2026-08-13T04:00:00.000Z");
-  assert.equal(events[0].endDate.toJSDate().toISOString(), "2026-08-13T06:00:00.000Z");
-  assert.equal(events[1].location, "외부");
-  assert.equal(events[2].startDate.toJSDate().toISOString(), "2026-08-13T16:00:00.000Z");
+  assert.equal(calendar.getFirstPropertyValue("x-wr-calname"), "임하빈 · VGI Lab 일정");
+  const parsed = calendar.getAllSubcomponents("vevent").map((component) => new ICAL.Event(component));
+  assert.equal(parsed.length, 3);
+  assert.equal(parsed[0].summary, "[출장] ECCV");
+  assert.equal(parsed[1].summary, "랩 미팅 · Perception");
+  assert.equal(parsed[1].location, "세미나실");
+  assert.equal(parsed[1].startDate.toJSDate().toISOString(), "2026-09-10T05:00:00.000Z");
+  assert.equal(parsed[1].endDate.toJSDate().toISOString(), "2026-09-10T06:00:00.000Z");
+  assert.match(parsed[1].description, /참여: 이재호, 임하빈/);
+  assert.equal(parsed[2].startDate.toJSDate().toISOString(), "2026-09-11T01:00:00.000Z");
+
+  /* 같은 일정은 재생성해도 같은 UID여야 캘린더 앱이 중복 등록하지 않는다 */
+  assert.match(result.body, /UID:ev-ev_lab@vgi-scheduler/);
 });
 
-test("returns an empty feed for a linked member with no assigned events", () => {
+test("일정이 없는 멤버도 빈 피드를 받는다", () => {
   const result = buildMemberCalendar({
-    index: { ACTIVE1: index.ACTIVE1 },
-    projects: {
-      ACTIVE1: {
-        ...projects.ACTIVE1,
-        config: {
-          ...projects.ACTIVE1.config,
-          groups: { g1: { members: { idle: true } } },
-        },
-      },
-    },
-    member: "미연결 멤버",
-    feedUrl: "https://example.com/feed.ics?member=idle",
+    ...data,
+    mid: "m_alum",
+    feedUrl: "https://example.com/calendars/m_alum.ics",
     generatedAt: 0,
   });
   assert.ok(result);
   assert.equal(result.eventCount, 0);
+  assert.equal(result.displayName, "졸업생");
 });
 
-test("returns null when the member does not exist in active projects", () => {
+test("모르는 멤버는 피드를 만들지 않는다", () => {
   assert.equal(
-    buildMemberCalendar({ index, projects, member: "없는 사람", feedUrl: "https://example.com/feed" }),
+    buildMemberCalendar({ ...data, mid: "m_nobody", feedUrl: "https://example.com/feed.ics" }),
     null,
   );
 });
 
-test("keeps unchanged feed metadata stable and advances it after schedule changes", async () => {
-  const firstDir = await mkdtemp(join(tmpdir(), "talmood-feeds-first-"));
-  const secondDir = await mkdtemp(join(tmpdir(), "talmood-feeds-second-"));
-  const changedDir = await mkdtemp(join(tmpdir(), "talmood-feeds-changed-"));
-  const emptyDir = await mkdtemp(join(tmpdir(), "talmood-feeds-empty-"));
-  const firstNow = Date.UTC(2026, 7, 12, 1, 2, 45);
-  const secondNow = Date.UTC(2026, 7, 12, 2, 3, 10);
+test("내용이 그대로면 파일도 그대로, 바뀌면 갱신 시각이 올라간다", async () => {
+  const firstDir = await mkdtemp(join(tmpdir(), "vgi-feeds-first-"));
+  const secondDir = await mkdtemp(join(tmpdir(), "vgi-feeds-second-"));
+  const changedDir = await mkdtemp(join(tmpdir(), "vgi-feeds-changed-"));
+  const removedDir = await mkdtemp(join(tmpdir(), "vgi-feeds-removed-"));
+  const firstNow = Date.UTC(2026, 8, 1, 1, 2, 45);
+  const secondNow = Date.UTC(2026, 8, 1, 2, 3, 10);
 
-  const first = await generateCalendarFeeds({ index, projects, outputDir: firstDir, now: firstNow });
-  const key = memberFeedKey("김혜원");
-  const firstBody = await readFile(join(firstDir, `${key}.ics`), "utf8");
-  assert.equal(Object.keys(first.feeds).length, 2);
-  assert.equal(first.feeds[key].eventCount, 3);
+  const first = await generateCalendarFeeds({ ...data, outputDir: firstDir, now: firstNow });
+  const firstBody = await readFile(join(firstDir, "m_habin.ics"), "utf8");
+  assert.deepEqual(Object.keys(first.feeds).sort(), ["m_alum", "m_habin", "m_jaeho"]);
+  assert.equal(first.feeds.m_habin.eventCount, 3);
+  assert.equal(first.feeds.m_alum.eventCount, 0);
 
   const second = await generateCalendarFeeds({
-    index,
-    projects,
+    ...data,
     outputDir: secondDir,
     previousManifest: first,
     now: secondNow,
   });
-  const secondBody = await readFile(join(secondDir, `${key}.ics`), "utf8");
-  assert.equal(second.feeds[key].updatedAt, first.feeds[key].updatedAt);
+  const secondBody = await readFile(join(secondDir, "m_habin.ics"), "utf8");
+  assert.equal(second.feeds.m_habin.updatedAt, first.feeds.m_habin.updatedAt);
   assert.equal(secondBody, firstBody);
 
-  const changedProjects = structuredClone(projects);
-  changedProjects.ACTIVE1.config.songs.s1.name = "수정된 첫 곡";
+  const changedEvents = structuredClone(events);
+  changedEvents.ev_lab.location = "세미나실 B";
   const changed = await generateCalendarFeeds({
-    index,
-    projects: changedProjects,
+    ...data,
+    events: changedEvents,
     outputDir: changedDir,
     previousManifest: second,
     now: secondNow,
   });
-  const changedBody = await readFile(join(changedDir, `${key}.ics`), "utf8");
-  assert.equal(changed.feeds[key].updatedAt, Math.floor(secondNow / 60000) * 60000);
-  assert.notEqual(changedBody, firstBody);
-  assert.match(changedBody, /수정된 첫 곡/);
+  const changedBody = await readFile(join(changedDir, "m_habin.ics"), "utf8");
+  assert.equal(changed.feeds.m_habin.updatedAt, Math.floor(secondNow / 60000) * 60000);
+  assert.match(changedBody, /세미나실 B/);
+  /* 같은 일정에 참여한 이재호 피드도 함께 갱신되고, 무관한 졸업생 피드는 그대로 */
+  assert.equal(changed.feeds.m_jaeho.updatedAt, Math.floor(secondNow / 60000) * 60000);
+  assert.equal(changed.feeds.m_alum.updatedAt, first.feeds.m_alum.updatedAt);
 
-  const emptied = await generateCalendarFeeds({
-    index: {},
+  /* 멤버가 DB에서 지워져도 이미 구독 중인 링크는 빈 피드로 살아 있어야 한다 */
+  const removed = await generateCalendarFeeds({
+    members: {},
+    events: {},
+    exceptions: {},
     projects: {},
-    outputDir: emptyDir,
+    outputDir: removedDir,
     previousManifest: changed,
     now: secondNow + 60000,
   });
-  const emptyBody = await readFile(join(emptyDir, `${key}.ics`), "utf8");
-  const emptyCalendar = new ICAL.Component(ICAL.parse(emptyBody));
-  assert.equal(emptied.feeds[key].displayName, "김혜원");
-  assert.equal(emptied.feeds[key].eventCount, 0);
-  assert.equal(emptyCalendar.getFirstPropertyValue("x-wr-calname"), "김혜원 전체 합주 시간표");
-  assert.equal(emptyCalendar.getAllSubcomponents("vevent").length, 0);
+  const removedBody = await readFile(join(removedDir, "m_habin.ics"), "utf8");
+  const removedCalendar = new ICAL.Component(ICAL.parse(removedBody));
+  assert.equal(removed.feeds.m_habin.displayName, "임하빈");
+  assert.equal(removed.feeds.m_habin.eventCount, 0);
+  assert.equal(removedCalendar.getAllSubcomponents("vevent").length, 0);
 });

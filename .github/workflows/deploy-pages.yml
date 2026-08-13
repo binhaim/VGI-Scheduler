@@ -3,6 +3,9 @@ name: Deploy site
 on:
   push:
     branches: [main]
+  # 2시간마다 재생성 — 미팅을 확정해도 push는 일어나지 않으므로 구독 피드는 이 스케줄로 따라간다
+  schedule:
+    - cron: "0 */2 * * *"
   workflow_dispatch:
 
 permissions:
@@ -25,13 +28,31 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v4
 
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
       - name: Prepare site
         run: |
           mkdir -p _site
           cp index.html _site/index.html
           touch _site/.nojekyll
 
-      # TODO: 개인 구독 .ics 피드 생성 (calendar/ 를 memberId 기반 새 스키마로 포팅한 뒤 활성화)
+      # 이전 manifest를 가져와 내용이 안 바뀐 피드의 갱신 시각을 유지한다 (없으면 빈 값으로 시작)
+      - name: Fetch previous feed manifest
+        run: |
+          mkdir -p .cache
+          curl -fsSL --max-time 30 -o .cache/manifest.json \
+            "https://binhaim.github.io/VGI-Scheduler/calendars/manifest.json" \
+            || echo '{}' > .cache/manifest.json
+
+      - name: Generate member calendar feeds
+        run: npm run generate:feeds -- --output _site/calendars --previous .cache/manifest.json
 
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5

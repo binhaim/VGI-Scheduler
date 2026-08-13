@@ -31,8 +31,23 @@ vgi/
 - 모든 참조는 이름 문자열이 아닌 **memberId** 기준
 - 반복 미팅은 v2 — events에 rrule 필드를 추가하는 방식으로 확장 가능하게 설계
 
+## 개인 구독 캘린더 (.ics)
+
+멤버마다 `calendars/{memberId}.ics` 피드가 생성됩니다. 본인이 참여자로 포함된 **확정 일정**과 본인의 **예외 일정**이 담기며,
+Calendar 탭에서 멤버를 고른 뒤 **🔗 개인 구독**을 누르면 URL을 복사할 수 있습니다.
+
+- 생성기: [`calendar/`](calendar/) — Firebase REST로 `vgi/{members,events,exceptions,projects}`를 읽어 .ics와 `manifest.json`을 만듭니다
+- 갱신: push 시 + 2시간마다 (`.github/workflows/deploy-pages.yml`의 cron)
+- 내용이 그대로면 파일을 다시 쓰지 않아 구독자 쪽 갱신이 불필요하게 튀지 않습니다 (manifest의 fingerprint)
+
+```bash
+npm ci
+npm test                                     # 피드 생성 로직 테스트
+npm run generate:feeds -- --output ./_feeds   # 실제 DB로 직접 생성해보기
+```
+
 ## 남은 작업
 
-- [ ] 새 GitHub 저장소 연결 + Pages 배포 (현재 git remote 없음)
-- [ ] 개인 구독 .ics 피드 생성기(`calendar/`)와 배포 워크플로를 새 스키마(memberId 기반)로 포팅
-- [ ] (선택) 연구실 전용 Firebase 프로젝트 분리 — `firebaseConfig`와 `DB_ROOT`만 교체
+- [ ] 반복 미팅 (매주 고정) — `events`에 rrule성 필드 추가 후 클라이언트에서 전개
+- [ ] 모바일 실기기 점검
+- [ ] (선택) 관리자 권한 분리 — 현재는 "링크 아는 사람 전부 편집" 모델

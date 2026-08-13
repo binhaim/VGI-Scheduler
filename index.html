@@ -1860,7 +1860,8 @@ function viewSubscribeModal(){
         <div class="calendar-sub-url"><input type="text" readonly value="${esc(url)}" aria-label="구독 URL">
           <div class="calendar-sub-actions"><button class="btn sm" data-act="subcopy" data-url="${esc(url)}">링크 복사</button>
           <button class="btn ghost sm" data-act="subclose">닫기</button></div></div>
-        <div class="note">⚠️ 구독 파일은 GitHub Pages 배포와 피드 생성 워크플로를 설정한 뒤부터 동작합니다. 배포 전에는 링크가 비어 있습니다.</div>
+        <div class="note">Google 캘린더 → 다른 캘린더 <b>+</b> → <b>URL로 만들기</b>에 붙여넣으세요 (Apple: 캘린더 → 파일 → 새로운 캘린더 구독).<br>
+          담기는 내용은 <b>확정된 일정</b>과 <b>본인 예외 일정</b>입니다. 피드는 2시간마다 다시 만들어지고, 캘린더 앱이 실제로 다시 읽어오는 주기는 앱마다 다릅니다(구글은 보통 수 시간).</div>
       </div>
     </div>
   </div>`;

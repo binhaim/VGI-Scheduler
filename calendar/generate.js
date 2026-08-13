@@ -4,14 +4,14 @@ import { resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 import {
   SITE_URL,
-  activeProjectIds,
   buildMemberCalendar,
-  buildMemberIntervals,
-  listLinkedMembers,
-  memberFeedKey,
+  buildMemberItems,
+  feedKeyOf,
+  listFeedMembers,
 } from "./calendar.js";
 
-const DEFAULT_DATABASE_URL = "https://talmood-timetable-default-rtdb.firebaseio.com";
+const DEFAULT_DATABASE_URL = "https://vgi-scheduler-default-rtdb.firebaseio.com";
+const DB_ROOT = "vgi";
 
 async function fetchJson(databaseUrl, path, fetchImpl) {
   const url = `${databaseUrl.replace(/\/$/, "")}/${path}.json`;
@@ -24,31 +24,32 @@ export async function loadScheduleData({
   databaseUrl = DEFAULT_DATABASE_URL,
   fetchImpl = fetch,
 } = {}) {
-  const index = (await fetchJson(databaseUrl, "projectIndex", fetchImpl)) || {};
-  const entries = await Promise.all(
-    activeProjectIds(index).map(async (pid) => {
-      const [config, schedule] = await Promise.all([
-        fetchJson(databaseUrl, `projects/${pid}/config`, fetchImpl),
-        fetchJson(databaseUrl, `projects/${pid}/schedule`, fetchImpl),
-      ]);
-      return [pid, { config, schedule: schedule || {} }];
-    }),
+  const [members, events, exceptions, projects] = await Promise.all(
+    ["members", "events", "exceptions", "projects"].map((path) =>
+      fetchJson(databaseUrl, `${DB_ROOT}/${path}`, fetchImpl),
+    ),
   );
-  return { index, projects: Object.fromEntries(entries) };
+  return {
+    members: members || {},
+    events: events || {},
+    exceptions: exceptions || {},
+    projects: projects || {},
+  };
 }
 
-function memberFingerprint({ index, projects, member, fallbackDisplayName = "" }) {
-  const selection = buildMemberIntervals({ index, projects, member });
+/* 내용이 그대로면 지문도 그대로 — 파일을 다시 쓰지 않아 구독자 쪽 갱신 알림이 튀지 않는다 */
+function memberFingerprint({ members, events, exceptions, projects, mid, fallbackDisplayName = "" }) {
+  const selection = buildMemberItems({ members, events, exceptions, projects, mid });
   const payload = {
     displayName: selection.displayName || fallbackDisplayName,
-    intervals: selection.intervals.map(({ pid, sid, start, end, ext, projectName, songName }) => ({
-      pid,
-      sid,
+    items: selection.items.map(({ uid, allDay, start, end, summary, description, location }) => ({
+      uid,
+      allDay,
       start,
       end,
-      ext,
-      projectName,
-      songName,
+      summary,
+      description,
+      location,
     })),
   };
   return createHash("sha256").update(JSON.stringify(payload)).digest("base64url");
@@ -62,24 +63,22 @@ function retainedUpdatedAt(previousManifest, feedKey, fingerprint, now) {
   return Math.floor(now / 60000) * 60000;
 }
 
-function calendarMembers({ index, projects, previousManifest }) {
-  const members = new Map(
-    listLinkedMembers({ index, projects }).map(({ displayName }) => [
-      memberFeedKey(displayName),
-      displayName,
-    ]),
-  );
+/* 지금 DB에 있는 멤버 + 예전에 피드를 냈던 멤버(삭제됐어도 링크가 404가 되지 않도록 빈 피드 유지) */
+function calendarMembers({ members, previousManifest }) {
+  const feeds = new Map(listFeedMembers(members).map(({ mid, displayName }) => [mid, displayName]));
   for (const [feedKey, feed] of Object.entries(previousManifest?.feeds || {})) {
     const displayName = String(feed?.displayName || "").trim();
-    if (/^[A-Za-z0-9_-]+$/.test(feedKey) && displayName && memberFeedKey(displayName) === feedKey) {
-      if (!members.has(feedKey)) members.set(feedKey, displayName);
-    }
+    if (feedKeyOf(feedKey) && displayName && !feeds.has(feedKey)) feeds.set(feedKey, displayName);
   }
-  return [...members.entries()].sort((a, b) => a[1].localeCompare(b[1], "ko") || a[0].localeCompare(b[0]));
+  return [...feeds.entries()].sort(
+    (a, b) => (a[1] < b[1] ? -1 : a[1] > b[1] ? 1 : 0) || (a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0),
+  );
 }
 
 export async function generateCalendarFeeds({
-  index,
+  members,
+  events,
+  exceptions,
   projects,
   outputDir,
   previousManifest = {},
@@ -95,19 +94,23 @@ export async function generateCalendarFeeds({
     feeds: {},
   };
 
-  for (const [feedKey, displayName] of calendarMembers({ index, projects, previousManifest })) {
+  for (const [feedKey, displayName] of calendarMembers({ members, previousManifest })) {
     const fingerprint = memberFingerprint({
-      index,
+      members,
+      events,
+      exceptions,
       projects,
-      member: displayName,
+      mid: feedKey,
       fallbackDisplayName: displayName,
     });
     const updatedAt = retainedUpdatedAt(previousManifest, feedKey, fingerprint, now);
     const feedUrl = new URL(`calendars/${feedKey}.ics`, siteUrl).toString();
     const calendar = buildMemberCalendar({
-      index,
+      members,
+      events,
+      exceptions,
       projects,
-      member: displayName,
+      mid: feedKey,
       feedUrl,
       generatedAt: updatedAt,
       fallbackDisplayName: displayName,
@@ -147,7 +150,8 @@ async function main() {
   const previousManifest = await readPreviousManifest(optionValue("--previous"));
   const data = await loadScheduleData({ databaseUrl: process.env.FIREBASE_DATABASE_URL });
   const manifest = await generateCalendarFeeds({ ...data, outputDir, previousManifest });
-  console.log(`Generated ${Object.keys(manifest.feeds).length} member calendar feeds.`);
+  const total = Object.values(manifest.feeds).reduce((sum, feed) => sum + feed.eventCount, 0);
+  console.log(`Generated ${Object.keys(manifest.feeds).length} member feeds (${total} events) → ${outputDir}`);
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href) {

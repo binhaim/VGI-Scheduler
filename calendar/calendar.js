@@ -4,199 +4,212 @@ import ical, {
   ICalEventStatus,
 } from "ical-generator";
 
-const KST_OFFSET_MS = 9 * 60 * 60 * 1000;
-const SLOT_KEY_RE = /^(\d{4})-(\d{2})-(\d{2})\|(\d{1,2}):(\d{2})$/;
+const DAY_MS = 24 * 60 * 60 * 1000;
+const DATE_RE = /^(\d{4})-(\d{2})-(\d{2})$/;
 
-export const SITE_URL = "https://binhaim.github.io/Talmood-BandScheduler/";
+export const SITE_URL = "https://binhaim.github.io/VGI-Scheduler/";
 
-export function normalizeMemberName(value) {
-  return String(value || "").normalize("NFC").trim().toLocaleLowerCase("ko-KR");
+/* index.html의 EVENT_TYPES / EXC_LABEL과 같은 이름표 */
+export const EVENT_TYPE_LABEL = {
+  meeting: "미팅",
+  seminar: "세미나",
+  paper: "논문 리딩",
+  conference: "학회",
+  travel: "출장",
+  vacation: "휴가",
+  other: "기타",
+};
+export const EXCEPTION_TYPE_LABEL = {
+  conference: "학회",
+  travel: "출장",
+  vacation: "휴가",
+  personal: "개인",
+  other: "기타",
+};
+
+/* 문자열 비교만으로 정렬 — 실행 환경의 로케일에 따라 순서가 흔들리지 않도록 */
+const byText = (a, b) => (a < b ? -1 : a > b ? 1 : 0);
+
+function trimmed(value) {
+  return typeof value === "string" ? value.trim() : value == null ? "" : String(value).trim();
 }
 
-export function memberFeedKey(value) {
-  return Buffer.from(normalizeMemberName(value), "utf8").toString("base64url");
+function truthyKeys(map) {
+  return Object.keys(map || {}).filter((key) => map[key]);
 }
 
-function itemName(value) {
-  return typeof value === "string" ? value : value?.name || "";
+function finiteMs(value) {
+  const ms = Number(value);
+  return Number.isFinite(ms) ? ms : null;
 }
 
-function normalizeSchedule(raw) {
-  if (!raw || typeof raw !== "object") return {};
-  const keys = Object.keys(raw);
-  if (!keys.some((key) => SLOT_KEY_RE.test(key))) return raw;
-
-  const normalized = {};
-  for (const key of keys) {
-    const sid = raw[key];
-    if (typeof sid !== "string") continue;
-    (normalized[sid] ||= {})[key] = true;
-  }
-  return normalized;
-}
-
-function linkedMemberIds(config) {
-  const linked = new Set();
-  for (const group of Object.values(config?.groups || {})) {
-    for (const [uid, included] of Object.entries(group?.members || {})) {
-      if (included) linked.add(uid);
-    }
-  }
-  for (const members of Object.values(config?.matrix || {})) {
-    for (const [uid, included] of Object.entries(members || {})) {
-      if (included) linked.add(uid);
-    }
-  }
-  return linked;
-}
-
-function slotStartMs(slotKey) {
-  const match = SLOT_KEY_RE.exec(slotKey);
+/* "YYYY-MM-DD" → 그 날 자정의 UTC ms. 종일 일정은 시각이 없으므로 UTC로 다뤄야 CI 타임존에 영향받지 않는다. */
+function dateStartUtc(value) {
+  const match = DATE_RE.exec(trimmed(value));
   if (!match) return null;
-  const [, yearText, monthText, dayText, hourText, minuteText] = match;
-  const year = Number(yearText);
-  const month = Number(monthText);
-  const day = Number(dayText);
-  const hour = Number(hourText);
-  const minute = Number(minuteText);
-  if (month < 1 || month > 12 || day < 1 || day > 31 || hour < 0 || hour > 47 || minute < 0 || minute > 59) {
-    return null;
-  }
-  return Date.UTC(year, month - 1, day, hour, minute) - KST_OFFSET_MS;
+  const [, year, month, day] = match;
+  const ms = Date.UTC(Number(year), Number(month) - 1, Number(day));
+  return Number.isFinite(ms) ? ms : null;
 }
 
-function projectUrl(pid) {
-  const url = new URL(SITE_URL);
-  url.searchParams.set("p", pid);
-  return url.toString();
+export function memberDisplayName(members, mid) {
+  return trimmed(members?.[mid]?.name);
 }
 
-export function activeProjectIds(index) {
-  return Object.keys(index || {})
-    .filter((pid) => index[pid] && !index[pid].trashedAt)
-    .sort();
+export function feedKeyOf(mid) {
+  const key = trimmed(mid);
+  return /^[A-Za-z0-9_-]+$/.test(key) ? key : "";
 }
 
-export function listLinkedMembers({ index, projects }) {
-  const members = new Map();
-  for (const pid of activeProjectIds(index)) {
-    const config = projects?.[pid]?.config;
-    if (!config) continue;
-    const people = config.people || {};
-    for (const uid of linkedMemberIds(config)) {
-      const displayName = itemName(people[uid]).trim();
-      const key = normalizeMemberName(displayName);
-      if (key && !members.has(key)) members.set(key, displayName);
-    }
-  }
-  return [...members.entries()]
-    .map(([key, displayName]) => ({ key, displayName }))
-    .sort((a, b) => a.displayName.localeCompare(b.displayName, "ko") || a.key.localeCompare(b.key));
+/* 피드를 만들 멤버 목록 — 비활성 멤버도 포함한다(이미 구독 중인 링크가 죽으면 안 되므로) */
+export function listFeedMembers(members) {
+  return Object.keys(members || {})
+    .map((mid) => ({ mid, displayName: memberDisplayName(members, mid) }))
+    .filter((member) => feedKeyOf(member.mid) && member.displayName)
+    .sort((a, b) => byText(a.displayName, b.displayName) || byText(a.mid, b.mid));
 }
 
-export function buildMemberIntervals({ index, projects, member }) {
-  const memberKey = normalizeMemberName(member);
-  if (!memberKey) return { displayName: "", intervals: [], memberFound: false };
+function projectLabel(projects, pid) {
+  if (!pid) return "";
+  return trimmed(projects?.[pid]?.name);
+}
 
-  let displayName = "";
-  const raw = [];
+function participantNames(members, participants) {
+  return truthyKeys(participants)
+    .map((mid) => memberDisplayName(members, mid))
+    .filter(Boolean)
+    .sort(byText);
+}
 
-  for (const pid of activeProjectIds(index)) {
-    const project = projects?.[pid];
-    const config = project?.config;
-    if (!config) continue;
+function eventItem({ evid, event, members, projects, mid }) {
+  const start = finiteMs(event?.start);
+  const end = finiteMs(event?.end);
+  if (start === null || end === null || !(end > start)) return null;
 
-    const people = config.people || {};
-    for (const uid of linkedMemberIds(config)) {
-      const name = itemName(people[uid]).trim();
-      if (!displayName && normalizeMemberName(name) === memberKey) displayName = name;
-    }
+  const title = trimmed(event.title) || "(제목 없음)";
+  const typeLabel = EVENT_TYPE_LABEL[event.type] || EVENT_TYPE_LABEL.other;
+  const project = projectLabel(projects, event.projectId);
+  const location = trimmed(event.location);
+  const people = participantNames(members, event.participants);
 
-    const schedule = normalizeSchedule(project.schedule);
-    const slotMinutes = Number(config.slotMinutes) > 0 ? Number(config.slotMinutes) : 60;
-    const projectName = itemName(config.name).trim() || itemName(index[pid]?.name).trim() || pid;
+  const description = [
+    `종류: ${typeLabel}`,
+    project ? `프로젝트: ${project}` : "",
+    location ? `장소: ${location}` : "",
+    people.length ? `참여: ${people.join(", ")}` : "",
+    `일정 페이지: ${SITE_URL}#calendar`,
+  ].filter(Boolean).join("\n");
 
-    for (const [sid, slots] of Object.entries(schedule)) {
-      if (!config.songs?.[sid] || !slots || typeof slots !== "object") continue;
-      const members = config.matrix?.[sid] || {};
-      const includesMember = Object.keys(members).some(
-        (uid) => members[uid] && normalizeMemberName(itemName(people[uid])) === memberKey,
-      );
-      if (!includesMember) continue;
+  return {
+    kind: "ev",
+    id: evid,
+    uid: `ev-${evid}@vgi-scheduler`,
+    allDay: false,
+    start,
+    end,
+    summary: project ? `${title} · ${project}` : title,
+    description,
+    location,
+    memberId: mid,
+  };
+}
 
-      const songName = itemName(config.songs[sid]).trim() || "활동";
-      for (const [slotKey, value] of Object.entries(slots)) {
-        if (!value) continue;
-        const start = slotStartMs(slotKey);
-        if (start === null) continue;
-        raw.push({
-          pid,
-          sid,
-          start,
-          end: start + slotMinutes * 60 * 1000,
-          ext: value === "e",
-          projectName,
-          songName,
-        });
-      }
-    }
+function exceptionItem({ xid, exception, mid }) {
+  const title = trimmed(exception?.title) || "(제목 없음)";
+  const typeLabel = EXCEPTION_TYPE_LABEL[exception?.type] || EXCEPTION_TYPE_LABEL.other;
+  const summary = `[${typeLabel}] ${title}`;
+  const description = [`구분: ${typeLabel}`, `일정 페이지: ${SITE_URL}#availability`].join("\n");
+  const base = {
+    kind: "x",
+    id: xid,
+    uid: `x-${xid}@vgi-scheduler`,
+    summary,
+    description,
+    location: "",
+    memberId: mid,
+  };
+
+  if (exception?.allDay) {
+    const start = dateStartUtc(exception.startDate);
+    const endDate = dateStartUtc(exception.endDate ?? exception.startDate);
+    if (start === null || endDate === null || endDate < start) return null;
+    /* .ics의 종일 DTEND는 배타적 — 마지막 날 다음 날짜를 넣어야 그 날까지 표시된다 */
+    return { ...base, allDay: true, start, end: endDate + DAY_MS };
   }
 
-  raw.sort((a, b) => a.start - b.start || a.pid.localeCompare(b.pid) || a.sid.localeCompare(b.sid));
-  const intervals = [];
-  const lastByActivity = new Map();
-  for (const slot of raw) {
-    const key = `${slot.pid}|${slot.sid}|${slot.ext ? "e" : "i"}`;
-    const previous = lastByActivity.get(key);
-    if (previous && slot.start <= previous.end) {
-      previous.end = Math.max(previous.end, slot.end);
-      continue;
-    }
-    const interval = { ...slot };
-    intervals.push(interval);
-    lastByActivity.set(key, interval);
+  const start = finiteMs(exception?.start);
+  const end = finiteMs(exception?.end);
+  if (start === null || end === null || !(end > start)) return null;
+  return { ...base, allDay: false, start, end };
+}
+
+/**
+ * 한 멤버의 캘린더에 들어갈 항목 — 본인이 참여자로 포함된 확정 일정 + 본인의 예외 일정.
+ */
+export function buildMemberItems({ members, events, exceptions, projects, mid }) {
+  const feedKey = feedKeyOf(mid);
+  if (!feedKey) return { displayName: "", items: [], memberFound: false };
+
+  const displayName = memberDisplayName(members, feedKey);
+  const items = [];
+
+  for (const evid of Object.keys(events || {}).sort(byText)) {
+    const event = events[evid];
+    if (!event?.participants?.[feedKey]) continue;
+    const item = eventItem({ evid, event, members, projects, mid: feedKey });
+    if (item) items.push(item);
   }
 
-  return { displayName, intervals, memberFound: Boolean(displayName) };
+  for (const xid of Object.keys(exceptions || {}).sort(byText)) {
+    const exception = exceptions[xid];
+    if (trimmed(exception?.mid) !== feedKey) continue;
+    const item = exceptionItem({ xid, exception, mid: feedKey });
+    if (item) items.push(item);
+  }
+
+  items.sort((a, b) => a.start - b.start || byText(a.kind, b.kind) || byText(a.id, b.id));
+  return { displayName, items, memberFound: Boolean(displayName) };
 }
 
 export function buildMemberCalendar({
-  index,
+  members,
+  events,
+  exceptions,
   projects,
-  member,
+  mid,
   feedUrl,
   generatedAt = Date.now(),
   fallbackDisplayName = "",
 }) {
-  const selection = buildMemberIntervals({ index, projects, member });
-  const displayName = selection.displayName || String(fallbackDisplayName || "").trim();
+  const selection = buildMemberItems({ members, events, exceptions, projects, mid });
+  const displayName = selection.displayName || trimmed(fallbackDisplayName);
   if (!displayName) return null;
 
-  const calendarName = `${displayName} 전체 합주 시간표`;
+  const calendarName = `${displayName} · VGI Lab 일정`;
   const generatedDate = new Date(generatedAt);
   const calendar = ical({
     name: calendarName,
-    description: `Talmood 전체 프로젝트 중 ${displayName} 참여 일정`,
-    prodId: { company: "Talmood", product: "BandScheduler", language: "KO" },
+    description: `${displayName}의 VGI Lab 확정 일정과 예외 일정`,
+    prodId: { company: "VGI Lab", product: "Scheduler", language: "KO" },
     method: ICalCalendarMethod.PUBLISH,
     scale: "GREGORIAN",
-    ttl: 6 * 60 * 60,
+    ttl: 2 * 60 * 60,
     source: feedUrl,
     url: feedUrl,
   });
 
-  for (const interval of selection.intervals) {
-    const url = projectUrl(interval.pid);
+  for (const item of selection.items) {
     calendar.createEvent({
-      id: `all-${interval.pid}-${interval.sid}-${interval.start}@talmood.app`,
-      start: new Date(interval.start),
-      end: new Date(interval.end),
+      id: item.uid,
+      allDay: item.allDay,
+      start: new Date(item.start),
+      end: new Date(item.end),
       stamp: generatedDate,
       lastModified: generatedDate,
-      summary: `${interval.songName}${interval.ext ? " (외부)" : ""} · ${interval.projectName}`,
-      description: `프로젝트: ${interval.projectName}\n구분: ${interval.ext ? "외부" : "동방"}\n일정 페이지: ${url}`,
-      location: interval.ext ? "외부" : "동방",
-      url,
+      summary: item.summary,
+      description: item.description,
+      location: item.location || null,
+      url: SITE_URL,
       status: ICalEventStatus.CONFIRMED,
       busystatus: ICalEventBusyStatus.BUSY,
     });
@@ -206,6 +219,6 @@ export function buildMemberCalendar({
     body: calendar.toString(),
     calendarName,
     displayName,
-    eventCount: selection.intervals.length,
+    eventCount: selection.items.length,
   };
 }
