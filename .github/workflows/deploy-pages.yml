@@ -1,10 +1,8 @@
-name: Deploy site and calendar feeds
+name: Deploy site
 
 on:
   push:
     branches: [main]
-  schedule:
-    - cron: "3,13,23,33,43,53 * * * *"
   workflow_dispatch:
 
 permissions:
@@ -27,30 +25,13 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v4
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: npm
-
-      - name: Install calendar dependencies
-        run: npm ci
-
-      - name: Verify calendar generator
-        run: npm test
-
       - name: Prepare site
         run: |
           mkdir -p _site
           cp index.html _site/index.html
           touch _site/.nojekyll
 
-      - name: Recover previous feed metadata
-        continue-on-error: true
-        run: curl --fail --silent --show-error --location https://binhaim.github.io/Talmood-BandScheduler/calendars/manifest.json --output /tmp/calendar-manifest.json
-
-      - name: Generate member calendar feeds
-        run: npm run generate:feeds -- --output _site/calendars --previous /tmp/calendar-manifest.json
+      # TODO: 개인 구독 .ics 피드 생성 (calendar/ 를 memberId 기반 새 스키마로 포팅한 뒤 활성화)
 
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
