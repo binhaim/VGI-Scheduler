@@ -1119,6 +1119,69 @@
   .btn.sm[disabled]{opacity:.45;cursor:not-allowed;}
   @media(pointer:coarse){.mtg-btn,.mtg-ev{height:34px;} .mtg td.mtg-cell{min-width:64px;height:34px;}}
 
+  /* 주간 뷰 (Calendar 기본) */
+  .wk-wrap{overflow:auto;max-height:72vh;border:1px solid var(--line);border-radius:var(--r-sm);
+    background:var(--surface);overscroll-behavior:contain;-webkit-overflow-scrolling:touch;}
+  .wk{border-collapse:collapse;width:100%;min-width:660px;table-layout:fixed;}
+  .wk col.wk-c0{width:54px;}
+  .wk th{position:sticky;top:0;z-index:3;background:var(--ink);color:var(--paper);
+    font-family:'Bricolage Grotesque',sans-serif;font-size:11.5px;font-weight:700;
+    padding:6px 4px;text-align:center;white-space:nowrap;}
+  .wk th.wk-corner{left:0;z-index:4;font-size:10.5px;font-weight:600;opacity:.85;}
+  .wk th em{display:block;font-style:normal;font-size:10px;font-weight:600;opacity:.8;margin-top:1px;}
+  .wk th.sat{color:#9ac8e8;} .wk th.sun{color:#e89c92;}
+  .wk th.today{background:var(--accent-d);color:#fff;}
+  .wk th.today em{opacity:1;}
+  .wk td.wk-rh{position:sticky;left:0;z-index:2;background:var(--paper);
+    font-family:ui-monospace,Menlo,monospace;font-size:10.5px;color:var(--muted-2);
+    padding:0 6px;text-align:right;white-space:nowrap;
+    border-right:1px solid var(--line);border-bottom:1px solid var(--line);}
+  .wk td.wk-rh.hour{color:var(--ink);font-weight:700;}
+  .wk tr:hover td.wk-rh{color:var(--ink);background:var(--line);}
+  .wk td.wk-all{vertical-align:top;padding:3px;background:var(--paper);
+    border-right:1px solid var(--line);border-bottom:1px solid var(--line-2);}
+  .wk td.wk-cell{height:26px;padding:0;vertical-align:top;
+    border-right:1px solid var(--line);border-bottom:1px solid var(--line);}
+  .wk td.wk-cell.h0{border-bottom-color:var(--line-2);}
+  .wk td.wk-cell.past{background:rgba(0,0,0,.03);}
+  .wk td.wk-cell.cont{background:var(--pcs);box-shadow:inset 3px 0 0 var(--pc);}
+  .wk td.wk-cell.free{cursor:pointer;}
+  .wk td.wk-cell.free:hover{background:rgba(0,0,0,.05);}
+  .wk td.wk-cell.cand{background:var(--ok-soft);box-shadow:inset 0 0 0 1px rgba(45,117,73,.18);cursor:pointer;}
+  .wk td.wk-cell.cand:hover{background:rgba(45,117,73,.28);}
+  .wk td.wk-cell.cur{background:var(--accent-soft);box-shadow:inset 3px 0 0 var(--accent);}
+  .wk td.wk-cell.sel{background:var(--ok);}
+  .wk-mark{display:block;font-size:10px;font-weight:700;line-height:26px;text-align:center;
+    white-space:nowrap;overflow:hidden;}
+  .wk td.wk-cell.sel .wk-mark{color:#fff;}
+  .wk td.wk-cell.cur .wk-mark{color:var(--accent-d);}
+  .wk-chip{display:block;width:100%;text-align:left;border:0;cursor:pointer;
+    padding:2px 4px;font-size:10px;line-height:1.15;font-weight:700;
+    background:var(--pcs);color:var(--pc);box-shadow:inset 2px 0 0 var(--pc);
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .wk-chip+.wk-chip{margin-top:1px;}
+  .wk-chip .wk-t{font-weight:600;opacity:.8;}
+  .wk-chip.off{opacity:.55;} .wk-chip.off .wk-n{text-decoration:line-through;}
+  .wk-chip.on{outline:2px solid var(--ink);outline-offset:-2px;}
+  .wk-chip.x{background:transparent;color:var(--muted);box-shadow:inset 2px 0 0 var(--line-2);
+    font-weight:600;}
+  .wk-chip.allday{border-radius:3px;box-shadow:none;background:var(--pcs);}
+  .wk-sel{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;
+    border:1px solid var(--ink);border-radius:var(--r-sm);background:var(--paper);
+    padding:9px 12px;font-size:13px;margin-top:10px;}
+  .wk-sel .wk-sel-t{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;}
+  .wk-sel b{font-family:'Bricolage Grotesque',sans-serif;font-size:14px;}
+  .wk-sel .sub{font-size:12px;color:var(--muted);margin:0;}
+  .wk-sel-act{display:flex;gap:5px;flex-wrap:wrap;}
+  .wk-hint{margin-top:10px;font-size:12px;color:var(--muted-2);}
+  .cal-mode{display:flex;gap:2px;background:var(--paper);padding:3px;border-radius:8px;
+    border:1px solid var(--line);}
+  .cal-mode button{border:0;background:transparent;color:var(--muted);cursor:pointer;
+    font-size:12px;font-weight:600;padding:5px 12px;border-radius:5px;
+    font-family:'Bricolage Grotesque',sans-serif;}
+  .cal-mode button.on{color:var(--ink);background:var(--surface);box-shadow:var(--shadow-sm);}
+  @media(pointer:coarse){.wk td.wk-cell{height:34px;} .wk-mark{line-height:34px;}}
+
   /* 회차 목록 */
   .occ-wrap{margin-top:12px;padding-top:12px;border-top:1px dashed var(--line-2);
     display:flex;flex-direction:column;gap:4px;}
@@ -1181,7 +1244,9 @@ let state={
   settings:{}, members:{}, semesters:{}, projects:{},
   meetings:{}, events:{}, exceptions:{}, availability:{},
   // Calendar 탭
-  calMonth:'', calMember:'', calProject:'', calType:'',
+  calMode:'week',                         // 'week'(기본) | 'month' — start()에서 저장값 복원
+  calMonth:'', calWeek:'', calPick:null,  // calWeek = 그 주 일요일 "YYYY-MM-DD"
+  calMember:'', calProject:'', calType:'',
   // Availability 탭
   avMember:'', avSemester:'',
   // Meetings 탭
@@ -1591,6 +1656,7 @@ function swapOccurrence(aid,bid){
 /* 취소는 삭제가 아니라 표시 — 캘린더에 회색으로 남고 되돌릴 수 있다 */
 function setOccCancel(evid,on){
   if(!state.events[evid]) return;
+  state.calPick=null;
   FB.update(R('events/'+evid),{status:on?'cancelled':null}).catch(wErr);
   toast(on?'회차를 취소했습니다':'취소를 되돌렸습니다');
 }
@@ -1748,16 +1814,177 @@ function calEventsByDate(){
 function viewCalendar(){
   const now=new Date(); now.setHours(0,0,0,0);
   if(!/^\d{4}-\d{2}$/.test(state.calMonth)) state.calMonth=fmtDate(now).slice(0,7);
-  const [year,month]=state.calMonth.split('-').map(Number);
-  const monthStart=new Date(year,month-1,1);
-  const gridStart=new Date(monthStart); gridStart.setDate(gridStart.getDate()-gridStart.getDay());
-  const byDate=calEventsByDate();
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(state.calWeek)) state.calWeek=weekOf(fmtDate(now))[0];
+  const week=state.calMode!=='month';
   const memberOpts='<option value="">전체 멤버</option>'+membersSorted(false).map(mid=>
     `<option value="${mid}" ${state.calMember===mid?'selected':''}>${esc(memberName(mid))}</option>`).join('');
   const projectOpts='<option value="">전체 프로젝트</option>'+sortedIds(state.projects).map(pid=>
     `<option value="${pid}" ${state.calProject===pid?'selected':''}>${esc(projectName(pid))}</option>`).join('');
   const typeOpts='<option value="">전체 종류</option>'+EVENT_TYPES.map(([k,l])=>
     `<option value="${k}" ${state.calType===k?'selected':''}>${l}</option>`).join('');
+  const filterName=state.calMember?memberName(state.calMember):'';
+  const view=week?viewCalWeek(now):viewCalMonth(now);
+  const [ws,we]=[state.calWeek,addDays(state.calWeek,6)];
+  const navTitle=week?`${mdLabel(ws)} ~ ${mdLabel(we)}`
+    :`${state.calMonth.split('-')[0]}년 ${Number(state.calMonth.split('-')[1])}월`;
+  return `<div class="card">
+    <div class="agg-head">
+      <div class="section-label">Lab Calendar <span class="count">${view.count}건</span></div>
+      <div class="agg-tools">
+        <div class="cal-mode">
+          <button class="${week?'on':''}" data-act="calmode" data-mode="week">주간</button>
+          <button class="${week?'':'on'}" data-act="calmode" data-mode="month">월간</button>
+        </div>
+        <button class="btn sm" data-act="caladd" data-date="">+ 일정 추가</button>
+        <button class="btn ghost sm" data-act="calpng" ${view.count?'':'disabled'}>📷 PNG</button>
+        <button class="btn ghost sm" data-act="calics" ${view.count?'':'disabled'}>📅 .ics</button>
+        <button class="btn ghost sm" data-act="calsub" ${state.calMember?'':'disabled'} title="${state.calMember?esc(filterName)+' 개인 구독':'멤버를 먼저 선택하세요'}">🔗 개인 구독</button>
+        <div class="agg-nav">
+          <button data-act="${week?'calweekgo':'calmonth'}" data-d="-1" title="이전" aria-label="이전">‹</button>
+          <div class="agg-month-title">${navTitle}</div>
+          <button data-act="${week?'calweekgo':'calmonth'}" data-d="1" title="다음" aria-label="다음">›</button>
+        </div>
+        <button class="btn ghost sm" data-act="caltoday">오늘</button>
+        <select class="agg-member" data-act="calmember" aria-label="멤버 필터">${memberOpts}</select>
+        <select class="agg-project" data-act="calproject" aria-label="프로젝트 필터">${projectOpts}</select>
+        <select class="agg-member" data-act="caltype" aria-label="종류 필터">${typeOpts}</select>
+      </div>
+    </div>
+    ${view.html}
+  </div>`;
+}
+
+/* ---- 주간 뷰 — 매주 반복되는 그 주의 배치. 여기서 바로 회차를 고친다 ---- */
+function viewCalWeek(now){
+  const ws=state.calWeek, days=dateList(ws,addDays(ws,6));
+  const todayDs=fmtDate(now);
+  const slot=cfgSlot(), startMin=cfgDayStart()*60, endMin=cfgDayEnd()*60;
+  const rows=[]; for(let m=startMin;m<endMin;m+=slot) rows.push(m);
+  const byDate=calEventsByDate();
+  /* 수정 중이면(시간 변경/회차 추가) 그 주 후보를 겹쳐 그린다 */
+  const find=state.mtFind&&state.mtFind.inCal?state.mtFind:null;
+  const pick=find&&state.mtPick&&state.mtPick.mtid===find.mtid?state.mtPick:null;
+  const findDay={}; if(find) find.days.forEach(d=>findDay[d.ds]=d);
+  let count=0;
+  const head='<tr><th class="wk-corner">시간</th>'+days.map(ds=>{
+    const wd=wdOf(ds);
+    return `<th class="${ds===todayDs?'today':wd===0?'sun':wd===6?'sat':''}">${mdLabel(ds)}<em>${WD[wd]}</em></th>`;
+  }).join('')+'</tr>';
+  /* 종일 예외 줄 */
+  const allDay=days.map(ds=>{
+    const items=(byDate[ds]||[]).filter(o=>o.kind==='x'&&o.allDay);
+    count+=items.length;
+    return `<td class="wk-all">${items.map(o=>
+      `<button class="wk-chip x allday" style="--pc:${typeColor(o.type==='personal'?'other':o.type)};--pcs:${typeColorSoft(o.type==='personal'?'other':o.type)}"
+        data-act="xopen" data-xid="${o.id}" title="${esc(memberName(o.mid))} · ${esc(o.title)} (${EXC_LABEL[o.type]||'예외'}) · 클릭하여 수정"
+        ><span class="wk-n">${esc(memberName(o.mid))} · ${esc(o.title)}</span></button>`).join('')||''}</td>`;
+  }).join('');
+  const body=rows.map(m=>{
+    const cells=days.map(ds=>{
+      const base=new Date(ds+'T00:00:00').getTime();
+      const cs=base+m*60000, ce=cs+slot*60000;
+      const items=(byDate[ds]||[]).filter(o=>{
+        if(o.kind==='x'&&o.allDay) return false;
+        return overlap(cs,ce,Number(o.start),Number(o.end));
+      });
+      /* 하루 시작 전에 시작한 일정은 첫 줄을 머리로 삼아 이름이 보이게 한다 */
+      const heads=items.filter(o=>(Number(o.start)>=cs&&Number(o.start)<ce)||(m===startMin&&Number(o.start)<cs));
+      heads.forEach(()=>count++);
+      const cand=findDay[ds]?.ok[m];
+      const inPick=!!(pick&&pick.s!=null&&cs>=pick.s&&cs<pick.e);
+      const inCur=!!(find?.cur&&cs>=find.cur.s&&cs<find.cur.e);
+      const cls=['wk-cell']; if(m%60===0) cls.push('h0');
+      const lead=items[0];
+      if(items.length&&!heads.length) cls.push('cont');
+      if(cs<Date.now()&&!items.length&&!cand) cls.push('past');
+      if(cand) cls.push('cand');
+      if(inCur) cls.push('cur');
+      if(inPick) cls.push('sel');
+      const style=lead?`--pc:${typeColor(lead.kind==='x'?(lead.type==='personal'?'other':lead.type):lead.type)};--pcs:${typeColorSoft(lead.kind==='x'?(lead.type==='personal'?'other':lead.type):lead.type)}`:'';
+      let inner=heads.map(o=>chipHtml(o,find,pick)).join('');
+      if(inPick&&cs===pick.s) inner=`<span class="wk-mark">✓ ${hm(pick.s)}~${hm(pick.e)}</span>`+inner;
+      else if(inCur&&cs===find.cur.s) inner=`<span class="wk-mark">현재 ${hm(find.cur.s)}~${hm(find.cur.e)}</span>`+inner;
+      const when=`${mdLabel(ds)} (${WD[wdOf(ds)]}) ${hm(cs)}`;
+      if(cand){
+        const e=cand+find.dur*60000;
+        return `<td class="${cls.join(' ')}" style="${style}" role="button" tabindex="0"
+          data-act="mtpick" data-mtid="${find.mtid}" data-s="${cand}" data-e="${e}"
+          title="${when}~${hm(e)} (${find.dur}분)로 옮기기">${inner}</td>`;
+      }
+      if(!items.length&&!find){
+        cls.push('free');
+        return `<td class="${cls.join(' ')}" role="button" tabindex="0" data-act="calslot"
+          data-date="${ds}" data-min="${m}" title="${when} 일정 추가">${inner}</td>`;
+      }
+      return `<td class="${cls.join(' ')}" style="${style}">${inner}</td>`;
+    }).join('');
+    return `<tr><td class="wk-rh${m%60===0?' hour':''}">${minLabel(m)}</td>${cells}</tr>`;
+  }).join('');
+  const title=`${mdLabel(ws)}~${mdLabel(addDays(ws,6))} VGI Lab Calendar`
+    +(state.calMember?` · ${esc(memberName(state.calMember))}`:'')
+    +(state.calProject?` · ${esc(projectName(state.calProject))}`:'');
+  const html=`<div class="wk-wrap scroll"><div id="cal-export">
+      <div class="agg-export-title">${title}</div>
+      <table class="wk"><colgroup><col class="wk-c0">${days.map(()=>'<col>').join('')}</colgroup>
+        <thead>${head}</thead>
+        <tbody><tr><td class="wk-rh">종일</td>${allDay}</tr>${body}</tbody></table>
+    </div></div>
+    ${find?viewFindControls(find.mtid,find)+viewFindBar(find.mtid,find,pick,FIND_MODE[find.mode]||FIND_MODE.first)
+          :viewWeekSelBar()}`;
+  return {html,count};
+}
+/* 주간 격자의 일정 조각 */
+function chipHtml(o,find,pick){
+  const isEv=o.kind==='ev';
+  const t=isEv?o.type:(o.type==='personal'?'other':o.type);
+  const style=`--pc:${typeColor(t)};--pcs:${typeColorSoft(t)}`;
+  const time=`${hm(Number(o.start))}~${hm(Number(o.end))}`;
+  if(!isEv){
+    const lbl=EXC_LABEL[o.type]||'예외';
+    return `<button class="wk-chip x" style="${style}" data-act="xopen" data-xid="${o.id}"
+      title="${esc(memberName(o.mid))} · ${esc(o.title)} (${lbl}) ${time} · 클릭하여 수정"
+      ><span class="wk-n">${esc(memberName(o.mid))} · ${esc(o.title)}</span></button>`;
+  }
+  const off=o.status==='cancelled';
+  const swap=find&&find.mode==='move'&&o.id!==find.evid&&!off;
+  const on=(!find&&state.calPick===o.id)||(pick&&pick.swap===o.id);
+  const tip=`${esc(o.title)} ${time}${o.location?' · '+esc(o.location):''} · ${esc(namesOf(participantsOf(o)))}`
+    +(off?' · 취소됨':'')+(swap?' · 클릭하면 이 일정과 자리 바꾸기':'');
+  return `<button class="wk-chip${off?' off':''}${on?' on':''}" style="${style}"
+    data-act="${swap?'mtswap':'calevpick'}"${swap?` data-mtid="${find.mtid}"`:''} data-evid="${o.id}"
+    title="${tip}"><span class="wk-t">${hm(Number(o.start))}</span> <span class="wk-n">${esc(o.title)}</span></button>`;
+}
+/* 주간 뷰에서 일정을 고르면 뜨는 조작 줄 */
+function viewWeekSelBar(){
+  const evid=state.calPick, ev=evid?state.events[evid]:null;
+  if(!ev) return `<div class="wk-hint">칸을 누르면 그 시간에 일정을 추가하고, 일정을 누르면 그 회차를 바로 고칠 수 있습니다. 이 주의 배치는 매주 반복됩니다.</div>`;
+  const s=Number(ev.start), e=Number(ev.end);
+  const mtid=ev.seriesId||ev.meetingId;
+  const mt=mtid?state.meetings[mtid]:null;
+  const off=!isLive(ev);
+  const rk=mt?recurKey(mt):'';
+  return `<div class="wk-sel">
+    <div class="wk-sel-t">
+      <b>${esc(ev.title)}</b>
+      <span class="sub">${whenLabel(s,e)} · ${(e-s)/60000}분${ev.location?' · '+esc(ev.location):''}${rk?` · ${RECUR_LABEL[rk]} 반복`:''}${off?' · 취소됨':''}</span>
+    </div>
+    <div class="wk-sel-act">
+      ${mt&&!off?`<button class="btn sm" data-act="occmove" data-mtid="${mtid}" data-evid="${evid}" data-cal="1">시간 변경</button>
+                  <button class="btn ghost sm" data-act="occadd" data-mtid="${mtid}" data-evid="${evid}" data-cal="1">+ 이 주 추가</button>`:''}
+      ${mt?(off?`<button class="btn ghost sm" data-act="occrestore" data-evid="${evid}">취소 되돌리기</button>`
+              :`<button class="btn ghost sm" data-act="occcancel" data-evid="${evid}">이 주 취소</button>`):''}
+      <button class="btn ghost sm" data-act="evedit" data-evid="${evid}">상세 수정</button>
+      <button class="btn danger sm" data-act="evdelete" data-evid="${evid}">삭제</button>
+      <button class="btn ghost sm" data-act="calpickclear">선택 해제</button>
+    </div>
+  </div>`;
+}
+/* ---- 월간 뷰 (기존) ---- */
+function viewCalMonth(now){
+  const [year,month]=state.calMonth.split('-').map(Number);
+  const monthStart=new Date(year,month-1,1);
+  const gridStart=new Date(monthStart); gridStart.setDate(gridStart.getDate()-gridStart.getDay());
+  const byDate=calEventsByDate();
   const cells=[];
   const cursor=new Date(gridStart);
   let monthCount=0;
@@ -1788,32 +2015,14 @@ function viewCalendar(){
   }
   const weekdays=WD.map((d,i)=>`<div class="agg-weekday${i===0?' sun':i===6?' sat':''}">${d}</div>`).join('');
   const filterName=state.calMember?memberName(state.calMember):'';
-  return `<div class="card">
-    <div class="agg-head">
-      <div class="section-label">Lab Calendar <span class="count">${monthCount}건</span></div>
-      <div class="agg-tools">
-        <button class="btn sm" data-act="caladd" data-date="">+ 일정 추가</button>
-        <button class="btn ghost sm" data-act="calpng" ${monthCount?'':'disabled'}>📷 PNG</button>
-        <button class="btn ghost sm" data-act="calics" ${monthCount?'':'disabled'}>📅 .ics</button>
-        <button class="btn ghost sm" data-act="calsub" ${state.calMember?'':'disabled'} title="${state.calMember?esc(filterName)+' 개인 구독':'멤버를 먼저 선택하세요'}">🔗 개인 구독</button>
-        <div class="agg-nav">
-          <button data-act="calmonth" data-d="-1" title="이전 달" aria-label="이전 달">‹</button>
-          <div class="agg-month-title">${year}년 ${month}월</div>
-          <button data-act="calmonth" data-d="1" title="다음 달" aria-label="다음 달">›</button>
-        </div>
-        <select class="agg-member" data-act="calmember" aria-label="멤버 필터">${memberOpts}</select>
-        <select class="agg-project" data-act="calproject" aria-label="프로젝트 필터">${projectOpts}</select>
-        <select class="agg-member" data-act="caltype" aria-label="종류 필터">${typeOpts}</select>
-      </div>
-    </div>
-    <div class="agg-cal-wrap"><div class="agg-cal-scroll scroll"><div class="agg-cal" id="cal-export">
+  const html=`<div class="agg-cal-wrap"><div class="agg-cal-scroll scroll"><div class="agg-cal" id="cal-export">
       <div class="agg-export-title">${year}년 ${month}월 VGI Lab Calendar${filterName?`<span>· ${esc(filterName)}</span>`:''}${state.calProject?`<span>· ${esc(projectName(state.calProject))}</span>`:''}</div>
       <div class="agg-weekdays">${weekdays}</div>
       <div class="agg-month-grid">${cells.join('')}</div>
     </div></div></div>
     <div class="agg-swipe-hint">옆으로 밀어 나머지 요일 보기 →</div>
-    ${monthCount?'':'<div class="agg-month-empty">이달 등록된 일정이 없습니다.</div>'}
-  </div>`;
+    ${monthCount?'':'<div class="agg-month-empty">이달 등록된 일정이 없습니다.</div>'}`;
+  return {html,count:monthCount};
 }
 
 /* ======== Meetings ======== */
@@ -1861,17 +2070,21 @@ const FIND_MODE={
   extra:{title:'이 주에 회차 추가',apply:'이 시간에 회차 추가'},
 };
 const DUR_OPTS=[30,60,90,120,150,180];
+/* 격자 위 조작 줄 — 무엇을 하는 중인지 + 길이 조정 + 닫기 */
+function viewFindControls(mtid,find){
+  const mode=FIND_MODE[find.mode]||FIND_MODE.first;
+  const durSel=(find.mode==='move'||find.mode==='extra')?`<label class="mtg-dur">길이
+    <select data-act="mtdur">${DUR_OPTS.map(v=>`<option value="${v}" ${v===find.dur?'selected':''}>${v}분</option>`).join('')}</select></label>`:'';
+  return `<div class="mtg-mode" style="margin-top:10px">
+      <span><b>${mode.title}</b>${find.scope?' · '+esc(find.scope):''}${find.inCal?' · 초록색 칸을 누르세요':''}</span>
+      <span class="mtg-mode-r">${durSel}<button class="btn ghost sm" data-act="mtfindclose">닫기</button></span>
+    </div>`;
+}
 /* 후보 격자 — 기존 일정 배치까지 같이 보여주고, 고른 시간은 길이만큼 통째로 표시한다 */
 function viewMeetingFind(mtid,find){
   const mt=state.meetings[mtid];
   const mode=FIND_MODE[find.mode]||FIND_MODE.first;
-  const week=find.mode==='move'||find.mode==='extra';
-  const durSel=week?`<label class="mtg-dur">길이
-    <select data-act="mtdur">${DUR_OPTS.map(v=>`<option value="${v}" ${v===find.dur?'selected':''}>${v}분</option>`).join('')}</select></label>`:'';
-  const modeBar=`<div class="mtg-mode">
-      <span><b>${mode.title}</b>${find.scope?' · '+esc(find.scope):''}</span>
-      <span class="mtg-mode-r">${durSel}<button class="btn ghost sm" data-act="mtfindclose">닫기</button></span>
-    </div>`;
+  const modeBar=viewFindControls(mtid,find);
   if(find.error) return `<div class="mt-cands">${modeBar}<div class="note">${esc(find.error)}</div></div>`;
   if(!find.days.length) return `<div class="mt-cands">${modeBar}<div class="note">조건에 맞는 시간이 없습니다. 날짜 범위를 넓히거나 참여자·길이를 조정해보세요.</div></div>`;
   const pick=state.mtPick&&state.mtPick.mtid===mtid?state.mtPick:null;
@@ -2024,7 +2237,7 @@ function viewMeetingCard(mtid){
   const mt=state.meetings[mtid];
   const mids=participantsOf(mt);
   const confirmed=mt.status==='confirmed';
-  const find=state.mtFind&&state.mtFind.mtid===mtid?state.mtFind:null;
+  const find=state.mtFind&&state.mtFind.mtid===mtid&&!state.mtFind.inCal?state.mtFind:null;
   const findHtml=find?viewMeetingFind(mtid,find):'';
   const rk=recurKey(mt);
   const occIds=confirmed?occurrencesOf(mtid):[];
@@ -2298,6 +2511,7 @@ function viewHelp(){
         <div class="tut-section"><h3><span class="tut-num">3</span>출장·휴가·학회</h3>
           <p>특별한 일정이 생기면 <b>Availability</b> 탭에서 예외 일정으로 추가합니다. 해당 기간엔 미팅 계산에서 자동 제외되고 Lab Calendar에도 표시됩니다.</p></div>
         <div class="tut-section"><h3><span class="tut-num">4</span>미팅 잡기</h3>
+          <p><b>Lab Calendar</b>는 <b>주간</b>이 기본입니다. 한 주의 배치를 보고, 그 자리에서 바로 고칩니다 — 빈 칸을 누르면 그 시간에 일정을 추가하고, 일정을 누르면 <b>시간 변경 / 이 주 취소 / + 이 주 추가 / 상세 수정</b>이 뜹니다. 시간 변경 중에는 그 주 후보 칸이 초록색으로, 원래 시간이 주황색으로 표시되고, <b>다른 미팅을 누르면 두 미팅의 자리가 바뀝니다</b>. 매주 반복 미팅은 다음 주로 넘겨도 같은 자리에 나타나고, 한 주만 바꾼 것은 그 주에만 반영됩니다. 월간 보기는 오른쪽 위 <b>월간</b> 버튼으로 전환합니다.</p>
           <p><b>Meetings</b> 탭에서 새 미팅을 만들고 참여자·길이·후보 날짜 범위를 고른 뒤 <b>가능 시간 찾기</b>를 누르면, 반복 일정 + 예외 + 이미 확정된 일정을 모두 계산해 전원 가능한 시간을 보여줍니다. 날짜×시간 격자에서 초록색 칸을 고르면 아래에 그 시간대가 표시되고, ‘이 시간으로 확정’을 누르면 Lab Calendar에 등록됩니다.</p>
           <p><b>반복 미팅</b>을 ‘매주/격주’로 만들면 반복 종료일까지 회차가 한 번에 만들어집니다. 확정된 미팅 카드의 <b>회차 목록</b>에서 그 주만 <b>시간 변경</b>하거나, 학회 등으로 <b>취소</b>(캘린더에 회색 취소선으로 남고 되돌릴 수 있음)하거나, <b>+ 이 주 추가</b>로 같은 주에 회차를 하나 더 잡을 수 있습니다. 참여자가 겹치는 회차에는 ⚠ 표시가 붙습니다.</p>
           <p><b>회차 시간 변경</b>을 누르면 그 주 전체가 격자로 열립니다. <b>현재 시간대</b>가 주황색으로 표시되고, 그 주에 이미 잡힌 일정들도 함께 보이므로 배치를 보고 옮길 수 있습니다. 위쪽 <b>길이</b>를 바꾸면 그 회차만 길이를 조정할 수 있고, 고른 시간은 길이만큼(예: 90분이면 칸 3개) 통째로 표시됩니다. <b>다른 미팅 칸을 누르면 두 미팅의 시간이 서로 맞바뀝니다</b> — 미팅 순서를 바꿀 때 쓰세요.</p></div>
@@ -2327,7 +2541,7 @@ async function exportCalPNG(){
     const canvas=await h2c(el,{backgroundColor:'#fffdf7',scale:2,width,
       windowWidth:Math.max(width,document.documentElement.clientWidth)});
     const link=document.createElement('a');
-    link.download=`vgi-lab-${state.calMonth}.png`;
+    link.download=`vgi-lab-${state.calMode==='month'?state.calMonth:state.calWeek}.png`;
     link.href=canvas.toDataURL('image/png');
     link.click();
     toast('PNG를 저장했습니다');
@@ -2409,6 +2623,29 @@ function bindEvents(){
       const d=new Date(y,m-1+(Number(t.dataset.d)||0),1);
       state.calMonth=fmtDate(d).slice(0,7); render(); return;
     }
+    if(act==='calmode'){
+      state.calMode=t.dataset.mode; lsSet('vgi.calMode',state.calMode);
+      state.mtFind=null; state.mtPick=null; render();return;
+    }
+    if(act==='calweekgo'){
+      state.calWeek=addDays(state.calWeek,7*(Number(t.dataset.d)||0));
+      state.calPick=null; render();return;
+    }
+    if(act==='caltoday'){
+      const td=fmtDate(new Date());
+      state.calWeek=weekOf(td)[0]; state.calMonth=td.slice(0,7);
+      state.calPick=null; render();return;
+    }
+    if(act==='calslot'){
+      const ds=t.dataset.date, m=Number(t.dataset.min)||cfgDayStart()*60;
+      state.evEdit={title:'',type:'meeting',projectId:'',location:'',participants:{},
+        date:ds,fromMin:m,toMin:Math.min(m+60,cfgDayEnd()*60)};
+      state.calPick=null; render();return;
+    }
+    if(act==='calevpick'){
+      state.calPick=state.calPick===t.dataset.evid?null:t.dataset.evid; render();return;
+    }
+    if(act==='calpickclear'){state.calPick=null;render();return;}
     if(act==='calpng'){exportCalPNG();return;}
     if(act==='calics'){exportCalICS();return;}
     if(act==='calsub'){if(state.calMember){state.subscribeFor=state.calMember;render();}return;}
@@ -2442,10 +2679,9 @@ function bindEvents(){
     /* Meetings */
     if(act==='mtnew'){
       const today=fmtDate(new Date());
-      const in2w=new Date(); in2w.setDate(in2w.getDate()+14);
       state.mtDraft={title:'',type:'meeting',durationMin:60,participants:{},
-        rangeStart:today,rangeEnd:fmtDate(in2w),projectId:'',location:'',description:'',
-        recur:'',recurUntil:defaultRecurUntil()};
+        rangeStart:today,rangeEnd:addDays(today,6),projectId:'',location:'',description:'',
+        recur:'w1',recurUntil:defaultRecurUntil()};
       render();return;
     }
     if(act==='mtcancel'){state.mtDraft=null;render();return;}
@@ -2479,7 +2715,9 @@ function bindEvents(){
       const [ws,we]=weekOf(fmtDate(new Date(Number(ev.start))));
       const move=act==='occmove';
       const dur=move?(Number(ev.end)-Number(ev.start))/60000:(Number(mt.durationMin)||60);
-      openFind(mtid,{mode:move?'move':'extra',evid,from:ws,to:we,dur,maxDays:7,allDays:true,
+      const inCal=t.dataset.cal==='1';
+      if(inCal){ state.calWeek=ws; state.calPick=null; }
+      openFind(mtid,{mode:move?'move':'extra',evid,from:ws,to:we,dur,maxDays:7,allDays:true,inCal,
         scope:`${mdLabel(ws)}~${mdLabel(we)} 주`,
         cur:move?{s:Number(ev.start),e:Number(ev.end)}:null});
       return;
@@ -2745,6 +2983,8 @@ function bindEvents(){
 
 /* ---------------- 시작 ---------------- */
 async function start(){
+  const savedMode=lsGet('vgi.calMode');
+  if(savedMode==='month'||savedMode==='week') state.calMode=savedMode;
   bindEvents();
   const h=location.hash.slice(1);
   if(NAV.some(([k])=>k===h)) state.tab=h;
