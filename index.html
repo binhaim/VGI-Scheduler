@@ -776,6 +776,10 @@
   .note{font-size:12.5px;color:var(--muted);background:var(--paper);
     padding:9px 13px;border-radius:var(--r-sm);margin:10px 0 0;line-height:1.5;}
   .note b{color:var(--ink-2);}
+  .note.warn{background:var(--accent-soft);color:var(--accent-d);
+    box-shadow:inset 3px 0 0 var(--accent);}
+  .note.warn b{color:var(--accent-d);}
+  .note.warn .btn{margin-left:6px;vertical-align:1px;}
   code{background:var(--paper);padding:1px 6px;border-radius:4px;font-size:13px;
     font-family:ui-monospace,'SF Mono',Menlo,monospace;}
   #net-banner{position:fixed;top:0;left:0;right:0;z-index:9999;display:none;
@@ -1082,6 +1086,11 @@
   .mtg td.mtg-cell.sel{background:var(--ok);}
   .mtg td.mtg-cell.sel .mtg-in{color:#fff;}
   .mtg td.mtg-cell.swap-on{outline:2px solid var(--ink);outline-offset:-2px;}
+  /* 학기 밖 날짜 — 주간 반복 불가 시간이 적용되지 않아 '모름'에 가깝다 */
+  .mtg th.nosem{background:var(--muted);}
+  .mtg td.mtg-cell.nosem .mtg-btn{background:repeating-linear-gradient(45deg,
+    var(--ok-soft) 0 6px,rgba(45,117,73,.16) 6px 7px);}
+  .mtg td.mtg-cell.nosem.sel .mtg-btn{background:transparent;}
   .mtg-btn{display:block;width:100%;height:26px;border:0;padding:0;cursor:pointer;
     background:var(--ok-soft);box-shadow:inset 0 0 0 1px rgba(45,117,73,.18);}
   .mtg-btn:hover{background:rgba(45,117,73,.28);}
@@ -1430,20 +1439,35 @@ function locationBusy(loc,s,e,ignoreEventId){
 const MT_MAX_DAYS=14;
 function findMeetingSlots(mt,opts={}){
   const mids=participantsOf(mt);
-  const empty={rows:[],days:[],dur:0,slot:cfgSlot(),total:0,truncated:false};
+  const empty={rows:[],days:[],dur:0,slot:cfgSlot(),total:0,outTotal:0,truncated:false,
+    clamped:null,sem:null,noAvail:[]};
   if(!mids.length) return {...empty,error:'참여자를 먼저 선택하세요'};
   const dur=Number(opts.dur||mt.durationMin)||60;
   const slot=cfgSlot();
   const startMin=cfgDayStart()*60, endMin=cfgDayEnd()*60;
   const todayDs=fmtDate(new Date());
   const rangeStart=opts.from||mt.rangeStart, rangeEnd=opts.to||mt.rangeEnd;
-  const from=(opts.allDays||rangeStart>=todayDs)?rangeStart:todayDs;
-  if(!rangeEnd||from>rangeEnd) return {...empty,dur,error:'남은 날짜가 없습니다. 날짜 범위를 확인하세요'};
+  /* 주간 반복 불가 시간은 '활성 학기 안'에서만 적용된다 — 학기 밖 날짜는 제약이 없어
+     전원 가능처럼 보인다. 그래서 기본 검색은 학기 시작일부터 한다. */
+  const sid=activeSemesterId();
+  const sem=sid?state.semesters[sid]:null;
+  let from=(opts.allDays||rangeStart>=todayDs)?rangeStart:todayDs;
+  let clamped=null;
+  if(!opts.allDays&&!opts.noClamp&&sem&&from<sem.startDate&&sem.startDate<=(rangeEnd||'')){
+    clamped=from; from=sem.startDate;
+  }
+  if(!rangeEnd||from>rangeEnd) return {...empty,dur,sem:sem?{id:sid,...sem}:null,
+    error:'남은 날짜가 없습니다. 날짜 범위를 확인하세요'};
   const maxDays=opts.maxDays||MT_MAX_DAYS;
   const rows=[]; for(let m=startMin;m<endMin;m+=slot) rows.push(m);
   const locKey=String(mt.location||'').trim().toLocaleLowerCase('ko-KR');
   const now=Date.now();
-  const days=[]; let total=0, truncated=false;
+  const semAv=state.availability?.[sid]||{};
+  const noAvail=mids.filter(mid=>{
+    const d=semAv[mid]; if(!d) return true;
+    return !Object.values(d).some(slots=>Object.values(slots||{}).some(Boolean));
+  });
+  const days=[]; let total=0, outTotal=0, truncated=false;
   for(const ds of dateList(from,rangeEnd)){
     const base=new Date(ds+'T00:00:00').getTime();
     const dayS=base+startMin*60000, dayE=base+endMin*60000;
@@ -1478,9 +1502,11 @@ function findMeetingSlots(mt,opts={}){
     }
     if(!n&&!opts.allDays) continue;
     if(days.length>=maxDays){ truncated=true; break; }
-    days.push({ds,base,cells,ok,n}); total+=n;
+    const outSem=!sem||ds<sem.startDate||ds>sem.endDate;
+    days.push({ds,base,cells,ok,n,outSem}); total+=n; if(outSem) outTotal+=n;
   }
-  return {rows,days,dur,slot,total,truncated,maxDays,error:null};
+  return {rows,days,dur,slot,total,outTotal,truncated,maxDays,clamped,
+    sem:sem?{id:sid,...sem}:null,noAvail,error:null};
 }
 
 /* ---------------- 쓰기 동작 ---------------- */
@@ -1923,13 +1949,22 @@ function viewCalWeek(now){
   const title=`${mdLabel(ws)}~${mdLabel(addDays(ws,6))} VGI Lab Calendar`
     +(state.calMember?` · ${esc(memberName(state.calMember))}`:'')
     +(state.calProject?` · ${esc(projectName(state.calProject))}`:'');
-  const html=`<div class="wk-wrap scroll"><div id="cal-export">
+  const sid=activeSemesterId(), sem=sid?state.semesters[sid]:null;
+  const outSem=!sem||days[6]<sem.startDate||days[0]>sem.endDate;
+  const partSem=!outSem&&sem&&(days[0]<sem.startDate||days[6]>sem.endDate);
+  const semWarn=(!sem||outSem||partSem)
+    ?`<div class="note warn">${!sem
+        ?'활성 학기가 없어 주간 반복 불가 시간이 적용되지 않습니다. <b>Members</b> 탭에서 학기를 지정하세요.'
+        :`이 주는 학기 <b>${esc(sem.name)}</b>(${mdLabel(sem.startDate)}~${mdLabel(sem.endDate)}) ${outSem?'밖입니다':'경계에 걸쳐 있습니다'} — `
+         +`학기 밖 날짜에는 <b>주간 반복 불가 시간이 적용되지 않습니다</b>.`}</div>`
+    :'';
+  const html=`${semWarn}<div class="wk-wrap scroll"><div id="cal-export">
       <div class="agg-export-title">${title}</div>
       <table class="wk"><colgroup><col class="wk-c0">${days.map(()=>'<col>').join('')}</colgroup>
         <thead>${head}</thead>
         <tbody><tr><td class="wk-rh">종일</td>${allDay}</tr>${body}</tbody></table>
     </div></div>
-    ${find?viewFindControls(find.mtid,find)+viewFindBar(find.mtid,find,pick,FIND_MODE[find.mode]||FIND_MODE.first)
+    ${find?viewFindControls(find.mtid,find)+viewFindWarn(find.mtid,find)+viewFindBar(find.mtid,find,pick,FIND_MODE[find.mode]||FIND_MODE.first)
           :viewWeekSelBar()}`;
   return {html,count};
 }
@@ -2070,6 +2105,23 @@ const FIND_MODE={
   extra:{title:'이 주에 회차 추가',apply:'이 시간에 회차 추가'},
 };
 const DUR_OPTS=[30,60,90,120,150,180];
+/* 계산이 '전원 가능'으로 보이게 만드는 원인을 짚어준다 — 침묵보다 낫다 */
+function viewFindWarn(mtid,find){
+  const w=[];
+  const sem=find.sem;
+  if(find.clamped){
+    w.push(`학기 <b>${esc(sem.name)}</b> 시작일(${mdLabel(sem.startDate)})부터 찾고 있습니다 — `
+      +`${mdLabel(find.clamped)}~${mdLabel(addDays(sem.startDate,-1))} 구간은 학기 밖이라 <b>주간 반복 불가 시간이 적용되지 않아</b> 전원 가능으로 나옵니다.`
+      +`<button class="btn ghost sm" data-act="mtfindall" data-mtid="${mtid}">${mdLabel(find.clamped)}부터 전체 보기</button>`);
+  }else if(find.outTotal){
+    w.push(`지금 보는 날짜 일부가 ${sem?`학기 <b>${esc(sem.name)}</b>(${mdLabel(sem.startDate)}~${mdLabel(sem.endDate)})`:'활성 학기'} 밖입니다(빗금 표시). `
+      +`그 날짜에는 <b>주간 반복 불가 시간이 적용되지 않아</b> 전원 가능처럼 보입니다 — 후보 ${find.outTotal}개.`
+      +(sem?`<button class="btn ghost sm" data-act="mtfindsem" data-mtid="${mtid}">학기 안에서만 보기</button>`:''));
+  }
+  if(!sem) w.push('활성 학기가 없어 주간 반복 불가 시간이 전혀 적용되지 않습니다. <b>Members</b> 탭에서 학기를 만들고 활성으로 지정하세요.');
+  if(find.noAvail?.length) w.push(`<b>${esc(namesOf(find.noAvail))}</b> 님은 이 학기 <b>반복 불가 시간</b>을 아직 입력하지 않았습니다 — 늘 가능한 것으로 계산됩니다. (<b>Availability</b> 탭)`);
+  return w.length?`<div class="note warn">${w.join('<br>')}</div>`:'';
+}
 /* 격자 위 조작 줄 — 무엇을 하는 중인지 + 길이 조정 + 닫기 */
 function viewFindControls(mtid,find){
   const mode=FIND_MODE[find.mode]||FIND_MODE.first;
@@ -2084,14 +2136,15 @@ function viewFindControls(mtid,find){
 function viewMeetingFind(mtid,find){
   const mt=state.meetings[mtid];
   const mode=FIND_MODE[find.mode]||FIND_MODE.first;
-  const modeBar=viewFindControls(mtid,find);
+  const modeBar=viewFindControls(mtid,find)+viewFindWarn(mtid,find);
   if(find.error) return `<div class="mt-cands">${modeBar}<div class="note">${esc(find.error)}</div></div>`;
   if(!find.days.length) return `<div class="mt-cands">${modeBar}<div class="note">조건에 맞는 시간이 없습니다. 날짜 범위를 넓히거나 참여자·길이를 조정해보세요.</div></div>`;
   const pick=state.mtPick&&state.mtPick.mtid===mtid?state.mtPick:null;
   const wide=find.days.length<=7;
   const head='<tr><th class="mtg-corner">시간</th>'+find.days.map(d=>{
     const wd=wdOf(d.ds);
-    return `<th class="mtg-day${wd===0?' sun':wd===6?' sat':''}">${mdLabel(d.ds)}<em>${WD[wd]}</em></th>`;
+    return `<th class="mtg-day${d.outSem?' nosem':''}${wd===0?' sun':wd===6?' sat':''}"
+      ${d.outSem?'title="학기 밖 — 주간 반복 불가 시간이 적용되지 않습니다"':''}>${mdLabel(d.ds)}<em>${d.outSem?'학기밖':WD[wd]}</em></th>`;
   }).join('')+'</tr>';
   const slotMs=find.slot*60000;
   const body=find.rows.map(m=>{
@@ -2104,6 +2157,7 @@ function viewMeetingFind(mtid,find){
       const cls=['mtg-cell'];
       if(c.kind!=='free') cls.push(c.kind);
       if(cand) cls.push('cand');
+      if(d.outSem) cls.push('nosem');
       if(inCur) cls.push('cur');
       if(inPick) cls.push('sel');
       if(c.kind==='ev'&&pick?.swap===c.evid) cls.push('swap-on');
@@ -2114,7 +2168,7 @@ function viewMeetingFind(mtid,find){
       else if(c.kind==='ev'&&c.head&&wide) inner=`<span class="mtg-in">${esc(c.title)}</span>`;
       if(cand){
         const e=cand+find.dur*60000;
-        const lbl=`${when}~${hm(e)} (${find.dur}분)`;
+        const lbl=`${when}~${hm(e)} (${find.dur}분)`+(d.outSem?' · 학기 밖이라 반복 불가 시간 미적용':'');
         return `<td class="${cls.join(' ')}"><button type="button" class="mtg-btn" data-act="mtpick"
           data-mtid="${mtid}" data-s="${cand}" data-e="${e}" title="${lbl}" aria-label="${lbl}"
           aria-pressed="${inPick&&cs===pick.s}">${inner}</button></td>`;
@@ -2137,7 +2191,7 @@ function viewMeetingFind(mtid,find){
   }).join('');
   return `<div class="mt-cands">
     ${modeBar}
-    <div class="mt-find-head">전원 가능한 ${find.dur}분 자리 <b>${find.total}</b>개 · ${find.days.length}일${find.truncated?` (가능한 날이 많아 앞쪽 ${find.maxDays}일만 표시)`:''}
+    <div class="mt-find-head">전원 가능한 ${find.dur}분 자리 <b>${find.total}</b>개${find.outTotal?` (학기 밖 ${find.outTotal}개 포함)`:''} · ${find.days.length}일${find.truncated?` (가능한 날이 많아 앞쪽 ${find.maxDays}일만 표시)`:''}
       <span class="mtg-legend"><i class="lg-ok"></i>가능<i class="lg-ev"></i>기존 일정<i class="lg-na"></i>참여자 불가${find.cur?'<i class="lg-cur"></i>현재 시간':''}</span></div>
     <div class="mtg-wrap scroll"><table class="mtg${wide?' wide':''}"><thead>${head}</thead><tbody>${body}</tbody></table></div>
     ${viewFindBar(mtid,find,pick,mode)}
@@ -2601,7 +2655,7 @@ function exportCalICS(){
 function openFind(mtid,cfg={}){
   const mt=state.meetings[mtid]; if(!mt) return;
   const opts={from:cfg.from,to:cfg.to,dur:cfg.dur,maxDays:cfg.maxDays,allDays:cfg.allDays,
-    ignoreEventId:cfg.mode==='move'?cfg.evid:undefined,mtid};
+    noClamp:cfg.noClamp,ignoreEventId:cfg.mode==='move'?cfg.evid:undefined,mtid};
   state.mtFind={mtid,...cfg,...opts,...findMeetingSlots(mt,opts)};
   state.mtPick=null; render();
 }
@@ -2708,6 +2762,13 @@ function bindEvents(){
       return;
     }
     if(act==='mtfindclose'){state.mtFind=null;state.mtPick=null;render();return;}
+    if(act==='mtfindall'||act==='mtfindsem'){
+      const f=state.mtFind, mt=state.meetings[t.dataset.mtid]; if(!f||!mt)return;
+      const all=act==='mtfindall';
+      openFind(f.mtid,{...f,from:undefined,noClamp:all,
+        scope:`후보 ${mdLabel(mt.rangeStart)}~${mdLabel(mt.rangeEnd)}${all?'':' · 학기 안'}`});
+      return;
+    }
     /* 회차: 그 주 안에서만 다시 고르게 한다 */
     if(act==='occmove'||act==='occadd'){
       const mtid=t.dataset.mtid, evid=t.dataset.evid;
