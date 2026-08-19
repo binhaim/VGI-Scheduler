@@ -42,9 +42,14 @@ exceptions/{xid}     { mid, title, type(conference|travel|vacation|personal|othe
 projects/{pid}       { name, members:{mid:true}, ts }
 meetings/{mtid}      { title, type, participants:{mid:true}, durationMin, rangeStart, rangeEnd,
                        projectId, location, description, status:'planning'|'confirmed',
+                       recurrence:{freq:'weekly', interval:1|2, until:"YYYY-MM-DD"}|null,
                        confirmedEventId?, confirmedStart?, confirmedEnd?, ts }
 events/{evid}        { title, type, start(ms), end(ms), participants:{mid:true},
-                       projectId, location, meetingId?, ts }
+                       projectId, location, meetingId?, ts,
+                       seriesId?,          ← 이 회차가 속한 미팅 id (= mtid)
+                       seriesDate?,        ← 원래 회차 날짜 "YYYY-MM-DD"
+                       status?,            ← 'cancelled' (삭제 대신 취소 표시)
+                       moved?, extra? }    ← 그 주만 시간 조정됨 / 그 주에 추가된 회차
 ```
 
 **설계 결정과 이유**
@@ -52,7 +57,26 @@ events/{evid}        { title, type, start(ms), end(ms), participants:{mid:true},
 - availability는 프로젝트가 아닌 **member × semester** 전역 데이터.
 - meeting(조율 단위)과 event(확정된 캘린더 항목)를 분리. 확정 시 event가 생성되고 meeting이 참조.
 - project는 스케줄링 단위가 아니라 **선택적 분류 메타데이터**.
-- 반복 미팅은 미구현 — v2에서 events에 rrule성 필드({freq:'weekly', until})를 추가하고 클라이언트에서 전개하는 방향으로 확장.
+- **반복 미팅은 "회차 실체화" 방식** (2026-08-19 구현). rrule을 화면에서 가상 전개하지 않고, 확정 시 반복 종료일까지 회차를
+  실제 event로 만들어 `seriesId`로 묶는다. 이유: 가용성 엔진·캘린더·PNG/ICS·구독 피드(Node)가 전부 event 단위라
+  가상 전개를 택하면 같은 전개 로직을 브라우저와 `calendar/generate.js` 양쪽에 이중으로 유지해야 한다.
+  회차 수는 학기당 미팅 하나에 15~20개 수준이라 데이터량은 문제되지 않는다.
+  - 그 주만 시간 변경 = 그 event 하나 수정(`moved:true`), 그 주에 회차 추가 = event 추가(`extra:true`),
+    학회 등으로 쉬는 주 = `status:'cancelled'` (캘린더에 회색 취소선으로 남고 되돌릴 수 있음).
+  - **취소된 회차는 일정으로 치지 않는다** — `isLive(ev)` 헬퍼로 `memberBusy`/`locationBusy`에서 제외.
+    구독 피드는 지우지 않고 `STATUS:CANCELLED`로 내보내야 구독자 캘린더에서도 사라진다
+    (`calendar/generate.js`의 지문에도 `cancelled`가 들어가야 피드가 갱신됨).
+  - 미팅 정보를 고치면 `syncSeries()`가 **아직 오지 않은 회차**에만 제목·참여자·장소를 반영하고,
+    반복 종료일을 늘렸으면 마지막 회차 뒤로 이어서 만든다. 시간은 회차별 관리라 건드리지 않는다.
+  - **후보 격자(`findMeetingSlots` → `viewMeetingFind`)는 "빈 칸 목록"이 아니라 배치표**다. 칸마다
+    `{kind:'free'|'ev'|'na'|'past'}`를 담아 기존 일정(제목·타입색)·참여자 불가 이유·지난 시간을 그대로 그린다.
+    `ok[분]`은 **길이가 통째로 들어가는 시작 칸**만 담으므로 90분 미팅은 30분 칸 3개가 연속으로 비어야 후보가 된다.
+    선택하면 길이만큼 칸이 함께 칠해진다.
+  - 회차 시간 변경은 그 주(일~토)로 좁힌 격자에서 하고, 원래 시간대는 `find.cur`로 주황색 표시된다.
+    격자 위 `길이` 선택으로 그 회차만 길이를 조정할 수 있다(`openFind`가 같은 조건으로 재계산).
+  - **미팅 순서 바꾸기**: 시간 변경 격자에서 다른 미팅 칸을 누르면 `swapOccurrence(a,b)`로 두 일정의
+    시작 시각을 맞바꾼다(각자 길이는 유지). 길이가 달라 서로 겹치게 되면 거부한다.
+  - 미구현(다음 단계): 학회 기간 일괄 취소(유지할 미팅만 체크), 주간 조정 보드(그 주 회차를 한 화면에서 재배치).
 
 ## 4. 코드 구조 (단일 index.html, vanilla JS)
 

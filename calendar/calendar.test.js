@@ -147,6 +147,31 @@ test("구독 가능한 .ics를 만들고 종일/시각 일정을 정확히 표�
   assert.match(result.body, /UID:ev-ev_lab@vgi-scheduler/);
 });
 
+test("취소된 회차는 STATUS:CANCELLED로 나가고 지문도 달라진다", () => {
+  const cancelled = {
+    ...events,
+    ev_lab: { ...events.ev_lab, seriesId: "mt_lab", status: "cancelled" },
+  };
+  const result = buildMemberCalendar({
+    ...data,
+    events: cancelled,
+    mid: "m_habin",
+    feedUrl: "https://example.com/calendars/m_habin.ics",
+    generatedAt: Date.UTC(2026, 8, 1, 0, 0),
+  });
+  assert.ok(result);
+  /* 지우지 않고 취소 상태로 내보내야 구독자 캘린더에서도 사라진다 */
+  assert.equal(result.eventCount, 3);
+  assert.match(result.body, /STATUS:CANCELLED/);
+  assert.match(result.body, /X-MICROSOFT-CDO-BUSYSTATUS:FREE/);
+
+  const items = buildMemberItems({ ...data, events: cancelled, mid: "m_habin" }).items;
+  const lab = items.find((item) => item.id === "ev_lab");
+  assert.equal(lab.cancelled, true);
+  const before = buildMemberItems({ ...data, mid: "m_habin" }).items.find((item) => item.id === "ev_lab");
+  assert.equal(before.cancelled, false);
+});
+
 test("일정이 없는 멤버도 빈 피드를 받는다", () => {
   const result = buildMemberCalendar({
     ...data,

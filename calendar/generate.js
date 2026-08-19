@@ -42,9 +42,10 @@ function memberFingerprint({ members, events, exceptions, projects, mid, fallbac
   const selection = buildMemberItems({ members, events, exceptions, projects, mid });
   const payload = {
     displayName: selection.displayName || fallbackDisplayName,
-    items: selection.items.map(({ uid, allDay, start, end, summary, description, location }) => ({
+    items: selection.items.map(({ uid, allDay, cancelled, start, end, summary, description, location }) => ({
       uid,
       allDay,
+      cancelled,
       start,
       end,
       summary,

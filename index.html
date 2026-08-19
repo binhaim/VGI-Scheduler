@@ -1048,8 +1048,99 @@
   .mt-actions{display:flex;gap:6px;flex-wrap:wrap;align-items:center;}
   .mt-cands{margin-top:12px;padding-top:12px;border-top:1px dashed var(--line-2);
     display:flex;flex-direction:column;gap:8px;}
-  .mt-cand-day{display:flex;align-items:center;gap:6px;flex-wrap:wrap;font-size:13px;}
-  .mt-cand-day b{min-width:70px;font-family:'Bricolage Grotesque',sans-serif;}
+  .mt-find-head{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:12.5px;color:var(--muted);}
+  .mtg-wrap{overflow:auto;max-height:60vh;border:1px solid var(--line);border-radius:var(--r-sm);
+    background:var(--surface);overscroll-behavior:contain;-webkit-overflow-scrolling:touch;}
+  .mtg{border-collapse:collapse;width:100%;}
+  .mtg th{position:sticky;top:0;z-index:3;background:var(--ink);color:var(--paper);
+    font-family:'Bricolage Grotesque',sans-serif;font-size:11.5px;font-weight:700;
+    padding:5px 6px;text-align:center;white-space:nowrap;}
+  .mtg th.mtg-corner{left:0;z-index:4;width:56px;font-size:10.5px;font-weight:600;opacity:.8;}
+  .mtg th.mtg-day em{display:block;font-style:normal;font-size:10px;font-weight:600;opacity:.8;margin-top:1px;}
+  .mtg th.mtg-day.sat{color:#9ac8e8;} .mtg th.mtg-day.sun{color:#e89c92;}
+  .mtg td.mtg-rh{position:sticky;left:0;z-index:2;background:var(--paper);
+    font-family:ui-monospace,Menlo,monospace;font-size:10.5px;color:var(--muted-2);
+    padding:0 7px;text-align:right;border-right:1px solid var(--line);
+    border-bottom:1px solid var(--line);white-space:nowrap;}
+  .mtg td.mtg-rh.hour{color:var(--ink);font-weight:700;}
+  .mtg tr:hover td.mtg-rh{color:var(--ink);background:var(--line);}
+  .mtg td.mtg-cell{padding:0;min-width:62px;height:26px;
+    border-right:1px solid var(--line);border-bottom:1px solid var(--line);}
+  .mtg.wide td.mtg-cell{min-width:104px;}
+  .mtg-in{display:flex;align-items:center;justify-content:center;height:100%;width:100%;
+    font-size:10px;line-height:1.1;padding:0 4px;white-space:nowrap;overflow:hidden;
+    text-overflow:ellipsis;color:var(--ink-2);}
+  .mtg-in.mark{font-weight:700;}
+  /* 칸 상태 */
+  .mtg td.mtg-cell.na{background:repeating-linear-gradient(45deg,
+    transparent 0 5px,rgba(0,0,0,.045) 5px 6px);}
+  .mtg td.mtg-cell.past{background:rgba(0,0,0,.035);}
+  .mtg td.mtg-cell.ev{background:var(--pcs);box-shadow:inset 3px 0 0 var(--pc);}
+  .mtg td.mtg-cell.ev .mtg-in{color:var(--pc);font-weight:700;}
+  .mtg td.mtg-cell.cur{background:var(--accent-soft);box-shadow:inset 3px 0 0 var(--accent);}
+  .mtg td.mtg-cell.cur .mtg-in{color:var(--accent-d);}
+  .mtg td.mtg-cell.sel{background:var(--ok);}
+  .mtg td.mtg-cell.sel .mtg-in{color:#fff;}
+  .mtg td.mtg-cell.swap-on{outline:2px solid var(--ink);outline-offset:-2px;}
+  .mtg-btn{display:block;width:100%;height:26px;border:0;padding:0;cursor:pointer;
+    background:var(--ok-soft);box-shadow:inset 0 0 0 1px rgba(45,117,73,.18);}
+  .mtg-btn:hover{background:rgba(45,117,73,.28);}
+  .mtg td.mtg-cell.sel .mtg-btn{background:transparent;box-shadow:none;}
+  .mtg td.mtg-cell.cur .mtg-btn{background:transparent;box-shadow:none;}
+  .mtg-ev{display:block;width:100%;height:26px;border:0;padding:0;background:transparent;cursor:pointer;}
+  .mtg td.mtg-cell.swap:hover{outline:2px dashed var(--ink);outline-offset:-2px;}
+  .mtg-btn:focus-visible,.mtg-ev:focus-visible{outline:2px solid var(--ink);outline-offset:-2px;}
+  /* 격자 위/아래 줄 */
+  .mtg-mode{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;
+    font-size:12.5px;color:var(--muted);}
+  .mtg-mode b{color:var(--ink);font-family:'Bricolage Grotesque',sans-serif;font-size:13px;}
+  .mtg-mode-r{display:flex;align-items:center;gap:8px;}
+  .mtg-dur{display:flex;align-items:center;gap:5px;font-size:12px;color:var(--muted);}
+  .mtg-dur select{padding:5px 8px;font-size:12px;}
+  .mtg-legend{display:inline-flex;align-items:center;gap:6px;margin-left:8px;font-size:11px;color:var(--muted-2);}
+  .mtg-legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-left:6px;
+    vertical-align:-1px;}
+  .mtg-legend i:first-child{margin-left:0;}
+  .lg-ok{background:var(--ok-soft);box-shadow:inset 0 0 0 1px rgba(45,117,73,.35);}
+  .lg-ev{background:hsla(215,48%,42%,.2);box-shadow:inset 2px 0 0 hsl(215,48%,42%);}
+  .lg-na{background:repeating-linear-gradient(45deg,transparent 0 3px,rgba(0,0,0,.16) 3px 4px);
+    box-shadow:inset 0 0 0 1px var(--line-2);}
+  .lg-cur{background:var(--accent-soft);box-shadow:inset 2px 0 0 var(--accent);}
+  .mtg-bar{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;
+    border:1px solid var(--line);border-radius:var(--r-sm);background:var(--paper);
+    padding:9px 12px;font-size:13px;min-height:44px;}
+  .mtg-bar.on{border-color:var(--ok);background:var(--ok-soft);}
+  .mtg-bar.on.swap{border-color:var(--ink);background:var(--paper);}
+  .mtg-pick{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;}
+  .mtg-pick b{font-family:'Bricolage Grotesque',sans-serif;font-size:14px;}
+  .mtg-pick .sub{font-size:12px;color:var(--muted);margin:0;}
+  .mtg-arrow{font-size:15px;color:var(--muted);}
+  .mtg-bar-act{display:flex;gap:6px;flex-wrap:wrap;}
+  .btn.sm[disabled]{opacity:.45;cursor:not-allowed;}
+  @media(pointer:coarse){.mtg-btn,.mtg-ev{height:34px;} .mtg td.mtg-cell{min-width:64px;height:34px;}}
+
+  /* 회차 목록 */
+  .occ-wrap{margin-top:12px;padding-top:12px;border-top:1px dashed var(--line-2);
+    display:flex;flex-direction:column;gap:4px;}
+  .occ-head{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;
+    font-size:12.5px;color:var(--muted);margin-bottom:2px;}
+  .occ-head b{color:var(--ink);}
+  .occ-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:13px;
+    padding:6px 8px;border:1px solid var(--line);border-radius:var(--r-sm);background:var(--paper);}
+  .occ-row.off{opacity:.62;}
+  .occ-row.off .occ-when{text-decoration:line-through;}
+  .occ-row.past{opacity:.5;}
+  .occ-n{font-family:ui-monospace,Menlo,monospace;font-size:11px;color:var(--muted-2);
+    min-width:22px;text-align:right;}
+  .occ-when{font-family:'Bricolage Grotesque',sans-serif;font-weight:600;min-width:180px;}
+  .occ-tag{font-size:10.5px;font-weight:700;border-radius:999px;padding:2px 8px;white-space:nowrap;
+    background:var(--line);color:var(--ink-2);}
+  .occ-tag.add{background:var(--ok-soft);color:var(--ok);}
+  .occ-tag.off{background:var(--accent-soft);color:var(--accent-d);}
+  .occ-warn{font-size:11.5px;color:var(--accent-d);white-space:nowrap;}
+  .occ-act{display:flex;gap:4px;flex-wrap:wrap;margin-left:auto;}
+  .agg-event.ev-off{opacity:.5;}
+  .agg-event.ev-off .agg-event-song{text-decoration:line-through;}
   .x-type{font-size:10.5px;font-weight:700;color:#fff;background:var(--pc,var(--muted));
     border-radius:999px;padding:2px 8px;white-space:nowrap;flex-shrink:0;}
   .agg-event.x-event{opacity:.82;border-left-style:dashed;}
@@ -1095,7 +1186,9 @@ let state={
   avMember:'', avSemester:'',
   // Meetings 탭
   mtDraft:null,      // 새 미팅/수정 폼 {id?,title,...} | null
-  mtFind:null,       // {mtid, slots:[{s,e}], truncated} | null
+  mtFind:null,       // {mtid, rows:[분], days:[{ds,ok,n}], dur, total, truncated} | null
+  mtPick:null,       // 격자에서 고른 후보 {mtid, s, e} | null
+  occPast:{},        // {mtid:true} — 지난 회차까지 펼쳐 보기
   // 모달
   evEdit:null, xDraft:null, subscribeFor:null, showHelp:false,
 };
@@ -1129,6 +1222,9 @@ function parseTime(t){const [h,m]=t.split(':').map(Number);return h*60+(m||0);}
 const hm=ms=>{const d=new Date(ms);
   return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');};
 const overlap=(aS,aE,bS,bE)=>aS<bE&&bS<aE;
+const isLive=ev=>!!ev&&ev.status!=='cancelled';          // 취소된 회차는 일정으로 치지 않는다
+function addDays(ds,n){const d=new Date(ds+'T00:00:00');d.setDate(d.getDate()+n);return fmtDate(d);}
+function weekOf(ds){const st=addDays(ds,-wdOf(ds));return[st,addDays(st,6)];}   // 일~토
 const sortedIds=o=>Object.keys(o||{}).sort((a,b)=>(Number(o[a]?.ts)||0)-(Number(o[b]?.ts)||0)||a.localeCompare(b));
 
 /* ---------------- 도메인 상수 ---------------- */
@@ -1141,6 +1237,12 @@ const TYPE_HUE=Object.fromEntries(EVENT_TYPES.map(([k,,h])=>[k,h]));
 const EXC_TYPES=['conference','travel','vacation','personal','other'];
 const EXC_LABEL={conference:'학회',travel:'출장',vacation:'휴가',personal:'개인',other:'기타'};
 const typeColor=t=>`hsl(${TYPE_HUE[t]??0},48%,42%)`;
+const typeColorSoft=t=>`hsla(${TYPE_HUE[t]??0},48%,42%,.13)`;
+/* 반복 — 주 단위만 (interval 1=매주, 2=격주) */
+const RECUR_OPTS=[['','반복 없음'],['w1','매주'],['w2','격주']];
+const RECUR_LABEL={w1:'매주',w2:'격주'};
+const recurKey=mt=>mt?.recurrence?.freq==='weekly'?(Number(mt.recurrence.interval)===2?'w2':'w1'):'';
+const recurStepDays=k=>k==='w2'?14:7;
 
 /* ---------------- 설정/파생 ---------------- */
 const cfgSlot=()=>Number(state.settings.slotMinutes)||30;
@@ -1159,6 +1261,11 @@ function membersSorted(includeInactive){
     .sort((a,b)=>memberName(a).localeCompare(memberName(b),'ko'));
 }
 function projectName(pid){return pid?String(state.projects[pid]?.name||'(삭제된 프로젝트)'):'';}
+function defaultRecurUntil(){
+  const sem=state.semesters[activeSemesterId()];
+  if(sem?.endDate) return sem.endDate;
+  const d=new Date(); d.setDate(d.getDate()+84); return fmtDate(d);
+}
 function participantsOf(o){return Object.keys(o?.participants||{}).filter(mid=>o.participants[mid]);}
 function namesOf(mids){return mids.map(memberName).join(', ');}
 
@@ -1233,7 +1340,9 @@ function memberBusy(mid,s,e,opts={}){
   }
   for(const evid in state.events){
     if(evid===opts.ignoreEventId) continue;
+    if(opts.ignoreIds?.includes(evid)) continue;
     const ev=state.events[evid];
+    if(!isLive(ev)) continue;
     if(!ev.participants?.[mid]) continue;
     if(overlap(s,e,Number(ev.start),Number(ev.end))) return ev.title||'일정';
   }
@@ -1245,35 +1354,68 @@ function locationBusy(loc,s,e,ignoreEventId){
   for(const evid in state.events){
     if(evid===ignoreEventId) continue;
     const ev=state.events[evid];
+    if(!isLive(ev)) continue;
     if(String(ev.location||'').trim().toLocaleLowerCase('ko-KR')!==key) continue;
     if(overlap(s,e,Number(ev.start),Number(ev.end))) return ev.title||'일정';
   }
   return false;
 }
-/* 미팅 후보 시간 계산 — duration만큼 연속으로 전원+장소가 비어있는 시작 슬롯 */
-function findMeetingSlots(mt){
+/* 미팅 후보 시간 계산 — 날짜(열) x 슬롯(행) 격자.
+   칸마다 무엇이 막고 있는지(기존 일정 / 개인 불가 / 지난 시간)까지 담아 그대로 그릴 수 있게 한다. */
+const MT_MAX_DAYS=14;
+function findMeetingSlots(mt,opts={}){
   const mids=participantsOf(mt);
-  if(!mids.length) return {slots:[],truncated:false,error:'참여자를 먼저 선택하세요'};
-  const dur=Number(mt.durationMin)||60;
-  const step=cfgSlot()*60000;
+  const empty={rows:[],days:[],dur:0,slot:cfgSlot(),total:0,truncated:false};
+  if(!mids.length) return {...empty,error:'참여자를 먼저 선택하세요'};
+  const dur=Number(opts.dur||mt.durationMin)||60;
+  const slot=cfgSlot();
   const startMin=cfgDayStart()*60, endMin=cfgDayEnd()*60;
   const todayDs=fmtDate(new Date());
-  const from=mt.rangeStart>=todayDs?mt.rangeStart:todayDs;   // 과거는 제외
-  if(!mt.rangeEnd||from>mt.rangeEnd) return {slots:[],truncated:false,error:'검색 날짜 범위를 확인하세요'};
-  const slots=[]; let truncated=false;
-  outer:
-  for(const ds of dateList(from,mt.rangeEnd)){
+  const rangeStart=opts.from||mt.rangeStart, rangeEnd=opts.to||mt.rangeEnd;
+  const from=(opts.allDays||rangeStart>=todayDs)?rangeStart:todayDs;
+  if(!rangeEnd||from>rangeEnd) return {...empty,dur,error:'남은 날짜가 없습니다. 날짜 범위를 확인하세요'};
+  const maxDays=opts.maxDays||MT_MAX_DAYS;
+  const rows=[]; for(let m=startMin;m<endMin;m+=slot) rows.push(m);
+  const locKey=String(mt.location||'').trim().toLocaleLowerCase('ko-KR');
+  const now=Date.now();
+  const days=[]; let total=0, truncated=false;
+  for(const ds of dateList(from,rangeEnd)){
     const base=new Date(ds+'T00:00:00').getTime();
-    for(let m=startMin;m+dur<=endMin;m+=cfgSlot()){
-      const s=base+m*60000, e=s+dur*60000;
-      const blocked=mids.some(mid=>memberBusy(mid,s,e))||locationBusy(mt.location,s,e);
-      if(!blocked){
-        slots.push({s,e});
-        if(slots.length>=80){ truncated=true; break outer; }
+    const dayS=base+startMin*60000, dayE=base+endMin*60000;
+    /* 이 날 이 미팅과 부딪히는 일정만 미리 추린다 (참여자가 겹치거나 같은 장소) */
+    const evs=Object.keys(state.events).filter(id=>{
+      if(id===opts.ignoreEventId) return false;
+      const ev=state.events[id];
+      if(!isLive(ev)||!overlap(dayS,dayE,Number(ev.start),Number(ev.end))) return false;
+      return mids.some(mid=>ev.participants?.[mid])
+        ||(locKey&&String(ev.location||'').trim().toLocaleLowerCase('ko-KR')===locKey);
+    });
+    const cells={}; const ok={}; let n=0;
+    for(const m of rows){
+      const cs=base+m*60000, ce=cs+slot*60000;
+      const hit=evs.find(id=>overlap(cs,ce,Number(state.events[id].start),Number(state.events[id].end)));
+      if(hit){
+        const ev=state.events[hit], es=Number(ev.start), ee=Number(ev.end);
+        cells[m]={kind:'ev',evid:hit,title:ev.title||'일정',type:ev.type,s:es,e:ee,
+          head:es>=cs&&es<ce,mine:(ev.seriesId||ev.meetingId)===opts.mtid};
+        continue;
       }
+      if(cs<now){ cells[m]={kind:'past'}; continue; }
+      const who=mids.filter(mid=>memberBusy(mid,cs,ce,{ignoreEventId:opts.ignoreEventId}));
+      cells[m]=who.length?{kind:'na',who}:{kind:'free'};
     }
+    for(const m of rows){
+      if(m+dur>endMin) break;
+      let good=true;
+      for(let t=m;t<m+dur;t+=slot){ if(cells[t]?.kind!=='free'){good=false;break;} }
+      if(!good) continue;
+      ok[m]=base+m*60000; n++;
+    }
+    if(!n&&!opts.allDays) continue;
+    if(days.length>=maxDays){ truncated=true; break; }
+    days.push({ds,base,cells,ok,n}); total+=n;
   }
-  return {slots,truncated,error:null};
+  return {rows,days,dur,slot,total,truncated,maxDays,error:null};
 }
 
 /* ---------------- 쓰기 동작 ---------------- */
@@ -1319,37 +1461,148 @@ function saveMeetingDraft(){
   if(!participantsOf(d).length){toast('참여자를 한 명 이상 선택하세요');return;}
   if(!d.rangeStart||!d.rangeEnd||d.rangeStart>d.rangeEnd){toast('후보 날짜 범위를 확인하세요');return;}
   const id=d.id||genId('mt');
+  const rk=d.recur||'';
+  if(rk&&!d.recurUntil){toast('반복 종료일을 정해주세요');return;}
   const obj={title,type:d.type||'meeting',participants:d.participants||{},
     durationMin:Number(d.durationMin)||60,rangeStart:d.rangeStart,rangeEnd:d.rangeEnd,
     projectId:d.projectId||'',location:String(d.location||'').trim(),
     description:String(d.description||'').trim(),
+    recurrence:rk?{freq:'weekly',interval:rk==='w2'?2:1,until:d.recurUntil}:null,
     status:d.status||'planning',ts:d.ts||Date.now()};
   FB.update(R('meetings/'+id),obj).catch(wErr);
-  state.mtDraft=null; state.mtFind=null; render();
+  if(d.id&&d.status==='confirmed') syncSeries(d.id,obj);
+  state.mtDraft=null; state.mtFind=null; state.mtPick=null; render();
+}
+/* 미팅 정보를 고치면 아직 오지 않은 회차에도 반영한다 (시간은 회차별로 관리하므로 건드리지 않음) */
+function syncSeries(mtid,obj){
+  const now=Date.now();
+  const ids=occurrencesOf(mtid);
+  ids.forEach(evid=>{
+    if(Number(state.events[evid].start)<now) return;
+    FB.update(R('events/'+evid),{title:obj.title,type:obj.type,participants:obj.participants,
+      projectId:obj.projectId,location:obj.location}).catch(wErr);
+  });
+  /* 반복 종료일을 늘렸으면 모자란 회차를 이어서 만든다 */
+  const rk=recurKey(obj); if(!rk||!ids.length) return;
+  const last=state.events[ids[ids.length-1]];
+  const dur=Number(last.end)-Number(last.start);
+  const endMs=new Date(obj.recurrence.until+'T23:59:59').getTime();
+  const stepMs=recurStepDays(rk)*86400000;
+  let t=Number(last.start)+stepMs, made=0;
+  while(t<=endMs&&made<60){
+    const evid=genId('ev');
+    FB.set(R('events/'+evid),occEvent(obj,mtid,t,t+dur)).catch(wErr);
+    t+=stepMs; made++;
+  }
+  if(made) toast(`회차 ${made}개를 이어서 만들었습니다`);
 }
 function deleteMeeting(mtid){
   const mt=state.meetings[mtid]; if(!mt) return;
-  if(!confirm(`'${mt.title}' 미팅을 삭제할까요?${mt.confirmedEventId?'\n확정된 캘린더 일정도 함께 삭제됩니다.':''}`)) return;
-  if(mt.confirmedEventId) FB.remove(R('events/'+mt.confirmedEventId)).catch(wErr);
+  const n=occurrencesOf(mtid).length;
+  if(!confirm(`'${mt.title}' 미팅을 삭제할까요?${n?`\n등록된 회차 ${n}개도 함께 삭제됩니다.`:''}`)) return;
+  removeSeriesEvents(mtid);
   FB.remove(R('meetings/'+mtid)).catch(wErr);
   if(state.mtFind?.mtid===mtid) state.mtFind=null;
+  if(state.mtPick?.mtid===mtid) state.mtPick=null;
   render();
+}
+/* ---- 회차(시리즈) ---- */
+function occEvent(mt,mtid,s,e,extra){
+  return {title:mt.title,type:mt.type||'meeting',start:s,end:e,
+    participants:mt.participants||{},projectId:mt.projectId||'',location:mt.location||'',
+    meetingId:mtid,seriesId:mtid,seriesDate:fmtDate(new Date(s)),ts:Date.now(),...extra};
+}
+/* 한 미팅에 속한 회차 id — 시작 시각 순 */
+function occurrencesOf(mtid){
+  return Object.keys(state.events)
+    .filter(id=>(state.events[id]?.seriesId||state.events[id]?.meetingId)===mtid)
+    .sort((a,b)=>Number(state.events[a].start)-Number(state.events[b].start));
+}
+function removeSeriesEvents(mtid){
+  occurrencesOf(mtid).forEach(id=>FB.remove(R('events/'+id)).catch(wErr));
+}
+/* 첫 회차 시각 + 반복 규칙 → 회차 시작 시각 목록 */
+function seriesStarts(firstMs,mt){
+  const k=recurKey(mt); if(!k) return [firstMs];
+  const untilDs=mt.recurrence?.until;
+  if(!untilDs) return [firstMs];
+  const end=new Date(untilDs+'T23:59:59').getTime();
+  const stepMs=recurStepDays(k)*86400000;
+  const out=[]; let t=firstMs, guard=0;
+  while(t<=end&&guard<80){ out.push(t); t+=stepMs; guard++; }
+  return out.length?out:[firstMs];
 }
 function confirmMeeting(mtid,s,e){
   const mt=state.meetings[mtid]; if(!mt) return;
-  if(!confirm(`'${mt.title}'을(를) ${mdLabel(fmtDate(new Date(s)))} (${WD[new Date(s).getDay()]}) ${hm(s)}~${hm(e)}로 확정할까요?`)) return;
-  const evid=genId('ev');
-  FB.set(R('events/'+evid),{title:mt.title,type:mt.type||'meeting',start:s,end:e,
-    participants:mt.participants||{},projectId:mt.projectId||'',location:mt.location||'',
-    meetingId:mtid,ts:Date.now()}).catch(wErr);
-  FB.update(R('meetings/'+mtid),{status:'confirmed',confirmedEventId:evid,confirmedStart:s,confirmedEnd:e}).catch(wErr);
-  state.mtFind=null; toast('미팅이 확정되어 Lab Calendar에 등록되었습니다');
+  const dur=e-s;
+  const starts=seriesStarts(s,mt);
+  let first=null;
+  starts.forEach(st=>{
+    const evid=genId('ev'); if(!first) first=evid;
+    FB.set(R('events/'+evid),occEvent(mt,mtid,st,st+dur)).catch(wErr);
+  });
+  FB.update(R('meetings/'+mtid),{status:'confirmed',confirmedEventId:first,
+    confirmedStart:starts[0],confirmedEnd:starts[0]+dur}).catch(wErr);
+  state.mtFind=null; state.mtPick=null;
+  toast(starts.length>1?`회차 ${starts.length}개가 Lab Calendar에 등록되었습니다`
+                       :'미팅이 확정되어 Lab Calendar에 등록되었습니다');
 }
 function unconfirmMeeting(mtid){
   const mt=state.meetings[mtid]; if(!mt) return;
-  if(!confirm(`'${mt.title}' 확정을 취소할까요? 캘린더 일정이 삭제되고 다시 조율 상태가 됩니다.`)) return;
-  if(mt.confirmedEventId) FB.remove(R('events/'+mt.confirmedEventId)).catch(wErr);
+  const n=occurrencesOf(mtid).length;
+  if(!confirm(`'${mt.title}' 확정을 취소할까요? 등록된 회차 ${n}개가 삭제되고 다시 조율 상태가 됩니다.`)) return;
+  removeSeriesEvents(mtid);
   FB.update(R('meetings/'+mtid),{status:'planning',confirmedEventId:null,confirmedStart:null,confirmedEnd:null}).catch(wErr);
+  state.mtFind=null; state.mtPick=null;
+}
+/* 회차 하나만 옮기기 — 시리즈의 나머지는 그대로 */
+function moveOccurrence(evid,s,e){
+  const ev=state.events[evid]; if(!ev) return;
+  FB.update(R('events/'+evid),{start:s,end:e,moved:true}).catch(wErr);
+  const mtid=ev.seriesId||ev.meetingId;
+  if(mtid&&state.meetings[mtid]?.confirmedEventId===evid)
+    FB.update(R('meetings/'+mtid),{confirmedStart:s,confirmedEnd:e}).catch(wErr);
+  state.mtFind=null; state.mtPick=null; toast('회차 시간을 옮겼습니다');
+}
+/* 그 주에 회차 하나 더 (학회 전 몰아서 2~3회 하는 경우) */
+function addOccurrence(mtid,s,e){
+  const mt=state.meetings[mtid]; if(!mt) return;
+  const evid=genId('ev');
+  FB.set(R('events/'+evid),occEvent(mt,mtid,s,e,{extra:true})).catch(wErr);
+  state.mtFind=null; state.mtPick=null; toast('회차를 추가했습니다');
+}
+/* 두 일정의 시작 시각을 맞바꾼다 — 각자 길이는 그대로 (미팅 순서 바꾸기) */
+function swapOccurrence(aid,bid){
+  const a=state.events[aid], b=state.events[bid]; if(!a||!b||aid===bid) return;
+  const aS=Number(a.start),aE=Number(a.end),bS=Number(b.start),bE=Number(b.end);
+  const na={start:bS,end:bS+(aE-aS)}, nb={start:aS,end:aS+(bE-bS)};
+  if(overlap(na.start,na.end,nb.start,nb.end)){
+    toast('길이가 달라 서로 겹칩니다. 시간을 직접 골라주세요'); return;
+  }
+  [[aid,na],[bid,nb]].forEach(([id,v])=>{
+    FB.update(R('events/'+id),{...v,moved:true}).catch(wErr);
+    const ev=state.events[id], mtid=ev.seriesId||ev.meetingId;
+    if(mtid&&state.meetings[mtid]?.confirmedEventId===id)
+      FB.update(R('meetings/'+mtid),{confirmedStart:v.start,confirmedEnd:v.end}).catch(wErr);
+  });
+  state.mtFind=null; state.mtPick=null;
+  toast(`'${a.title}' ↔ '${b.title}' 시간을 맞바꿨습니다`);
+}
+/* 취소는 삭제가 아니라 표시 — 캘린더에 회색으로 남고 되돌릴 수 있다 */
+function setOccCancel(evid,on){
+  if(!state.events[evid]) return;
+  FB.update(R('events/'+evid),{status:on?'cancelled':null}).catch(wErr);
+  toast(on?'회차를 취소했습니다':'취소를 되돌렸습니다');
+}
+function deleteOccurrence(evid){
+  const ev=state.events[evid]; if(!ev) return;
+  const when=`${mdLabel(fmtDate(new Date(Number(ev.start))))} ${hm(Number(ev.start))}`;
+  if(!confirm(`${when} 회차를 완전히 삭제할까요?`)) return;
+  const mtid=ev.seriesId||ev.meetingId;
+  FB.remove(R('events/'+evid)).catch(wErr);
+  if(mtid&&state.meetings[mtid]&&occurrencesOf(mtid).filter(id=>id!==evid).length===0)
+    FB.update(R('meetings/'+mtid),{status:'planning',confirmedEventId:null,
+      confirmedStart:null,confirmedEnd:null}).catch(wErr);
 }
 function saveEventEdit(){
   const d=state.evEdit; if(!d) return;
@@ -1368,8 +1621,9 @@ function saveEventEdit(){
 function deleteEvent(evid){
   const ev=state.events[evid]; if(!ev) return;
   if(!confirm(`'${ev.title}' 일정을 삭제할까요?`)) return;
-  if(ev.meetingId&&state.meetings[ev.meetingId])
-    FB.update(R('meetings/'+ev.meetingId),{status:'planning',confirmedEventId:null,confirmedStart:null,confirmedEnd:null}).catch(wErr);
+  const mtid=ev.seriesId||ev.meetingId;
+  if(mtid&&state.meetings[mtid]&&occurrencesOf(mtid).filter(id=>id!==evid).length===0)
+    FB.update(R('meetings/'+mtid),{status:'planning',confirmedEventId:null,confirmedStart:null,confirmedEnd:null}).catch(wErr);
   FB.remove(R('events/'+evid)).catch(wErr);
   state.evEdit=null; render();
 }
@@ -1514,8 +1768,8 @@ function viewCalendar(){
     if(inMonth) monthCount+=items.length;
     const html=items.map(o=>{
       if(o.kind==='ev'){
-        const title=`${esc(o.title)} · ${hm(Number(o.start))}–${hm(Number(o.end))}`+(o.location?` · ${esc(o.location)}`:'')+` · ${namesOf(participantsOf(o))}`;
-        return `<button class="agg-event" style="--pc:${typeColor(o.type)}" data-act="evedit" data-evid="${o.id}" title="${title} · 클릭하여 수정">
+        const title=`${o.status==='cancelled'?'[취소] ':''}${esc(o.title)} · ${hm(Number(o.start))}–${hm(Number(o.end))}`+(o.location?` · ${esc(o.location)}`:'')+` · ${namesOf(participantsOf(o))}`;
+        return `<button class="agg-event${o.status==='cancelled'?' ev-off':''}" style="--pc:${typeColor(o.type)}" data-act="evedit" data-evid="${o.id}" title="${title}${o.status==='cancelled'?' · 취소됨':''} · 클릭하여 수정">
           <span class="agg-event-time">${hm(Number(o.start))}~${hm(Number(o.end))}</span>
           <span class="agg-event-song-row"><span class="agg-event-song">${esc(o.title)}</span>${o.location?`<span class="agg-ext">${esc(o.location)}</span>`:''}</span>
         </button>`;
@@ -1575,6 +1829,7 @@ function viewMeetingForm(){
   const durOpts=[30,60,90,120,150,180].map(v=>`<option value="${v}" ${Number(d.durationMin)===v?'selected':''}>${v}분</option>`).join('');
   const projOpts='<option value="">프로젝트 없음</option>'+sortedIds(state.projects).map(pid=>
     `<option value="${pid}" ${d.projectId===pid?'selected':''}>${esc(projectName(pid))}</option>`).join('');
+  const recurOpts=RECUR_OPTS.map(([k,l])=>`<option value="${k}" ${(d.recur||'')===k?'selected':''}>${l}</option>`).join('');
   return `<div class="card" id="mtForm">
     <div class="section-label">${d.id?'미팅 수정':'새 미팅'}</div>
     <div class="agg-edit-grid" style="margin-top:12px">
@@ -1585,6 +1840,8 @@ function viewMeetingForm(){
       <div class="agg-edit-field"><label for="mtFrom">후보 시작일</label><input id="mtFrom" type="date" value="${esc(d.rangeStart||'')}" data-act="mtfield" data-field="rangeStart"></div>
       <div class="agg-edit-field"><label for="mtTo">후보 종료일</label><input id="mtTo" type="date" value="${esc(d.rangeEnd||'')}" data-act="mtfield" data-field="rangeEnd"></div>
       <div class="agg-edit-field"><label for="mtLoc">장소 (선택)</label><input id="mtLoc" type="text" value="${esc(d.location||'')}" placeholder="예: 세미나실" data-act="mtfield" data-field="location"></div>
+      <div class="agg-edit-field"><label for="mtRecur">반복</label><select id="mtRecur" data-act="mtrecur">${recurOpts}</select></div>
+      <div class="agg-edit-field"><label for="mtUntil">반복 종료일</label><input id="mtUntil" type="date" value="${esc(d.recurUntil||'')}" ${d.recur?'':'disabled'} data-act="mtfield" data-field="recurUntil"></div>
       <div class="agg-edit-field full"><label>참여자</label><div class="grp-row">${memberChips(d.participants,'mtmember')}</div></div>
       <div class="agg-edit-field full"><label for="mtDesc">메모 (선택)</label><input id="mtDesc" type="text" value="${esc(d.description||'')}" data-act="mtfield" data-field="description"></div>
     </div>
@@ -1596,44 +1853,207 @@ function viewMeetingForm(){
     </div>
   </div>`;
 }
+const minLabel=m=>String(Math.floor(m/60)).padStart(2,'0')+':'+String(m%60).padStart(2,'0');
+/* 후보 시간 격자 — 날짜(열) x 시작시각(행), 칸을 골라서 확정 */
+const FIND_MODE={
+  first:{title:'첫 회차(기본 시간) 고르기',apply:'이 시간으로 확정'},
+  move: {title:'회차 시간 변경',apply:'이 시간으로 옮기기'},
+  extra:{title:'이 주에 회차 추가',apply:'이 시간에 회차 추가'},
+};
+const DUR_OPTS=[30,60,90,120,150,180];
+/* 후보 격자 — 기존 일정 배치까지 같이 보여주고, 고른 시간은 길이만큼 통째로 표시한다 */
+function viewMeetingFind(mtid,find){
+  const mt=state.meetings[mtid];
+  const mode=FIND_MODE[find.mode]||FIND_MODE.first;
+  const week=find.mode==='move'||find.mode==='extra';
+  const durSel=week?`<label class="mtg-dur">길이
+    <select data-act="mtdur">${DUR_OPTS.map(v=>`<option value="${v}" ${v===find.dur?'selected':''}>${v}분</option>`).join('')}</select></label>`:'';
+  const modeBar=`<div class="mtg-mode">
+      <span><b>${mode.title}</b>${find.scope?' · '+esc(find.scope):''}</span>
+      <span class="mtg-mode-r">${durSel}<button class="btn ghost sm" data-act="mtfindclose">닫기</button></span>
+    </div>`;
+  if(find.error) return `<div class="mt-cands">${modeBar}<div class="note">${esc(find.error)}</div></div>`;
+  if(!find.days.length) return `<div class="mt-cands">${modeBar}<div class="note">조건에 맞는 시간이 없습니다. 날짜 범위를 넓히거나 참여자·길이를 조정해보세요.</div></div>`;
+  const pick=state.mtPick&&state.mtPick.mtid===mtid?state.mtPick:null;
+  const wide=find.days.length<=7;
+  const head='<tr><th class="mtg-corner">시간</th>'+find.days.map(d=>{
+    const wd=wdOf(d.ds);
+    return `<th class="mtg-day${wd===0?' sun':wd===6?' sat':''}">${mdLabel(d.ds)}<em>${WD[wd]}</em></th>`;
+  }).join('')+'</tr>';
+  const slotMs=find.slot*60000;
+  const body=find.rows.map(m=>{
+    const cells=find.days.map(d=>{
+      const c=d.cells[m]||{kind:'free'};
+      const cs=d.base+m*60000, ce=cs+slotMs;
+      const cand=d.ok[m];
+      const inPick=!!(pick&&pick.s!=null&&cs>=pick.s&&cs<pick.e);
+      const inCur=!!(find.cur&&cs>=find.cur.s&&cs<find.cur.e);
+      const cls=['mtg-cell'];
+      if(c.kind!=='free') cls.push(c.kind);
+      if(cand) cls.push('cand');
+      if(inCur) cls.push('cur');
+      if(inPick) cls.push('sel');
+      if(c.kind==='ev'&&pick?.swap===c.evid) cls.push('swap-on');
+      const when=`${mdLabel(d.ds)} (${WD[wdOf(d.ds)]}) ${hm(cs)}`;
+      let inner='';
+      if(inPick&&cs===pick.s) inner=`<span class="mtg-in mark">✓ ${hm(pick.s)}~${hm(pick.e)}</span>`;
+      else if(inCur&&cs===find.cur.s) inner=`<span class="mtg-in mark">현재 ${hm(find.cur.s)}~${hm(find.cur.e)}</span>`;
+      else if(c.kind==='ev'&&c.head&&wide) inner=`<span class="mtg-in">${esc(c.title)}</span>`;
+      if(cand){
+        const e=cand+find.dur*60000;
+        const lbl=`${when}~${hm(e)} (${find.dur}분)`;
+        return `<td class="${cls.join(' ')}"><button type="button" class="mtg-btn" data-act="mtpick"
+          data-mtid="${mtid}" data-s="${cand}" data-e="${e}" title="${lbl}" aria-label="${lbl}"
+          aria-pressed="${inPick&&cs===pick.s}">${inner}</button></td>`;
+      }
+      if(c.kind==='ev'){
+        const range=`${hm(c.s)}~${hm(c.e)}`;
+        /* 시간 변경 중이라면 다른 미팅을 눌러 자리를 맞바꿀 수 있다 */
+        const swappable=find.mode==='move'&&c.evid!==find.evid;
+        const tip=`${esc(c.title)} · ${range}${swappable?' · 클릭하면 이 일정과 자리 바꾸기':''}`;
+        const style=`--pc:${typeColor(c.type)};--pcs:${typeColorSoft(c.type)}`;
+        return swappable
+          ?`<td class="${cls.join(' ')} swap" style="${style}"><button type="button" class="mtg-ev"
+              data-act="mtswap" data-mtid="${mtid}" data-evid="${c.evid}" title="${tip}" aria-label="${tip}">${inner}</button></td>`
+          :`<td class="${cls.join(' ')}" style="${style}" title="${tip}">${inner}</td>`;
+      }
+      const tip=c.kind==='na'?`${esc(namesOf(c.who))} 불가`:c.kind==='past'?'지난 시간':`${find.dur}분이 들어가지 않습니다`;
+      return `<td class="${cls.join(' ')}" title="${when} · ${tip}">${inner}</td>`;
+    }).join('');
+    return `<tr><td class="mtg-rh${m%60===0?' hour':''}">${minLabel(m)}</td>${cells}</tr>`;
+  }).join('');
+  return `<div class="mt-cands">
+    ${modeBar}
+    <div class="mt-find-head">전원 가능한 ${find.dur}분 자리 <b>${find.total}</b>개 · ${find.days.length}일${find.truncated?` (가능한 날이 많아 앞쪽 ${find.maxDays}일만 표시)`:''}
+      <span class="mtg-legend"><i class="lg-ok"></i>가능<i class="lg-ev"></i>기존 일정<i class="lg-na"></i>참여자 불가${find.cur?'<i class="lg-cur"></i>현재 시간':''}</span></div>
+    <div class="mtg-wrap scroll"><table class="mtg${wide?' wide':''}"><thead>${head}</thead><tbody>${body}</tbody></table></div>
+    ${viewFindBar(mtid,find,pick,mode)}
+  </div>`;
+}
+/* 격자 아래 확인 바 — 고른 시간(또는 자리 바꿀 상대)을 글자로 다시 보여준다 */
+function viewFindBar(mtid,find,pick,mode){
+  const mt=state.meetings[mtid];
+  if(pick&&pick.swap){
+    const a=state.events[find.evid], b=state.events[pick.swap];
+    if(!a||!b) return '<div class="mtg-bar"><div class="mtg-pick sub">일정이 바뀌었습니다. 다시 골라주세요.</div></div>';
+    const aS=Number(a.start),aE=Number(a.end),bS=Number(b.start),bE=Number(b.end);
+    const na={s:bS,e:bS+(aE-aS)}, nb={s:aS,e:aS+(bE-bS)};
+    const clash=overlap(na.s,na.e,nb.s,nb.e);
+    const ignoreIds=[find.evid,pick.swap];
+    const warn=[...participantsOf(a).filter(mid=>memberBusy(mid,na.s,na.e,{ignoreIds})),
+                ...participantsOf(b).filter(mid=>memberBusy(mid,nb.s,nb.e,{ignoreIds}))];
+    const uniq=[...new Set(warn)];
+    return `<div class="mtg-bar on swap">
+      <div class="mtg-pick">
+        <b>${esc(a.title)}</b> ${whenLabel(aS,aE)} <span class="mtg-arrow">↔</span>
+        <b>${esc(b.title)}</b> ${whenLabel(bS,bE)}
+        <span class="sub">바꾼 뒤 · ${esc(a.title)} ${whenLabel(na.s,na.e)} / ${esc(b.title)} ${whenLabel(nb.s,nb.e)}</span>
+        ${clash?'<span class="occ-warn">⚠ 길이가 달라 서로 겹칩니다 — 시간을 직접 골라주세요</span>'
+               :uniq.length?`<span class="occ-warn">⚠ 바꾸면 ${esc(namesOf(uniq))} 불가</span>`:''}
+      </div>
+      <div class="mtg-bar-act">
+        <button class="btn ghost sm" data-act="mtpickclear">선택 해제</button>
+        <button class="btn sm" data-act="mtswapdo" data-a="${find.evid}" data-b="${pick.swap}" ${clash?'disabled':''}>자리 바꾸기</button>
+      </div>
+    </div>`;
+  }
+  if(!pick) return `<div class="mtg-bar"><div class="mtg-pick sub">초록색 칸을 눌러 시간을 고르세요${find.mode==='move'?' · 다른 미팅 칸을 누르면 그 미팅과 자리를 바꿉니다':''}.</div></div>`;
+  let note='';
+  if(find.mode==='first'){
+    const rk=recurKey(mt);
+    if(rk){
+      /* 첫 회차만 보고 확정하면 뒤 회차가 겹치는 걸 나중에 알게 된다 — 미리 세어 알려준다 */
+      const starts=seriesStarts(pick.s,mt), span=pick.e-pick.s, mids=participantsOf(mt);
+      const clash=starts.filter(st=>mids.some(mid=>memberBusy(mid,st,st+span))||locationBusy(mt.location,st,st+span)).length;
+      note=` · ${RECUR_LABEL[rk]} 회차 ${starts.length}개 생성`+(clash?` (그중 ${clash}개는 겹침 — 만든 뒤 회차별로 조정)`:'');
+    }
+  }else if(find.cur){
+    note=` · 원래 ${whenLabel(find.cur.s,find.cur.e)}에서 옮김`;
+  }
+  return `<div class="mtg-bar on">
+      <div class="mtg-pick"><b>${whenLabel(pick.s,pick.e)}</b>
+        <span class="sub">${(pick.e-pick.s)/60000}분${mt?.location?' · '+esc(mt.location):''}${note}</span></div>
+      <div class="mtg-bar-act">
+        <button class="btn ghost sm" data-act="mtpickclear">선택 해제</button>
+        <button class="btn sm" data-act="mtapply" data-mtid="${mtid}" data-s="${pick.s}" data-e="${pick.e}">${mode.apply}</button>
+      </div>
+    </div>`;
+}
+const whenLabel=(s,e)=>`${mdLabel(fmtDate(new Date(s)))} (${WD[new Date(s).getDay()]}) ${hm(s)}~${hm(e)}`;
+/* 회차 목록 — 회차별 시간 변경 / 취소 / 그 주에 추가 */
+function viewOccurrences(mtid){
+  const ids=occurrencesOf(mtid);
+  if(!ids.length) return '<div class="note">등록된 회차가 없습니다. 확정을 취소하고 다시 잡아주세요.</div>';
+  const todayMs=new Date().setHours(0,0,0,0);
+  const past=ids.filter(id=>Number(state.events[id].start)<todayMs);
+  const cancelled=ids.filter(id=>!isLive(state.events[id]));
+  const upcoming=ids.filter(id=>Number(state.events[id].start)>=todayMs&&isLive(state.events[id]));
+  const showPast=!!state.occPast[mtid];
+  const shown=showPast?ids:ids.filter(id=>Number(state.events[id].start)>=todayMs);
+  const rows=shown.map(id=>{
+    const ev=state.events[id];
+    const s=Number(ev.start), e=Number(ev.end);
+    const off=!isLive(ev), isPast=s<todayMs;
+    const busy=(off||isPast)?[]:participantsOf(ev).filter(mid=>memberBusy(mid,s,e,{ignoreEventId:id}));
+    return `<div class="occ-row${off?' off':''}${isPast?' past':''}">
+      <span class="occ-n">${ids.indexOf(id)+1}</span>
+      <span class="occ-when">${mdLabel(fmtDate(new Date(s)))} (${WD[new Date(s).getDay()]}) ${hm(s)}~${hm(e)}</span>
+      ${ev.extra?'<span class="occ-tag add">추가 회차</span>':''}
+      ${ev.moved?'<span class="occ-tag">시간 조정됨</span>':''}
+      ${off?'<span class="occ-tag off">취소됨</span>':''}
+      ${busy.length?`<span class="occ-warn" title="${esc(namesOf(busy))} 불가">⚠ ${esc(namesOf(busy))} 불가</span>`:''}
+      <span class="occ-act">
+        ${isPast?''
+          :off?`<button class="btn ghost sm" data-act="occrestore" data-evid="${id}">되돌리기</button>`
+              :`<button class="btn ghost sm" data-act="occmove" data-mtid="${mtid}" data-evid="${id}">시간 변경</button>
+                <button class="btn ghost sm" data-act="occadd" data-mtid="${mtid}" data-evid="${id}" title="이 주에 회차를 하나 더 잡습니다">+ 이 주 추가</button>
+                <button class="btn ghost sm" data-act="occcancel" data-evid="${id}">취소</button>`}
+        <button class="btn danger sm" data-act="occdelete" data-evid="${id}">삭제</button>
+      </span>
+    </div>`;
+  }).join('')||'<div class="note">남은 회차가 없습니다.</div>';
+  return `<div class="occ-wrap">
+    <div class="occ-head">
+      <span>회차 <b>${ids.length}</b>개 · 남은 회차 ${upcoming.length}개${cancelled.length?` · 취소 ${cancelled.length}개`:''}</span>
+      ${past.length?`<button class="btn ghost sm" data-act="occpast" data-mtid="${mtid}">${showPast?'지난 회차 숨기기':`지난 회차 ${past.length}개 보기`}</button>`:''}
+    </div>
+    ${rows}
+  </div>`;
+}
 function viewMeetingCard(mtid){
   const mt=state.meetings[mtid];
   const mids=participantsOf(mt);
   const confirmed=mt.status==='confirmed';
   const find=state.mtFind&&state.mtFind.mtid===mtid?state.mtFind:null;
-  let findHtml='';
-  if(find){
-    if(find.error) findHtml=`<div class="note">${esc(find.error)}</div>`;
-    else if(!find.slots.length) findHtml='<div class="note">조건에 맞는 시간이 없습니다. 날짜 범위를 넓히거나 참여자·길이를 조정해보세요.</div>';
-    else{
-      const byDay={};
-      find.slots.forEach(sl=>{const ds=fmtDate(new Date(sl.s));(byDay[ds]=byDay[ds]||[]).push(sl);});
-      findHtml='<div class="mt-cands">'+Object.keys(byDay).map(ds=>
-        `<div class="mt-cand-day"><b>${mdLabel(ds)} (${WD[wdOf(ds)]})</b>${byDay[ds].map(sl=>
-          `<button class="btn ghost sm" data-act="mtconfirm" data-mtid="${mtid}" data-s="${sl.s}" data-e="${sl.e}">${hm(sl.s)}~${hm(sl.e)}</button>`).join('')}</div>`).join('')
-        +(find.truncated?'<div class="note">가능한 시간이 많아 앞쪽 80개까지만 표시했습니다.</div>':'')+'</div>';
-    }
-  }
+  const findHtml=find?viewMeetingFind(mtid,find):'';
+  const rk=recurKey(mt);
+  const occIds=confirmed?occurrencesOf(mtid):[];
+  const nextId=occIds.find(id=>Number(state.events[id].start)>=Date.now()&&isLive(state.events[id]));
+  const nextEv=nextId?state.events[nextId]:null;
   return `<div class="card mt-card">
     <div class="mt-head">
       <div>
         <div class="mt-title"><span class="mt-type" style="--pc:${typeColor(mt.type)}">${TYPE_LABEL[mt.type]||'미팅'}</span><b>${esc(mt.title)}</b>${mt.projectId?`<span class="sub"> · ${esc(projectName(mt.projectId))}</span>`:''}</div>
         <div class="sub" style="margin-top:4px">
           ${confirmed
-            ?`✅ <b>${mdLabel(fmtDate(new Date(mt.confirmedStart)))} (${WD[new Date(mt.confirmedStart).getDay()]}) ${hm(mt.confirmedStart)}~${hm(mt.confirmedEnd)}</b>${mt.location?` · ${esc(mt.location)}`:''}`
-            :`${Number(mt.durationMin)||60}분 · 후보 ${mdLabel(mt.rangeStart)}~${mdLabel(mt.rangeEnd)}${mt.location?` · ${esc(mt.location)}`:''}`}
+            ?(rk
+              ?`🔁 <b>${RECUR_LABEL[rk]} ${WD[new Date(mt.confirmedStart).getDay()]} ${hm(mt.confirmedStart)}~${hm(mt.confirmedEnd)}</b> · ${mdLabel(mt.recurrence.until)}까지${nextEv?` · 다음 ${mdLabel(fmtDate(new Date(Number(nextEv.start))))} (${WD[new Date(Number(nextEv.start)).getDay()]}) ${hm(Number(nextEv.start))}`:' · 남은 회차 없음'}${mt.location?` · ${esc(mt.location)}`:''}`
+              :`✅ <b>${mdLabel(fmtDate(new Date(mt.confirmedStart)))} (${WD[new Date(mt.confirmedStart).getDay()]}) ${hm(mt.confirmedStart)}~${hm(mt.confirmedEnd)}</b>${mt.location?` · ${esc(mt.location)}`:''}`)
+            :`${Number(mt.durationMin)||60}분${rk?` · ${RECUR_LABEL[rk]}`:''} · 후보 ${mdLabel(mt.rangeStart)}~${mdLabel(mt.rangeEnd)}${mt.location?` · ${esc(mt.location)}`:''}`}
           · ${esc(namesOf(mids))}
         </div>
         ${mt.description?`<div class="sub" style="margin-top:2px">${esc(mt.description)}</div>`:''}
       </div>
       <div class="mt-actions">
         ${confirmed
-          ?`<button class="btn ghost sm" data-act="mtunconfirm" data-mtid="${mtid}">확정 취소</button>`
+          ?`<button class="btn ghost sm" data-act="mtedit" data-mtid="${mtid}">수정</button>
+            <button class="btn ghost sm" data-act="mtunconfirm" data-mtid="${mtid}">확정 취소</button>`
           :`<button class="btn sm" data-act="mtfind" data-mtid="${mtid}">🔍 가능 시간 찾기</button>
             <button class="btn ghost sm" data-act="mtedit" data-mtid="${mtid}">수정</button>`}
         <button class="btn danger sm" data-act="mtdelete" data-mtid="${mtid}">삭제</button>
       </div>
     </div>
+    ${confirmed?viewOccurrences(mtid):''}
     ${findHtml}
   </div>`;
 }
@@ -1878,7 +2298,9 @@ function viewHelp(){
         <div class="tut-section"><h3><span class="tut-num">3</span>출장·휴가·학회</h3>
           <p>특별한 일정이 생기면 <b>Availability</b> 탭에서 예외 일정으로 추가합니다. 해당 기간엔 미팅 계산에서 자동 제외되고 Lab Calendar에도 표시됩니다.</p></div>
         <div class="tut-section"><h3><span class="tut-num">4</span>미팅 잡기</h3>
-          <p><b>Meetings</b> 탭에서 새 미팅을 만들고 참여자·길이·후보 날짜 범위를 고른 뒤 <b>가능 시간 찾기</b>를 누르면, 반복 일정 + 예외 + 이미 확정된 일정을 모두 계산해 전원 가능한 시간을 보여줍니다. 시간을 누르면 확정되고 Lab Calendar에 등록됩니다.</p></div>
+          <p><b>Meetings</b> 탭에서 새 미팅을 만들고 참여자·길이·후보 날짜 범위를 고른 뒤 <b>가능 시간 찾기</b>를 누르면, 반복 일정 + 예외 + 이미 확정된 일정을 모두 계산해 전원 가능한 시간을 보여줍니다. 날짜×시간 격자에서 초록색 칸을 고르면 아래에 그 시간대가 표시되고, ‘이 시간으로 확정’을 누르면 Lab Calendar에 등록됩니다.</p>
+          <p><b>반복 미팅</b>을 ‘매주/격주’로 만들면 반복 종료일까지 회차가 한 번에 만들어집니다. 확정된 미팅 카드의 <b>회차 목록</b>에서 그 주만 <b>시간 변경</b>하거나, 학회 등으로 <b>취소</b>(캘린더에 회색 취소선으로 남고 되돌릴 수 있음)하거나, <b>+ 이 주 추가</b>로 같은 주에 회차를 하나 더 잡을 수 있습니다. 참여자가 겹치는 회차에는 ⚠ 표시가 붙습니다.</p>
+          <p><b>회차 시간 변경</b>을 누르면 그 주 전체가 격자로 열립니다. <b>현재 시간대</b>가 주황색으로 표시되고, 그 주에 이미 잡힌 일정들도 함께 보이므로 배치를 보고 옮길 수 있습니다. 위쪽 <b>길이</b>를 바꾸면 그 회차만 길이를 조정할 수 있고, 고른 시간은 길이만큼(예: 90분이면 칸 3개) 통째로 표시됩니다. <b>다른 미팅 칸을 누르면 두 미팅의 시간이 서로 맞바뀝니다</b> — 미팅 순서를 바꿀 때 쓰세요.</p></div>
         <div class="tut-section"><h3><span class="tut-num">5</span>Lab Calendar</h3>
           <p>모든 확정 일정과 출장·휴가가 한 달력에 표시됩니다. 멤버·프로젝트·종류로 필터링하고, PNG/.ics로 내보내거나 개인 구독 링크를 쓸 수 있어요. 날짜 칸을 누르면 일정을 직접 추가할 수도 있습니다.</p></div>
       </div>
@@ -1948,6 +2370,7 @@ function exportCalICS(){
       lines.push(`SUMMARY:${escapeICS(o.title)}`);
       lines.push(`DESCRIPTION:${escapeICS('참여자: '+namesOf(participantsOf(o))+(o.location?'\n장소: '+o.location:''))}`);
       if(o.location) lines.push(`LOCATION:${escapeICS(o.location)}`);
+      if(o.status==='cancelled') lines.push('STATUS:CANCELLED');
     }
     lines.push('END:VEVENT');
   });
@@ -1958,6 +2381,15 @@ function exportCalICS(){
   link.href=url; link.download=`vgi-lab-${state.calMonth}.ics`; link.click();
   setTimeout(()=>URL.revokeObjectURL(url),0);
   toast('.ics 파일을 받았습니다');
+}
+
+/* 후보 격자 열기 — 같은 조건으로 다시 계산할 수 있게 조건도 함께 담아 둔다 */
+function openFind(mtid,cfg={}){
+  const mt=state.meetings[mtid]; if(!mt) return;
+  const opts={from:cfg.from,to:cfg.to,dur:cfg.dur,maxDays:cfg.maxDays,allDays:cfg.allDays,
+    ignoreEventId:cfg.mode==='move'?cfg.evid:undefined,mtid};
+  state.mtFind={mtid,...cfg,...opts,...findMeetingSlots(mt,opts)};
+  state.mtPick=null; render();
 }
 
 /* ---------------- 이벤트 바인딩 ---------------- */
@@ -2012,7 +2444,8 @@ function bindEvents(){
       const today=fmtDate(new Date());
       const in2w=new Date(); in2w.setDate(in2w.getDate()+14);
       state.mtDraft={title:'',type:'meeting',durationMin:60,participants:{},
-        rangeStart:today,rangeEnd:fmtDate(in2w),projectId:'',location:'',description:''};
+        rangeStart:today,rangeEnd:fmtDate(in2w),projectId:'',location:'',description:'',
+        recur:'',recurUntil:defaultRecurUntil()};
       render();return;
     }
     if(act==='mtcancel'){state.mtDraft=null;render();return;}
@@ -2026,18 +2459,56 @@ function bindEvents(){
     }
     if(act==='mtedit'){
       const mt=state.meetings[t.dataset.mtid]; if(!mt)return;
-      state.mtDraft={id:t.dataset.mtid,...mt,participants:{...(mt.participants||{})}};
-      state.mtFind=null; render();
+      state.mtDraft={id:t.dataset.mtid,...mt,participants:{...(mt.participants||{})},
+        recur:recurKey(mt),recurUntil:mt.recurrence?.until||defaultRecurUntil()};
+      state.mtFind=null; state.mtPick=null; render();
       $('mtForm')?.scrollIntoView({behavior:'smooth'});
       return;
     }
     if(act==='mtdelete'){deleteMeeting(t.dataset.mtid);return;}
     if(act==='mtfind'){
-      const mt=state.meetings[t.dataset.mtid]; if(!mt)return;
-      state.mtFind={mtid:t.dataset.mtid,...findMeetingSlots(mt)};
+      const mtid=t.dataset.mtid, mt=state.meetings[mtid]; if(!mt)return;
+      openFind(mtid,{mode:'first',scope:`후보 ${mdLabel(mt.rangeStart)}~${mdLabel(mt.rangeEnd)}`});
+      return;
+    }
+    if(act==='mtfindclose'){state.mtFind=null;state.mtPick=null;render();return;}
+    /* 회차: 그 주 안에서만 다시 고르게 한다 */
+    if(act==='occmove'||act==='occadd'){
+      const mtid=t.dataset.mtid, evid=t.dataset.evid;
+      const mt=state.meetings[mtid], ev=state.events[evid]; if(!mt||!ev)return;
+      const [ws,we]=weekOf(fmtDate(new Date(Number(ev.start))));
+      const move=act==='occmove';
+      const dur=move?(Number(ev.end)-Number(ev.start))/60000:(Number(mt.durationMin)||60);
+      openFind(mtid,{mode:move?'move':'extra',evid,from:ws,to:we,dur,maxDays:7,allDays:true,
+        scope:`${mdLabel(ws)}~${mdLabel(we)} 주`,
+        cur:move?{s:Number(ev.start),e:Number(ev.end)}:null});
+      return;
+    }
+    if(act==='occcancel'){setOccCancel(t.dataset.evid,true);return;}
+    if(act==='occrestore'){setOccCancel(t.dataset.evid,false);return;}
+    if(act==='occdelete'){deleteOccurrence(t.dataset.evid);return;}
+    if(act==='occpast'){
+      const k=t.dataset.mtid;
+      state.occPast={...state.occPast,[k]:!state.occPast[k]}; render();return;
+    }
+    if(act==='mtpick'){
+      state.mtPick={mtid:t.dataset.mtid,s:Number(t.dataset.s),e:Number(t.dataset.e)};
       render();return;
     }
-    if(act==='mtconfirm'){confirmMeeting(t.dataset.mtid,Number(t.dataset.s),Number(t.dataset.e));return;}
+    if(act==='mtswap'){
+      state.mtPick={mtid:t.dataset.mtid,swap:t.dataset.evid};
+      render();return;
+    }
+    if(act==='mtswapdo'){swapOccurrence(t.dataset.a,t.dataset.b);return;}
+    if(act==='mtpickclear'){state.mtPick=null;render();return;}
+    if(act==='mtapply'){
+      const s=Number(t.dataset.s), e=Number(t.dataset.e), mtid=t.dataset.mtid;
+      const mode=state.mtFind?.mode||'first';
+      if(mode==='move') moveOccurrence(state.mtFind.evid,s,e);
+      else if(mode==='extra') addOccurrence(mtid,s,e);
+      else confirmMeeting(mtid,s,e);
+      return;
+    }
     if(act==='mtunconfirm'){unconfirmMeeting(t.dataset.mtid);return;}
     /* Members / Semesters */
     if(act==='memadd'){addMember();return;}
@@ -2104,6 +2575,8 @@ function bindEvents(){
     if($('mtFrom'))d.rangeStart=$('mtFrom').value;
     if($('mtTo'))d.rangeEnd=$('mtTo').value;
     if($('mtLoc'))d.location=$('mtLoc').value;
+    if($('mtRecur'))d.recur=$('mtRecur').value;
+    if($('mtUntil'))d.recurUntil=$('mtUntil').value;
     if($('mtDesc'))d.description=$('mtDesc').value;
   }
   function syncXDraft(){
@@ -2131,6 +2604,15 @@ function bindEvents(){
     else if(act==='setfield'){FB.update(R('settings'),{[t.dataset.field]:Number(v)}).catch(wErr);}
     else if(act==='projname'){FB.update(R('projects/'+t.dataset.pid),{name:v.trim()||'이름 없음'}).catch(wErr);}
     else if(act==='mtfield'&&state.mtDraft){state.mtDraft[t.dataset.field]=t.type==='number'?Number(v):v;}
+    else if(act==='mtdur'&&state.mtFind){
+      const f=state.mtFind;
+      openFind(f.mtid,{...f,dur:Number(v)||60});
+    }
+    else if(act==='mtrecur'&&state.mtDraft){
+      syncMtDraft(); state.mtDraft.recur=v;
+      if(v&&!state.mtDraft.recurUntil) state.mtDraft.recurUntil=defaultRecurUntil();
+      render();
+    }
     else if(act==='evfield'&&state.evEdit){state.evEdit[t.dataset.field]=v;}
     else if(act==='evdt'&&state.evEdit){
       const f=$('evFrom'),to=$('evTo');

@@ -105,6 +105,7 @@ function eventItem({ evid, event, members, projects, mid }) {
     id: evid,
     uid: `ev-${evid}@vgi-scheduler`,
     allDay: false,
+    cancelled: event.status === "cancelled",
     start,
     end,
     summary: project ? `${title} · ${project}` : title,
@@ -123,6 +124,7 @@ function exceptionItem({ xid, exception, mid }) {
     kind: "x",
     id: xid,
     uid: `x-${xid}@vgi-scheduler`,
+    cancelled: false,
     summary,
     description,
     location: "",
@@ -210,8 +212,9 @@ export function buildMemberCalendar({
       description: item.description,
       location: item.location || null,
       url: SITE_URL,
-      status: ICalEventStatus.CONFIRMED,
-      busystatus: ICalEventBusyStatus.BUSY,
+      /* 취소된 회차도 내보낸다 — 구독자 캘린더에서 자동으로 지워지도록 */
+      status: item.cancelled ? ICalEventStatus.CANCELLED : ICalEventStatus.CONFIRMED,
+      busystatus: item.cancelled ? ICalEventBusyStatus.FREE : ICalEventBusyStatus.BUSY,
     });
   }
 
