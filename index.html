@@ -1144,14 +1144,14 @@
     padding:3px 2px 1px;}
   .pz-item{display:flex;align-items:center;gap:7px;padding:7px 9px;border-radius:var(--r-sm);
     cursor:grab;user-select:none;-webkit-user-select:none;touch-action:pan-y;
-    background:var(--pc,var(--ink));color:#fff;font-size:12.5px;font-weight:700;
+    background:var(--pcb,var(--line));color:var(--pc,var(--ink));font-size:12.5px;font-weight:700;
     font-family:'Bricolage Grotesque',sans-serif;}
   .pz-item:active{cursor:grabbing;}
   .pz-grip{opacity:.55;font-size:11px;flex-shrink:0;}
   .pz-item .pz-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
   .pz-item .pz-name em{display:block;font-style:normal;font-size:10.5px;font-weight:600;opacity:.85;}
   .pz-item select.pz-dur{padding:2px 3px;font-size:11px;border-radius:6px;border:0;
-    background:rgba(255,255,255,.28);color:#fff;flex-shrink:0;}
+    background:rgba(255,255,255,.5);color:var(--pc,var(--ink));flex-shrink:0;}
   .pz-item.done{background:var(--paper);color:var(--pc,var(--ink));
     box-shadow:inset 0 0 0 1.5px var(--pc,var(--ink));}
   .pz-item.done select.pz-dur{background:var(--pcs,var(--line));color:var(--pc,var(--ink));}
@@ -1161,6 +1161,18 @@
   .pz-x:hover{opacity:1;}
   .pz-empty{font-size:12px;color:var(--muted);padding:6px 4px;}
   .pz-hint{font-size:12.5px;color:var(--muted);display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+  /* 선택된 미팅 패널 — 무엇을 들고 있는지, 누가 참석하는지 */
+  .pz-cur{display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+    border:1px solid var(--line-2);border-radius:var(--r-sm);background:var(--pcs);
+    box-shadow:inset 4px 0 0 var(--pc);padding:8px 12px;}
+  .pz-cur-t{display:flex;flex-direction:column;gap:1px;min-width:0;flex:1;}
+  .pz-cur-t>b{font-family:'Bricolage Grotesque',sans-serif;font-size:14px;color:var(--pc);
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .pz-cur-sub{font-size:12px;color:var(--ink-2);}
+  .pz-cur-sub b{font-weight:700;}
+  .pz-cur-p{font-size:12px;color:var(--muted);}
+  .pz-cur-hint{font-size:11.5px;color:var(--muted-2);max-width:180px;text-align:right;}
+  @media(max-width:700px){.pz-cur-hint{display:none;}}
   /* 끌고 다니는 블록 고스트 — 초록 칸 위에서는 그 자리에 스냅 */
   /* 고스트는 transform 으로만 움직인다 — left/top 은 매 프레임 레이아웃을 다시 잡는다.
      자유 이동엔 transition 을 두지 않는다(커서보다 늦게 따라와 '랙'처럼 보임). 스냅될 때만 짧게. */
@@ -1188,7 +1200,7 @@
     font-family:'Bricolage Grotesque',sans-serif;}
   #pzgrid .pz-fill:active{cursor:grabbing;}
   #pzgrid .pz-fill.static{cursor:default;opacity:.72;}
-  #pzgrid .pz-fill:hover:not(.static){background:var(--pc);color:#fff;}
+  #pzgrid .pz-fill:hover:not(.static){background:var(--pcb,var(--pc));color:var(--pc,#fff);}
   #pzgrid .pz-ft{font-size:9.5px;font-weight:600;opacity:.75;line-height:1;}
   #pzgrid .pz-fn{font-size:11px;font-weight:700;line-height:1.15;white-space:nowrap;
     overflow:hidden;text-overflow:ellipsis;max-width:100%;}
@@ -1394,6 +1406,15 @@ const TYPE_HUE=Object.fromEntries(EVENT_TYPES.map(([k,,h])=>[k,h]));
 const EXC_TYPES=['conference','travel','vacation','personal','other'];
 const EXC_LABEL={conference:'학회',travel:'출장',vacation:'휴가',personal:'개인',other:'기타'};
 const typeColor=t=>`hsl(${TYPE_HUE[t]??0},48%,42%)`;
+/* 미팅마다 다른 색 — 등록 순서에 황금각(137.5°)을 곱해 고르게 벌린다.
+   첫 미팅은 기존 '미팅' 파랑(215°)에서 시작해 낯설지 않게. */
+function meetingHue(mtid){
+  const i=sortedIds(state.meetings).indexOf(mtid);
+  return i<0?(TYPE_HUE.meeting??215):Math.round(215+i*137.508)%360;
+}
+const meetingColor=mtid=>`hsl(${meetingHue(mtid)},42%,37%)`;        // 글자·레일용 진한 톤
+const meetingColorPastel=mtid=>`hsl(${meetingHue(mtid)},62%,82%)`;  // 블록 바탕 파스텔
+const meetingColorSoft=mtid=>`hsla(${meetingHue(mtid)},58%,66%,.20)`; // 옅은 틴트
 const typeColorSoft=t=>`hsla(${TYPE_HUE[t]??0},48%,42%,.13)`;
 /* 반복 — 주 단위만 (interval 1=매주, 2=격주) */
 const RECUR_OPTS=[['','반복 없음'],['w1','매주'],['w2','격주']];
@@ -2792,7 +2813,7 @@ function viewPuzzleGrid(){
           const tip=g.ids.map(id=>{const q=b.placed[id],m0=state.meetings[id]||{};
             return `${esc(m0.title||'')} ${hm(q.s)}~${hm(q.e)}`;}).join(' · ')+' · 끌어서 옮기기';
           return `<td class="mtg-cell blk${pick===id0?' cur':''}" rowspan="${g.span}"
-            style="--pc:${typeColor(mt0.type)};--pcs:${typeColorSoft(mt0.type)}">
+            style="--pc:${meetingColor(id0)};--pcb:${meetingColorPastel(id0)};--pcs:${meetingColorSoft(id0)}">
             <button type="button" class="pz-fill" data-act="batchpick" data-mtid="${id0}" data-pz="${id0}"
               title="${tip}" aria-label="${tip}"><span class="pz-ft">${hm(pl.s)}~${hm(pl.e)}${on?' ✓':''}</span>
               <span class="pz-fn">${esc(mt0.title||'')}${more?` +${more}`:''}</span></button></td>`;
@@ -2841,7 +2862,7 @@ function viewBatchCard(){
       durChoices(dur).map(v=>`<option value="${v}" ${v===dur?'selected':''}>${v}분</option>`).join('')}</select>`;
     return `<div class="pz-item${pl?' done':''}${pick===id?' pick':''}" data-pz="${id}"
       data-act="batchpick" data-mtid="${id}" role="button" tabindex="0"
-      style="--pc:${typeColor(mt.type)};--pcs:${typeColorSoft(mt.type)}"
+      style="--pc:${meetingColor(id)};--pcb:${meetingColorPastel(id)};--pcs:${meetingColorSoft(id)}"
       title="${esc(namesOf(participantsOf(mt)))}${pl?` · ${whenLabel(pl.s,pl.e)}`:''} · 끌어서 놓기">
       <span class="pz-grip">⠿</span>
       <span class="pz-name">${mt.status==='confirmed'?'✓ ':''}${esc(mt.title)}${pl?`<em>${WD[new Date(pl.s).getDay()]} ${hm(pl.s)}~${hm(pl.e)}</em>`:''}</span>
@@ -2872,10 +2893,22 @@ function viewBatchCard(){
       <span class="occ-warn">${esc(f.why)}</span>
       <span class="occ-act"><button class="btn ghost sm" data-act="batchpick" data-mtid="${f.mtid}">직접 놓기</button></span></div>`;
   }).join('');
-  const hint=pick
-    ?`<div class="pz-hint"><b>${esc(state.meetings[pick].title)}</b><span>블록을 끌어오거나 초록 칸을 누르세요${b.placed[pick]?' — 이미 보드에 있는 블록은 끌어서 옮길 수 있어요':''}</span>
-       <button class="btn ghost sm" data-act="pzunpick">선택 해제</button></div>`
-    :`<div class="pz-hint">왼쪽 블록을 <b>끌어서</b> 시간표에 놓으세요. 누르면 들어갈 수 있는 칸이 초록색으로 표시됩니다.</div>`;
+  let hint;
+  if(pick){
+    const mt=state.meetings[pick], pl=b.placed[pick], mids=participantsOf(mt), rk=recurKey(mt);
+    hint=`<div class="pz-cur" style="--pc:${meetingColor(pick)};--pcs:${meetingColorSoft(pick)}">
+      <div class="pz-cur-t">
+        <b>${esc(mt.title)}</b>
+        <span class="pz-cur-sub">${Number(mt.durationMin)||60}분${mt.location?' · '+esc(mt.location):''}${rk?' · '+RECUR_LABEL[rk]:''}
+          · ${pl?`<b>${WD[new Date(pl.s).getDay()]} ${hm(pl.s)}~${hm(pl.e)}</b>에 놓음`:'아직 안 놓음'}</span>
+        <span class="pz-cur-p">참석 ${mids.length}명 — ${esc(namesOf(mids))||'참여자 없음'}</span>
+      </div>
+      <span class="pz-cur-hint">블록을 끌어오거나 초록 칸을 누르세요${pl?' · 보드의 블록은 끌어서 옮길 수 있어요':''}</span>
+      <button class="btn ghost sm" data-act="pzunpick">선택 해제</button>
+    </div>`;
+  }else{
+    hint=`<div class="pz-hint">왼쪽 블록을 <b>끌어서</b> 시간표에 놓으세요. 누르면 들어갈 수 있는 칸이 초록색으로 표시됩니다.</div>`;
+  }
   return `<div class="card">
     <div class="card-head">
       <div><h2>🧩 퍼즐 배치</h2>
@@ -3767,7 +3800,9 @@ function bindEvents(){
     pzP.w=r.width; pzP.h=r.height*Math.max(1,Math.round(pzP.dur/cfgSlot()));
     pzGhost=document.createElement('div'); pzGhost.id='pz-ghost';
     pzGhost.style.width=pzP.w+'px'; pzGhost.style.height=pzP.h+'px';
-    pzGhost.style.background=typeColor(mt.type);
+    pzGhost.style.background=meetingColorPastel(pzP.id);
+    pzGhost.style.color=meetingColor(pzP.id);
+    pzGhost.style.boxShadow=`inset 0 0 0 1.5px ${meetingColor(pzP.id)}, 0 8px 22px rgba(0,0,0,.22)`;
     pzGhost.style.transform=`translate3d(${pzP.sx-pzP.w/2}px,${pzP.sy-12}px,0)`;
     pzGhost.innerHTML=`<span>${esc(mt.title)}</span><em>${pzP.dur}분</em>`;
     document.body.appendChild(pzGhost);

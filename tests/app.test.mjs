@@ -453,3 +453,77 @@ test("모든 탭과 보드/격자 상태가 예외 없이 렌더된다", () => {
   state.tab = "calendar"; state.calMode = "month";
   assert.doesNotThrow(() => app.doRender());
 });
+
+test("길이 선택지는 저장된 값을 그대로 보여준다 — 칸 단위의 배수가 아니어도", () => {
+  reset({ recur: null });
+  assert.ok(app.durChoices(40).includes(40));          // 30분 격자에서도 40분이 남는다
+  assert.deepEqual(app.durChoices(40).slice(0, 3), [30, 40, 60]);
+  state.settings.slotMinutes = 20;
+  assert.deepEqual(app.durChoices(40).slice(0, 3), [20, 40, 60]);
+});
+
+test("회차 시간 변경 격자의 길이도 그 회차의 실제 길이를 보여주고, 바꾸면 그대로 적용된다", () => {
+  reset({ recur: null });
+  state.meetings.mt1.durationMin = 40;                 // 30분 배수가 아닌 길이
+  app.confirmMeeting("mt1", D(WED, 14), D(WED, 14, 40));
+  const evid = app.occurrencesOf("mt1")[0];
+  assert.equal(state.events[evid].end - state.events[evid].start, 40 * 60000);
+
+  /* 열었을 때 40분이 선택돼 있어야 한다 (선택지에 없으면 30분으로 보이고 조용히 바뀐다) */
+  app.openFind("mt1", { mode: "move", evid, from: WS, to: WE, dur: 40, maxDays: 7,
+    allDays: true, inCal: "cal", scope: "주", cur: { s: D(WED, 14), e: D(WED, 14, 40) } });
+  assert.equal(state.mtFind.dur, 40);
+  let html = app.viewCalWeek(new Date()).html;
+  assert.match(html, /<option value="40" selected>40분<\/option>/);
+  assert.match(html, /현재 14:00~14:40/);
+
+  /* 길이를 60분으로 바꾸면 후보가 다시 잡히고, 옮기면 60분으로 저장된다 */
+  app.openFind("mt1", { ...state.mtFind, dur: 60 });
+  assert.equal(state.mtFind.dur, 60);
+  assert.match(app.viewCalWeek(new Date()).html, /<option value="60" selected>60분<\/option>/);
+  const start = state.mtFind.days.find((d) => d.ds === WED).ok[16 * 60];
+  assert.ok(start, "16:00 시작이 후보여야 한다");
+  app.moveOccurrence(evid, start, start + 60 * 60000);
+  assert.equal(state.events[evid].end - state.events[evid].start, 60 * 60000);
+  assert.equal(new Date(state.events[evid].start).getHours(), 16);
+});
+
+/* ---------------- 퍼즐 보드: 미팅별 색 + 선택 패널 ---------------- */
+test("미팅마다 다른 색이 배정되고 등록 순서에 따라 안정적이다", () => {
+  reset({ recur: null });
+  state.meetings.mt2 = { ...state.meetings.mt1, title: "B", ts: 2 };
+  state.meetings.mt3 = { ...state.meetings.mt1, title: "C", ts: 3 };
+  const hues = ["mt1", "mt2", "mt3"].map((id) => app.meetingHue(id));
+  assert.equal(new Set(hues).size, 3);                          // 서로 다르다
+  assert.equal(hues[0], 215);                                    // 첫 미팅은 기존 파랑
+  const min = Math.min(...[[0,1],[0,2],[1,2]].map(([a,b]) => {
+    const d = Math.abs(hues[a] - hues[b]); return Math.min(d, 360 - d); }));
+  assert.ok(min >= 60, `색상 간격이 좁다: ${hues} (최소 ${min}°)`);
+  assert.equal(app.meetingHue("mt2"), hues[1]);                  // 다시 계산해도 같다
+});
+
+test("트레이·보드 블록·선택 패널이 미팅 색을 쓰고, 패널에 참석 인원이 나온다", () => {
+  reset({ recur: null });
+  state.meetings.mt2 = { ...state.meetings.mt1, title: "논문 리딩",
+    participants: { m2: true }, ts: 2 };
+  app.confirmMeeting("mt1", D(WED, 14), D(WED, 15));
+  app.openBatch();
+  state.batch.pick = "mt1";
+  const html = app.viewBatchCard();
+  const c1 = app.meetingColor("mt1"), c2 = app.meetingColor("mt2");
+  assert.ok(html.includes(`--pc:${c1}`));                        // mt1 색 (트레이/보드/패널)
+  assert.ok(html.includes(`--pc:${c2}`));                        // mt2 색
+  assert.notEqual(c1, c2);
+  /* 파스텔 바탕은 밝고(80%대), 글자 톤은 어둡다(30%대) — 대비가 유지된다 */
+  assert.ok(html.includes(`--pcb:${app.meetingColorPastel("mt1")}`));
+  assert.match(app.meetingColorPastel("mt1"), /,82%\)$/);
+  assert.match(c1, /,37%\)$/);
+  /* 선택 패널: 무엇을 들고 있고 누가 오는지 */
+  assert.match(html, /pz-cur/);
+  assert.match(html, /참석 2명 — 오경준, 박경문/);
+  assert.match(html, /에 놓음/);                                  // 이미 보드에 있는 위치
+  state.batch.pick = "mt2";
+  assert.match(app.viewBatchCard(), /참석 1명 — 이태영/);
+  assert.match(app.viewBatchCard(), /아직 안 놓음/);
+  state.batch = null;
+});
