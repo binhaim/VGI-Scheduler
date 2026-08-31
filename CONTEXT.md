@@ -33,7 +33,7 @@
 ## 3. 데이터 모델 (RTDB, 전부 `vgi/` 아래)
 
 ```
-settings/            { activeSemester, slotMinutes(30), dayStart(9), dayEnd(21) }
+settings/            { activeSemester, slotMinutes(20 — 20/30/60 선택), dayStart(9), dayEnd(21) }
 members/{mid}        { name, email, role, active, ts }
 semesters/{sid}      { name, startDate:"YYYY-MM-DD", endDate, ts }
 availability/{sid}/{mid}/d{0..6}/{HH:MM} = true     ← 주간 반복 "불가" 슬롯 (d+요일번호, 일=0)
@@ -89,6 +89,41 @@ events/{evid}        { title, type, start(ms), end(ms), participants:{mid:true},
     `noClamp:true`로 전체를 보면 학기 밖 날짜는 헤더 `학기밖` + 빗금으로 구분하고 `outTotal`로 따로 센다.
     반복 불가 시간을 입력하지 않은 참여자(`noAvail`)도 이름으로 경고한다 — 그 사람은 늘 가능으로 계산되기 때문.
     주간 뷰도 보고 있는 주가 학기 밖이면 같은 배너를 띄운다.
+  - **퍼즐 배치 보드** (2026-08-28 구현. 같은 날 '자동 배치 → 결과 확인' 초안을 퍼즐 UI로 개편 — 사용자 요구:
+    "블록이 정해져 있고, 주간 시간표에 그 블록을 채워 넣고, 블록을 선택하면 가능한 시간이 나오도록").
+    미팅마다 길이가 다른 **블록**을 한 주(월~금) 시간표 위에 직접 놓는다 — Meetings 탭 `🧩 퍼즐 배치`.
+    - **드래그&드랍이 기본 조작** (2026-08-28 오후, "드래그 앤 드랍 느낌 + UI 개선" 요구로 개편).
+      왼쪽 **sticky 사이드바**(`.pz-side`)에 블록 목록 — 남은/놓은 블록 그룹, 블록마다 길이 셀렉트(`pzdur`)와 내리기 ✕.
+      블록을 **끌면**(`data-pz` pointerdown, PC 6px 이동·터치 long-press 280ms) 실제 칸 크기의 고스트(`#pz-ghost`)가
+      따라오고, 그 순간 `pzCanPlace`로 **들어갈 수 있는 시작 칸만 초록색**으로 켜진다(참여자+장소+보드 위 블록).
+      초록 칸 위에서는 고스트가 그 자리에 **스냅**되고 놓으면 배치, 보드 위 블록을 끌면 이동,
+      사이드바로 끌면 내려놓기. 드래그 중엔 `pzDrag`로 재렌더를 미루고, 드랍 직후 click 1회는 `pzDidDrag`로 무시.
+      클릭 방식(블록 선택 → 초록 칸 클릭)도 폴백으로 유지 — 놓으면 다음 남은 블록이 자동 선택된다.
+    - **드래그 성능** (실측: 시작 21ms, 프레임 처리 평균 0.11ms/최대 0.6ms). 셋 다 필요했다:
+      ① 고스트를 `left/top` 대신 `transform: translate3d` + `will-change`로 옮기고, 자유 이동엔 transition을 두지 않는다
+         (transition이 걸려 있으면 커서보다 늦게 따라와 그 자체로 '랙'처럼 보인다 — 스냅될 때만 .08s).
+      ② pointermove는 좌표만 저장하고 **rAF로 한 프레임에 한 번만** 처리(`pzFrame`).
+      ③ 칸 목록(`pzCells`)은 드래그 시작 때 한 번만 모으고, 하이라이트는 지금 칠해진 칸(`pzSpanned`)만 지운다.
+      집는 순간의 재렌더도 전체가 아니라 **보드만**(`pzRepaint` — `.mtg-wrap` outerHTML 교체 + 스크롤 복원).
+    - **확정된 미팅도 블록이다** (2026-08-28, "이미 배치된 시간표도 뺐다가 넣을 수 있도록"). `pzTray()`는 모든 미팅을
+      돌려주고 `pzSeed(week)`가 확정 미팅을 그 주 회차 시각(없으면 확정 시각의 요일·시각)으로 보드에 미리 올린다.
+      보드에 올라온 미팅의 회차 event는 `pzIgnoreSet()`으로 가용성 계산에서 뺀다 — 안 그러면 자기 자신 때문에
+      놓을 자리가 없다고 나온다(`memberBusy`/`locationBusy`에 `ignoreSet` 인자를 추가한 이유).
+      `batchDiff()`가 보드와 원래 상태를 비교해 **새로 확정 / 시간 변경 / 확정 취소**를 세고, `applyBatch`가 그대로 반영한다
+      (시간 변경은 회차 재생성이라 그 주만 조정·취소했던 내용은 사라진다 — 확인 창에 명시).
+    - **20분 구분선은 없앴다** ("부드럽게 이어질 수 있도록"). 블록은 겹치는 것끼리 묶어 **`rowspan` 한 칸**으로 그리고
+      (`viewPuzzleGrid`의 `dayCover`), 칸 안을 `position:absolute`로 채워 둥근 카드로 만든다.
+      가로선은 정시 행(`tr.hr`)에만 남기고 행 머리도 정시만 표시 — 대신 블록 안에 `시작~끝`을 적어 길이를 읽게 했다.
+      이 CSS는 전부 `#pzgrid`로 한정해 기존 '가능 시간 찾기' 격자는 그대로다(회귀 확인함).
+    - 충돌 기준은 **시간 겹침 + (같은 사람 | 같은 장소)** — 참여자가 겹치지 않으면 같은 시간에 나란히 놓을 수 있다.
+    - `남은 블록 자동 배치` = 동적 MRV 그리디 → 실패 시 되돌아가는 DFS(1.5초 상한). `solveBatch(items,mode,fixed)`의
+      `fixed`가 이미 놓인 블록(고정 제약). 후보는 `batchFreeMap`(멤버 x 칸)을 한 번만 만들어 `batchCands`가 훑는다.
+      실데이터 19개 기준 수 ms. mode: `spread`(요일 고르게, 기본)/`compact`(붙여서 몰기).
+    - 주를 넘기면 놓인 블록도 7일씩 함께 이동하고, 새 주에서 안 되는 블록만 내려놓는다(토스트로 이름 알림).
+    - **학기 밖 날짜도 배치 허용**(사용자 결정, 2026-08-28) — 다만 그 날짜엔 주간 반복 불가가 적용되지 않아
+      실제보다 널널해 보인다는 경고를 띄운다(`batchDays`의 `outSem`은 이제 표시용).
+    - 확정은 `applyBatch` → 기존 `confirmMeeting(mtid,s,e,silent)` 재사용(회차 실체화 경로 단일 유지).
+      `매주 반복`이면 반복 없는 미팅에 `recurrence:{weekly,1,until:학기종료일}`을 넣고, `이 주만`이면 반복을 지운다.
   - 미구현(다음 단계): 학회 기간 일괄 취소(유지할 미팅만 체크).
 
 ## 4. 코드 구조 (단일 index.html, vanilla JS)
@@ -101,9 +136,10 @@ events/{evid}        { title, type, start(ms), end(ms), participants:{mid:true},
   4. 도메인 상수 (`EVENT_TYPES`, `EXC_TYPES`, 타입별 hue)
   5. Firebase (`initFirebase`, `R()`, `wErr`, `watchConnection`(오프라인 배너), `subscribeAll`)
   6. **가용성 엔진**: `excRange`, `weeklyBusy`, `memberBusy`, `locationBusy`, `findMeetingSlots`
+     + **퍼즐 배치**: `batchDays`, `pzTray`, `pzConflict`/`pzCanPlace`, `batchFreeMap`, `batchCands`, `solveBatch`, `autoPlace`, `applyBatch`
   7. 쓰기 동작 (member/semester/project/meeting/event/exception CRUD, `confirmMeeting`/`unconfirmMeeting`)
   8. 렌더 (`render`/`doRender` — 포커스·스크롤 보존, `syncScrollLock`)
-  9. 뷰: `viewCalendar`(월간, `.agg-*` 재사용) / `viewMeetings` / `viewMembers`(+학기+설정) / `viewAvailability`(주간 그리드+예외) / `viewProjects` / 모달 3종 / `viewHelp`
+  9. 뷰: `viewCalendar`(월간, `.agg-*` 재사용) / `viewMeetings` / `viewBatchCard`(퍼즐 배치: 보드 `viewPuzzleGrid`) / `viewMembers`(+학기+설정) / `viewAvailability`(주간 그리드+예외) / `viewProjects` / 모달 3종 / `viewHelp`
   10. PNG(`exportCalPNG`) / ICS(`exportCalICS`)
   11. `bindEvents` — 위임 클릭/체인지 핸들러, draft sync, Escape, **주간 그리드 페인팅 엔진**(박스 드래그, PC 즉시·모바일 long-press 320ms, pointercancel 복구)
   12. `start()` — 해시 라우팅(#calendar 등) + 구독 시작
@@ -139,6 +175,13 @@ events/{evid}        { title, type, start(ms), end(ms), participants:{mid:true},
 - 시간 저장은 모두 **로컬(KST) 기준 ms** 또는 "YYYY-MM-DD"/"HH:MM" 문자열. 타임존 로직 없음 (연구실 로컬 전제).
 - `findMeetingSlots`는 오늘 이전 날짜를 자동 제외하고, 후보 80개에서 잘라 `truncated` 플래그를 세운다.
 - 학기 밖 날짜엔 주간 반복이 적용되지 않음(`weeklyBusy`의 학기 범위 체크) — 의도된 동작.
+- **칸 단위(`slotMinutes`)를 바꾸면 저장된 반복 불가 시간이 격자에서 미끄러진다.** `weeklyBusy`는 칸 단위로 걸으며
+  `hm(t)` 키를 정확히 찾으므로, 30분 격자에 저장된 `09:30`은 20분 격자에서 **조회조차 되지 않아 '가능'으로 보인다**.
+  그래서 설정 변경은 `changeSlot()`을 타고 `remapAvailability()`가 겹치는 칸을 새 격자로 옮긴다
+  (경계는 불가 쪽으로 넓어진다 — 사람을 잘못 넣는 것보다 넓게 막는 편이 안전).
+  2026-08-28에 30분 → **20분**으로 전환하며 17명분 422칸 → 661칸으로 이전했다(막힌 총 시간 12,660분 → 13,220분, +4.4%).
+- 미팅 길이가 칸 단위의 배수가 아니면(20분 격자의 30분 미팅) 후보 계산이 다음 칸까지 비어 있기를 요구해 조금 빡빡해진다.
+  `durChoices()`가 칸 단위의 배수만 제시하고, 배치 화면의 `길이 맞추기`로 선택한 미팅을 한꺼번에 바꿀 수 있다.
 - 테스트 시 실DB에 쓰게 되므로 테스트 후 `vgi/` 하위 경로 정리 습관 유지 (settings는 남길 것).
 
 ## 8. 밴드 앱 쪽 참고 (별개 프로젝트, 계속 운영 중)

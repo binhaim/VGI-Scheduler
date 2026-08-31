@@ -1128,6 +1128,86 @@
   .btn.sm[disabled]{opacity:.45;cursor:not-allowed;}
   @media(pointer:coarse){.mtg-btn,.mtg-ev{height:34px;} .mtg td.mtg-cell{min-width:64px;height:34px;}}
 
+  /* 한 번에 배치 — 퍼즐 보드 */
+  .bt-bar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:12px;}
+  .bt-week{font-family:'Bricolage Grotesque',sans-serif;font-weight:700;font-size:14px;
+    min-width:112px;text-align:center;}
+  .bt-bar .mtg-dur{margin-left:auto;}
+  .pz-body{display:flex;gap:12px;align-items:flex-start;margin-top:12px;}
+  .pz-main{flex:1;min-width:0;display:flex;flex-direction:column;gap:8px;}
+  /* 블록 사이드바 — 보드를 스크롤해도 따라온다 */
+  .pz-side{width:230px;flex-shrink:0;position:sticky;top:12px;max-height:86vh;overflow:auto;
+    display:flex;flex-direction:column;gap:5px;padding:8px;border:1px dashed var(--line-2);
+    border-radius:var(--r-sm);background:var(--surface);overscroll-behavior:contain;}
+  .pz-side.droptarget{outline:2px dashed var(--accent);outline-offset:-2px;}
+  .pz-side-h{font-size:11px;font-weight:700;color:var(--muted);letter-spacing:.04em;
+    padding:3px 2px 1px;}
+  .pz-item{display:flex;align-items:center;gap:7px;padding:7px 9px;border-radius:var(--r-sm);
+    cursor:grab;user-select:none;-webkit-user-select:none;touch-action:pan-y;
+    background:var(--pc,var(--ink));color:#fff;font-size:12.5px;font-weight:700;
+    font-family:'Bricolage Grotesque',sans-serif;}
+  .pz-item:active{cursor:grabbing;}
+  .pz-grip{opacity:.55;font-size:11px;flex-shrink:0;}
+  .pz-item .pz-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .pz-item .pz-name em{display:block;font-style:normal;font-size:10.5px;font-weight:600;opacity:.85;}
+  .pz-item select.pz-dur{padding:2px 3px;font-size:11px;border-radius:6px;border:0;
+    background:rgba(255,255,255,.28);color:#fff;flex-shrink:0;}
+  .pz-item.done{background:var(--paper);color:var(--pc,var(--ink));
+    box-shadow:inset 0 0 0 1.5px var(--pc,var(--ink));}
+  .pz-item.done select.pz-dur{background:var(--pcs,var(--line));color:var(--pc,var(--ink));}
+  .pz-item.pick{outline:2.5px solid var(--ink);outline-offset:1px;}
+  .pz-x{border:0;background:transparent;color:inherit;cursor:pointer;font-size:13px;
+    opacity:.65;padding:0 2px;flex-shrink:0;}
+  .pz-x:hover{opacity:1;}
+  .pz-empty{font-size:12px;color:var(--muted);padding:6px 4px;}
+  .pz-hint{font-size:12.5px;color:var(--muted);display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+  /* 끌고 다니는 블록 고스트 — 초록 칸 위에서는 그 자리에 스냅 */
+  /* 고스트는 transform 으로만 움직인다 — left/top 은 매 프레임 레이아웃을 다시 잡는다.
+     자유 이동엔 transition 을 두지 않는다(커서보다 늦게 따라와 '랙'처럼 보임). 스냅될 때만 짧게. */
+  #pz-ghost{position:fixed;left:0;top:0;z-index:1000;pointer-events:none;border-radius:7px;
+    display:flex;align-items:flex-start;justify-content:center;gap:6px;padding-top:3px;
+    font-size:11px;font-weight:700;font-family:'Bricolage Grotesque',sans-serif;color:#fff;
+    box-shadow:0 8px 22px rgba(0,0,0,.28);opacity:.93;
+    will-change:transform;transition:none;}
+  #pz-ghost em{font-style:normal;font-weight:600;opacity:.85;}
+  #pz-ghost.snap{opacity:1;box-shadow:0 4px 14px rgba(0,0,0,.22);
+    transition:transform .08s ease-out;}
+  /* 보드 칸 — 20분 구분선은 없애고 시(hour) 선만 남긴다 */
+  #pzgrid td{border-bottom:0;}
+  #pzgrid tr.hr td{border-top:1px solid var(--line);}
+  #pzgrid tr.hr td.mtg-rh{border-top:1px solid var(--line-2);}
+  #pzgrid td.mtg-rh{color:var(--ink);font-weight:700;font-size:11px;}
+  #pzgrid td.mtg-cell{background-clip:padding-box;}
+  #pzgrid td.mtg-cell.past{background:rgba(0,0,0,.028);}
+  /* 블록 — rowspan 한 칸을 통째로 채운다 */
+  #pzgrid td.blk{position:relative;padding:0;}
+  #pzgrid .pz-fill{position:absolute;inset:1px 2px;border-radius:7px;border:0;
+    display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:1px;
+    padding:0 7px;overflow:hidden;text-align:left;cursor:grab;
+    background:var(--pcs);box-shadow:inset 0 0 0 1.5px var(--pc);color:var(--pc);
+    font-family:'Bricolage Grotesque',sans-serif;}
+  #pzgrid .pz-fill:active{cursor:grabbing;}
+  #pzgrid .pz-fill.static{cursor:default;opacity:.72;}
+  #pzgrid .pz-fill:hover:not(.static){background:var(--pc);color:#fff;}
+  #pzgrid .pz-ft{font-size:9.5px;font-weight:600;opacity:.75;line-height:1;}
+  #pzgrid .pz-fn{font-size:11px;font-weight:700;line-height:1.15;white-space:nowrap;
+    overflow:hidden;text-overflow:ellipsis;max-width:100%;}
+  #pzgrid td.blk.cur .pz-fill{box-shadow:inset 0 0 0 2px var(--ink);}
+  #pzgrid .mtg-btn{background:rgba(45,117,73,.16);box-shadow:none;
+    border-top:1px solid rgba(45,117,73,.10);}
+  #pzgrid .mtg-btn:hover{background:rgba(45,117,73,.34);}
+  #pzgrid td.mtg-cell.span{background:rgba(45,117,73,.34);}
+  #pzgrid td.mtg-cell.span .mtg-btn{background:transparent;border-top-color:transparent;}
+  .occ-row.fail{border-color:var(--accent);background:var(--accent-soft);}
+  .occ-row .occ-mt{font-weight:700;}
+  .bt-res{display:flex;flex-direction:column;gap:6px;}
+  @media(max-width:860px){
+    .pz-body{flex-direction:column;}
+    .pz-side{position:static;width:auto;max-height:220px;flex-direction:row;flex-wrap:wrap;align-content:flex-start;}
+    .pz-side-h{width:100%;}
+    .pz-item{flex:0 1 auto;}
+  }
+
   /* 주간 뷰 (Calendar 기본) */
   .wk-wrap{overflow:auto;max-height:72vh;border:1px solid var(--line);border-radius:var(--r-sm);
     background:var(--surface);overscroll-behavior:contain;-webkit-overflow-scrolling:touch;}
@@ -1263,6 +1343,7 @@ let state={
   mtFind:null,       // {mtid, rows:[분], days:[{ds,ok,n}], dur, total, truncated} | null
   mtPick:null,       // 격자에서 고른 후보 {mtid, s, e} | null
   occPast:{},        // {mtid:true} — 지난 회차까지 펼쳐 보기
+  batch:null,        // 퍼즐 배치 {week(월),placed:{mtid:{s,e}},pick,mode,repeat,autoFail} | null
   // 모달
   evEdit:null, xDraft:null, subscribeFor:null, showHelp:false,
 };
@@ -1299,6 +1380,8 @@ const overlap=(aS,aE,bS,bE)=>aS<bE&&bS<aE;
 const isLive=ev=>!!ev&&ev.status!=='cancelled';          // 취소된 회차는 일정으로 치지 않는다
 function addDays(ds,n){const d=new Date(ds+'T00:00:00');d.setDate(d.getDate()+n);return fmtDate(d);}
 function weekOf(ds){const st=addDays(ds,-wdOf(ds));return[st,addDays(st,6)];}   // 일~토
+/* 미팅은 월~금 안에서 잡는다 — 그 주의 월요일 */
+function mondayOf(ds){const w=wdOf(ds);return addDays(ds,w===0?-6:1-w);}
 const sortedIds=o=>Object.keys(o||{}).sort((a,b)=>(Number(o[a]?.ts)||0)-(Number(o[b]?.ts)||0)||a.localeCompare(b));
 
 /* ---------------- 도메인 상수 ---------------- */
@@ -1323,6 +1406,14 @@ const cfgSlot=()=>Number(state.settings.slotMinutes)||30;
 const cfgDayStart=()=>Number.isFinite(Number(state.settings.dayStart))?Number(state.settings.dayStart):9;
 const cfgDayEnd=()=>Number.isFinite(Number(state.settings.dayEnd))?Number(state.settings.dayEnd):21;
 const daySlots=()=>timeList(cfgDayStart(),cfgDayEnd(),cfgSlot());
+/* 미팅 길이 후보 — 칸 단위의 배수. 지금 값이 배수가 아니면 그 값도 남겨둔다 */
+function durChoices(cur){
+  const st=cfgSlot(), out=[];
+  for(let m=st;m<=240;m+=st) out.push(m);
+  const c=Number(cur)||0;
+  if(c&&!out.includes(c)) out.push(c);
+  return out.sort((a,b)=>a-b);
+}
 function activeSemesterId(){
   const s=state.settings.activeSemester;
   if(s&&state.semesters[s]) return s;
@@ -1415,6 +1506,7 @@ function memberBusy(mid,s,e,opts={}){
   for(const evid in state.events){
     if(evid===opts.ignoreEventId) continue;
     if(opts.ignoreIds?.includes(evid)) continue;
+    if(opts.ignoreSet?.has(evid)) continue;
     const ev=state.events[evid];
     if(!isLive(ev)) continue;
     if(!ev.participants?.[mid]) continue;
@@ -1422,11 +1514,12 @@ function memberBusy(mid,s,e,opts={}){
   }
   return false;
 }
-function locationBusy(loc,s,e,ignoreEventId){
+function locationBusy(loc,s,e,ignoreEventId,ignoreSet){
   if(!loc) return false;
   const key=loc.trim().toLocaleLowerCase('ko-KR'); if(!key) return false;
   for(const evid in state.events){
     if(evid===ignoreEventId) continue;
+    if(ignoreSet?.has(evid)) continue;
     const ev=state.events[evid];
     if(!isLive(ev)) continue;
     if(String(ev.location||'').trim().toLocaleLowerCase('ko-KR')!==key) continue;
@@ -1509,6 +1602,265 @@ function findMeetingSlots(mt,opts={}){
     sem:sem?{id:sid,...sem}:null,noAvail,error:null};
 }
 
+/* ---------------- 한 번에 배치 (퍼즐 보드) ----------------
+   미팅마다 길이가 다른 '블록'을 한 주(월~금) 시간표 위에 직접 놓는다.
+   블록을 고르면 그 블록이 들어갈 수 있는 시작 칸만 초록색으로 켜진다. */
+function batchDays(week){
+  const sem=state.semesters[activeSemesterId()];
+  return dateList(week,addDays(week,4)).map(ds=>({
+    ds, base:new Date(ds+'T00:00:00').getTime(),
+    /* 학기 밖 날짜엔 주간 반복 불가 시간이 적용되지 않는다 — 배치는 허용하되 경고만 */
+    outSem:!!sem&&(ds<sem.startDate||ds>sem.endDate),
+  }));
+}
+function defaultBatchWeek(){
+  const today=fmtDate(new Date());
+  const sem=state.semesters[activeSemesterId()];
+  return mondayOf(sem&&sem.startDate>today?sem.startDate:today);
+}
+const locKeyOf=l=>String(l||'').trim().toLocaleLowerCase('ko-KR');
+/* 보드에 올릴 블록 = 모든 미팅. 확정된 것도 빼서 다시 놓을 수 있어야 한다 */
+function pzTray(){ return sortedIds(state.meetings); }
+/* 보드에 올라온 미팅의 확정 회차는 '남의 일정'이 아니다 — 가용성 계산에서 뺀다
+   (안 그러면 자기 자신 때문에 놓을 자리가 없다고 나온다) */
+function pzIgnoreSet(){
+  const mts=new Set(pzTray());
+  const out=new Set();
+  for(const evid in state.events){
+    const ev=state.events[evid];
+    const mid=ev.seriesId||ev.meetingId;
+    if(mid&&mts.has(mid)) out.add(evid);
+  }
+  return out;
+}
+/* 확정된 미팅을 이 주 보드 위에 미리 올려둔다 — 그 주 회차가 있으면 그 시각, 없으면 확정 시각의 요일·시각 */
+function pzSeed(week){
+  const ws=week, we=addDays(week,4), placed={};
+  pzTray().forEach(id=>{
+    const mt=state.meetings[id];
+    if(mt.status!=='confirmed') return;
+    const occ=occurrencesOf(id).find(evid=>{
+      const ev=state.events[evid];
+      if(!isLive(ev)) return false;
+      const ds=fmtDate(new Date(Number(ev.start)));
+      return ds>=ws&&ds<=we;
+    });
+    if(occ){ placed[id]={s:Number(state.events[occ].start),e:Number(state.events[occ].end)}; return; }
+    const cs=Number(mt.confirmedStart)||0; if(!cs) return;
+    const d=new Date(cs), wd=d.getDay();
+    if(wd===0||wd===6) return;                          // 주말은 월~금 보드 밖
+    const base=new Date(addDays(week,wd-1)+'T00:00:00').getTime();
+    const s2=base+(d.getHours()*60+d.getMinutes())*60000;
+    placed[id]={s:s2,e:s2+((Number(mt.confirmedEnd)||cs+3600000)-cs)};
+  });
+  return placed;
+}
+/* 보드 위 다른 블록과 부딪히나 — 시간이 겹치고 (같은 사람 | 같은 장소)면 충돌.
+   참여자가 겹치지 않으면 같은 시간에 나란히 놓을 수 있다. */
+function pzConflict(mtid,s,e){
+  const b=state.batch, mt=state.meetings[mtid]; if(!b||!mt) return null;
+  const mids=participantsOf(mt), loc=locKeyOf(mt.location);
+  for(const oid in b.placed){
+    if(oid===mtid) continue;
+    const o=b.placed[oid]; if(!overlap(s,e,o.s,o.e)) continue;
+    const om=state.meetings[oid]; if(!om) continue;
+    if(loc&&locKeyOf(om.location)===loc) return oid;
+    if(participantsOf(om).some(m=>mids.includes(m))) return oid;
+  }
+  return null;
+}
+/* 블록 하나를 [s,e)에 놓아도 되나 — 참여자 가용성 + 장소 + 보드 위 블록 */
+function pzCanPlace(mtid,s,e,ign){
+  const mt=state.meetings[mtid]; if(!mt) return false;
+  const ignoreSet=ign||pzIgnoreSet();
+  if(participantsOf(mt).some(mid=>memberBusy(mid,s,e,{ignoreSet}))) return false;
+  const loc=String(mt.location||'').trim();
+  if(loc&&locationBusy(loc,s,e,null,ignoreSet)) return false;
+  return !pzConflict(mtid,s,e);
+}
+/* ---- 자동 배치 (남은 블록 채우기) ---- */
+/* 멤버 x 칸 → 비어 있나. 미팅마다 memberBusy를 다시 돌지 않게 한 번만 만들어 둔다 */
+function batchFreeMap(days,mids){
+  const slot=cfgSlot(), sM=cfgDayStart()*60, eM=cfgDayEnd()*60, now=Date.now();
+  const ignoreSet=pzIgnoreSet();
+  const free={};
+  mids.forEach(mid=>{
+    const per=free[mid]={};
+    days.forEach(d=>{
+      const map=per[d.ds]={};
+      for(let m=sM;m<eM;m+=slot){
+        const cs=d.base+m*60000;
+        if(cs<now) continue;                            // 지난 시간은 후보가 아니다
+        if(!memberBusy(mid,cs,cs+slot*60000,{ignoreSet})) map[m]=true;
+      }
+    });
+  });
+  return free;
+}
+/* 이 미팅 하나만 놓을 수 있는 시작 시각들 (블록끼리 충돌은 solveBatch가 본다) */
+function batchCands(mt,days,free,ign){
+  const mids=participantsOf(mt), dur=Number(mt.durationMin)||60;
+  const slot=cfgSlot(), sM=cfgDayStart()*60, eM=cfgDayEnd()*60;
+  const loc=String(mt.location||'').trim();
+  const out=[];
+  for(const d of days){
+    for(let m=sM;m+dur<=eM;m+=slot){
+      let ok=true;
+      for(let t=m;t<m+dur&&ok;t+=slot) ok=mids.every(mid=>free[mid][d.ds][t]);
+      if(!ok) continue;
+      const st=d.base+m*60000;
+      if(loc&&locationBusy(loc,st,st+dur*60000,null,ign)) continue;
+      out.push(st);
+    }
+  }
+  return out;
+}
+const BATCH_MS=1500;   // 되돌아가며 찾는 시간 상한
+/* items:[{mtid,dur,mids,set,loc,cands}] + fixed(이미 놓인 블록) → {chosen,failed}
+   mode: 'compact' 붙여서 몰기 | 'spread' 요일 고르게 */
+function solveBatch(items,mode,fixed=[]){
+  const t0=Date.now();
+  const conflict=(it,st,chosen)=>{
+    const e=st+it.dur*60000;
+    for(const c of chosen){
+      if(!overlap(st,e,c.s,c.e)) continue;
+      if(c.loc&&it.loc&&c.loc===it.loc) return true;    // 같은 장소
+      if(it.mids.some(m=>c.set.has(m))) return true;    // 같은 사람
+    }
+    return false;
+  };
+  /* 어떤 자리부터 볼지 — 이미 놓인 배치에 따라 매번 다시 고른다 */
+  const order=(it,chosen,cands)=>{
+    if(mode==='spread'){
+      const cnt={}; chosen.forEach(c=>{const k=fmtDate(new Date(c.s));cnt[k]=(cnt[k]||0)+1;});
+      return cands.slice().sort((a,b)=>
+        (cnt[fmtDate(new Date(a))]||0)-(cnt[fmtDate(new Date(b))]||0)||a-b);
+    }
+    const near=[], far=[];                              // 앞뒤로 딱 붙는 자리를 먼저 → 덩어리로 모인다
+    for(const st of cands) (chosen.some(c=>c.e===st||c.s===st+it.dur*60000)?near:far).push(st);
+    return near.concat(far);
+  };
+  /* 1) 남은 자리가 가장 적은 미팅부터 하나씩 놓는다 (동적 MRV) */
+  function greedy(){
+    const chosen=[...fixed], failed=[], rest=items.slice();
+    while(rest.length){
+      let pick=0, pickOK=null;
+      rest.forEach((it,i)=>{
+        const ok=it.cands.filter(st=>!conflict(it,st,chosen));
+        if(pickOK===null||ok.length<pickOK.length){pick=i;pickOK=ok;}
+      });
+      const it=rest.splice(pick,1)[0];
+      if(!pickOK.length){failed.push(it);continue;}
+      const st=order(it,chosen,pickOK)[0];
+      chosen.push({...it,s:st,e:st+it.dur*60000});
+    }
+    return {chosen,failed};
+  }
+  const g=greedy();
+  if(!g.failed.length) return g;
+  /* 2) 하나라도 못 놓았으면 앞선 선택까지 되돌리며 전부 들어가는 배치를 찾아본다 */
+  const seq=items.slice().sort((a,b)=>a.cands.length-b.cands.length||b.dur-a.dur);
+  const chosen=[...fixed]; let out=false;
+  function dfs(i){
+    if(Date.now()-t0>BATCH_MS){out=true;return false;}
+    if(i===seq.length) return true;
+    const it=seq[i];
+    for(const st of order(it,chosen,it.cands.filter(x=>!conflict(it,x,chosen)))){
+      chosen.push({...it,s:st,e:st+it.dur*60000});
+      if(dfs(i+1)) return true;
+      chosen.pop();
+      if(out) return false;
+    }
+    return false;
+  }
+  if(dfs(0)) return {chosen:chosen.slice(),failed:[]};
+  return g;                                             // 전부는 안 들어간다 — 되는 만큼 보여준다
+}
+/* 아직 안 놓인 블록들을 자동으로 채운다 — 이미 놓인 블록은 고정 제약 */
+function autoPlace(){
+  const b=state.batch; if(!b) return;
+  const rest=pzTray().filter(id=>!b.placed[id]);
+  if(!rest.length){toast('남은 블록이 없습니다');return;}
+  const days=batchDays(b.week);
+  const mids=[...new Set(rest.flatMap(id=>participantsOf(state.meetings[id])))];
+  const free=batchFreeMap(days,mids);
+  const ign=pzIgnoreSet();
+  const items=rest.map(id=>{
+    const mt=state.meetings[id], ps=participantsOf(mt);
+    return {mtid:id,dur:Number(mt.durationMin)||60,mids:ps,set:new Set(ps),
+      loc:locKeyOf(mt.location),cands:batchCands(mt,days,free,ign)};
+  });
+  const fixed=Object.keys(b.placed).map(id=>{
+    const mt=state.meetings[id]||{}, ps=participantsOf(mt), pl=b.placed[id];
+    return {mtid:id,s:pl.s,e:pl.e,dur:(pl.e-pl.s)/60000,mids:ps,set:new Set(ps),loc:locKeyOf(mt.location)};
+  });
+  const {chosen,failed}=solveBatch(items,b.mode,fixed);
+  const restSet=new Set(rest);
+  chosen.forEach(c=>{ if(restSet.has(c.mtid)) b.placed[c.mtid]={s:c.s,e:c.e}; });
+  b.autoFail=failed.length?failed.map(f=>({mtid:f.mtid,
+    why:f.cands.length?'다른 미팅과 겹치지 않는 자리가 없습니다':'이 주에 전원 가능한 자리가 없습니다'})):null;
+  b.pick=null;
+  render();
+}
+/* 보드 상태를 그대로 반영한다 — 놓인 블록은 확정, 뺀 블록은 확정 취소 */
+function batchDiff(){
+  const b=state.batch, out={add:[],move:[],drop:[]};
+  if(!b) return out;
+  pzTray().forEach(id=>{
+    const mt=state.meetings[id], pl=b.placed[id];
+    const on=mt.status==='confirmed';
+    if(pl&&!on) out.add.push(id);
+    else if(pl&&on){
+      const sd=b.seed[id];
+      if(!sd||sd.s!==pl.s||sd.e-sd.s!==pl.e-pl.s) out.move.push(id);
+    }else if(!pl&&on) out.drop.push(id);
+  });
+  return out;
+}
+function applyBatch(){
+  const b=state.batch; if(!b) return;
+  const {add,move,drop}=batchDiff();
+  if(!add.length&&!move.length&&!drop.length){toast('바뀐 것이 없습니다');return;}
+  const sem=state.semesters[activeSemesterId()];
+  const until=(sem&&sem.endDate)||defaultRecurUntil();
+  const lines=[];
+  if(add.length) lines.push(`새로 확정 ${add.length}개`);
+  if(move.length) lines.push(`시간 변경 ${move.length}개`);
+  if(drop.length) lines.push(`확정 취소 ${drop.length}개`);
+  if(!confirm(`${lines.join(' · ')}\n\n`
+    +(add.length&&b.repeat?`새로 확정하는 미팅은 ${mdLabel(until)}까지 매주 회차가 만들어집니다.\n`:'')
+    +(move.length?`시간을 바꾼 미팅은 회차를 다시 만듭니다 — 그 주만 조정·취소했던 내용은 사라집니다.\n`:'')
+    +(drop.length?`보드에서 뺀 ${drop.map(id=>state.meetings[id].title).join(', ')}은(는) 회차가 지워지고 조율 상태로 돌아갑니다.`:''))) return;
+  add.forEach(id=>{
+    const mt=state.meetings[id], pl=b.placed[id];
+    if(b.repeat&&!recurKey(mt)){
+      const rec={freq:'weekly',interval:1,until};
+      state.meetings[id]={...mt,recurrence:rec};        // 낙관적 — confirmMeeting이 바로 읽는다
+      FB.update(R('meetings/'+id),{recurrence:rec}).catch(wErr);
+    }else if(!b.repeat&&recurKey(mt)){
+      state.meetings[id]={...mt,recurrence:null};
+      FB.update(R('meetings/'+id),{recurrence:null}).catch(wErr);
+    }
+    confirmMeeting(id,pl.s,pl.e,true);
+  });
+  move.forEach(id=>{                                    // 시간이 바뀐 확정 미팅 — 회차를 다시 만든다
+    const pl=b.placed[id];
+    removeSeriesEvents(id);
+    occurrencesOf(id).forEach(evid=>{delete state.events[evid];});
+    confirmMeeting(id,pl.s,pl.e,true);
+  });
+  drop.forEach(id=>{
+    removeSeriesEvents(id);
+    occurrencesOf(id).forEach(evid=>{delete state.events[evid];});
+    state.meetings[id]={...state.meetings[id],status:'planning'};
+    FB.update(R('meetings/'+id),{status:'planning',confirmedEventId:null,
+      confirmedStart:null,confirmedEnd:null}).catch(wErr);
+  });
+  state.batch=null;
+  toast(lines.join(' · ')+' 반영했습니다');
+  render();
+}
+
 /* ---------------- 쓰기 동작 ---------------- */
 function addMember(){
   const id=genId('m');
@@ -1536,6 +1888,52 @@ function deleteSemester(sid){
   FB.remove(R('semesters/'+sid)).catch(wErr);
   FB.remove(R('availability/'+sid)).catch(wErr);
   if(state.settings.activeSemester===sid) FB.update(R('settings'),{activeSemester:''}).catch(wErr);
+}
+/* 칸 단위를 바꾸면 저장된 '반복 불가 시간'이 새 격자에 어긋난다 (예: 30분 격자의 09:30은
+   20분 격자에서 아예 조회되지 않아 '가능'으로 보인다). 겹치는 칸을 불가로 옮겨 맞춘다 —
+   경계는 불가 쪽으로 넓어진다. 사람을 잘못 넣는 것보다 넓게 막는 편이 안전하다. */
+function remapAvailability(cur,next){
+  const sM=cfgDayStart()*60, eM=cfgDayEnd()*60;
+  const writes=[]; let from=0, to=0, off=false;
+  for(const sid in state.availability){
+    for(const mid in state.availability[sid]||{}){
+      const days=state.availability[sid][mid]||{}, node={};
+      for(const dk in days){
+        const keys=Object.keys(days[dk]||{}).filter(k=>days[dk][k]);
+        if(!keys.length) continue;
+        from+=keys.length;
+        if(keys.some(k=>parseTime(k)<sM||(parseTime(k)-sM)%next!==0)) off=true;
+        const busy=keys.map(k=>[parseTime(k),parseTime(k)+cur]);
+        const map={};
+        for(let m=sM;m<eM;m+=next)
+          if(busy.some(([bs,be])=>m<be&&bs<m+next)) map[minLabel(m)]=true;
+        to+=Object.keys(map).length;
+        node[dk]=map;
+      }
+      if(Object.keys(node).length) writes.push([sid,mid,node]);
+    }
+  }
+  return {off,from,to,write(){
+    writes.forEach(([sid,mid,node])=>{
+      FB.set(R(`availability/${sid}/${mid}`),node).catch(wErr);
+      state.availability[sid][mid]=node;                 // 낙관적 반영
+    });
+    toast(`반복 불가 시간 ${writes.length}명분을 ${next}분 격자로 옮겼습니다`);
+    render();
+  }};
+}
+function changeSlot(next){
+  const cur=cfgSlot();
+  if(next===cur) return true;
+  const plan=remapAvailability(cur,next);
+  if(plan.off&&!confirm(
+      `칸 단위를 ${cur}분 → ${next}분으로 바꿉니다.\n\n`
+     +`저장된 반복 불가 시간 ${plan.from}칸이 새 격자에 맞지 않아 ${plan.to}칸으로 옮겨집니다.\n`
+     +`경계에 걸치는 부분은 불가 쪽으로 넓어집니다 — 정확히 하려면 Availability 탭에서 다시 칠하세요.`)) return false;
+  FB.update(R('settings'),{slotMinutes:next}).catch(wErr);
+  state.settings={...state.settings,slotMinutes:next};   // 낙관적 — 아래 이전 계산이 새 단위를 쓴다
+  if(plan.off) plan.write(); else render();
+  return true;
 }
 function addProject(){
   const id=genId('p');
@@ -1623,7 +2021,7 @@ function seriesStarts(firstMs,mt){
   while(t<=end&&guard<80){ out.push(t); t+=stepMs; guard++; }
   return out.length?out:[firstMs];
 }
-function confirmMeeting(mtid,s,e){
+function confirmMeeting(mtid,s,e,silent){
   const mt=state.meetings[mtid]; if(!mt) return;
   const dur=e-s;
   const starts=seriesStarts(s,mt);
@@ -1635,6 +2033,7 @@ function confirmMeeting(mtid,s,e){
   FB.update(R('meetings/'+mtid),{status:'confirmed',confirmedEventId:first,
     confirmedStart:starts[0],confirmedEnd:starts[0]+dur}).catch(wErr);
   state.mtFind=null; state.mtPick=null;
+  if(silent) return;
   toast(starts.length>1?`회차 ${starts.length}개가 Lab Calendar에 등록되었습니다`
                        :'미팅이 확정되어 Lab Calendar에 등록되었습니다');
 }
@@ -1746,10 +2145,10 @@ function deleteException(xid){
 }
 
 /* ---------------- 렌더 ---------------- */
-let deferRender=false, avPaint=null;
+let deferRender=false, avPaint=null, pzDrag=false;
 function render(){
   const a=document.activeElement;
-  if(avPaint){deferRender=true;return;}
+  if(avPaint||pzDrag){deferRender=true;return;}
   if(a&&a.tagName==='INPUT'&&(a.type==='text'||a.type==='email')&&$('app').contains(a)){
     deferRender=true;return;}
   doRender();
@@ -2070,7 +2469,7 @@ function memberChips(selected,act){
 function viewMeetingForm(){
   const d=state.mtDraft;
   const typeOpts=EVENT_TYPES.map(([k,l])=>`<option value="${k}" ${d.type===k?'selected':''}>${l}</option>`).join('');
-  const durOpts=[30,60,90,120,150,180].map(v=>`<option value="${v}" ${Number(d.durationMin)===v?'selected':''}>${v}분</option>`).join('');
+  const durOpts=durChoices(d.durationMin).map(v=>`<option value="${v}" ${Number(d.durationMin)===v?'selected':''}>${v}분</option>`).join('');
   const projOpts='<option value="">프로젝트 없음</option>'+sortedIds(state.projects).map(pid=>
     `<option value="${pid}" ${d.projectId===pid?'selected':''}>${esc(projectName(pid))}</option>`).join('');
   const recurOpts=RECUR_OPTS.map(([k,l])=>`<option value="${k}" ${(d.recur||'')===k?'selected':''}>${l}</option>`).join('');
@@ -2104,7 +2503,6 @@ const FIND_MODE={
   move: {title:'회차 시간 변경',apply:'이 시간으로 옮기기'},
   extra:{title:'이 주에 회차 추가',apply:'이 시간에 회차 추가'},
 };
-const DUR_OPTS=[30,60,90,120,150,180];
 /* 계산이 '전원 가능'으로 보이게 만드는 원인을 짚어준다 — 침묵보다 낫다 */
 function viewFindWarn(mtid,find){
   const w=[];
@@ -2126,7 +2524,7 @@ function viewFindWarn(mtid,find){
 function viewFindControls(mtid,find){
   const mode=FIND_MODE[find.mode]||FIND_MODE.first;
   const durSel=(find.mode==='move'||find.mode==='extra')?`<label class="mtg-dur">길이
-    <select data-act="mtdur">${DUR_OPTS.map(v=>`<option value="${v}" ${v===find.dur?'selected':''}>${v}분</option>`).join('')}</select></label>`:'';
+    <select data-act="mtdur">${durChoices(find.dur).map(v=>`<option value="${v}" ${v===find.dur?'selected':''}>${v}분</option>`).join('')}</select></label>`:'';
   return `<div class="mtg-mode" style="margin-top:10px">
       <span><b>${mode.title}</b>${find.scope?' · '+esc(find.scope):''}${find.inCal?' · 초록색 칸을 누르세요':''}</span>
       <span class="mtg-mode-r">${durSel}<button class="btn ghost sm" data-act="mtfindclose">닫기</button></span>
@@ -2297,7 +2695,7 @@ function viewMeetingCard(mtid){
   const occIds=confirmed?occurrencesOf(mtid):[];
   const nextId=occIds.find(id=>Number(state.events[id].start)>=Date.now()&&isLive(state.events[id]));
   const nextEv=nextId?state.events[nextId]:null;
-  return `<div class="card mt-card">
+  return `<div class="card mt-card" id="mt_${mtid}">
     <div class="mt-head">
       <div>
         <div class="mt-title"><span class="mt-type" style="--pc:${typeColor(mt.type)}">${TYPE_LABEL[mt.type]||'미팅'}</span><b>${esc(mt.title)}</b>${mt.projectId?`<span class="sub"> · ${esc(projectName(mt.projectId))}</span>`:''}</div>
@@ -2324,6 +2722,198 @@ function viewMeetingCard(mtid){
     ${findHtml}
   </div>`;
 }
+/* ---- 퍼즐 배치 화면 ---- */
+function openBatch(){
+  const week=defaultBatchWeek(), seed=pzSeed(week);
+  const rest=pzTray().filter(id=>!seed[id]);
+  state.batch={week,placed:{...seed},seed,pick:rest[0]||null,
+    mode:'spread',repeat:true,autoFail:null};
+  render();
+}
+/* 주간 보드 — 블록은 rowspan 한 칸으로 이어 그린다(20분 구분선 없음).
+   블록을 골랐으면 들어갈 수 있는 시작 칸이 초록색. */
+function viewPuzzleGrid(){
+  const b=state.batch, days=batchDays(b.week);
+  const slot=cfgSlot(), slotMs=slot*60000;
+  const sM=cfgDayStart()*60, eM=cfgDayEnd()*60, now=Date.now();
+  const rows=[]; for(let m=sM;m<eM;m+=slot) rows.push(m);
+  const pick=b.pick&&state.meetings[b.pick]?b.pick:null;
+  const pmt=pick?state.meetings[pick]:null;
+  const pd=pmt?(Number(pmt.durationMin)||60):0;
+  const pmids=pmt?participantsOf(pmt):[];
+  const ign=pzIgnoreSet();
+  const evIds=Object.keys(state.events).filter(id=>isLive(state.events[id])&&!ign.has(id));
+  /* 하루치 덩어리 — 겹치는 것끼리 묶어 한 칸으로 (참여자가 다르면 같은 시간에 겹칠 수 있다) */
+  const dayCover=days.map(d=>{
+    const dayS=d.base+sM*60000, dayE=d.base+eM*60000;
+    const items=[];
+    for(const id in b.placed){
+      const pl=b.placed[id];
+      if(overlap(dayS,dayE,pl.s,pl.e)) items.push({kind:'blk',id,s:pl.s,e:pl.e});
+    }
+    for(const evid of evIds){
+      const ev=state.events[evid], es=Number(ev.start), ee=Number(ev.end);
+      if(overlap(dayS,dayE,es,ee)) items.push({kind:'ev',id:evid,s:es,e:ee});
+    }
+    items.sort((x,y)=>x.s-y.s||x.e-y.e);
+    const groups=[];
+    items.forEach(it=>{
+      const g=groups[groups.length-1];
+      if(g&&it.s<g.e&&g.kind===it.kind){ g.e=Math.max(g.e,it.e); g.ids.push(it.id); }
+      else groups.push({kind:it.kind,s:it.s,e:it.e,ids:[it.id]});
+    });
+    const cover={};                                     // 행 index → {g, lead}
+    groups.forEach(g=>{
+      const r0=Math.max(0,Math.floor((g.s-dayS)/slotMs));
+      const r1=Math.min(rows.length,Math.ceil((g.e-dayS)/slotMs));
+      if(r1<=r0) return;
+      g.span=r1-r0;
+      for(let r=r0;r<r1;r++) cover[r]={g,lead:r===r0};
+    });
+    return cover;
+  });
+  const head='<tr><th class="mtg-corner">시간</th>'+days.map(d=>{
+    const wd=wdOf(d.ds);
+    return `<th class="mtg-day${d.outSem?' nosem':''}"
+      ${d.outSem?'title="학기 밖 — 주간 반복 불가 시간이 적용되지 않습니다"':''}>${mdLabel(d.ds)}<em>${WD[wd]}${d.outSem?' · 학기밖':''}</em></th>`;
+  }).join('')+'</tr>';
+  const body=rows.map((m,ri)=>{
+    const hr=m%60===0;
+    const cells=days.map((d,di)=>{
+      const cs=d.base+m*60000, ce=cs+slotMs;
+      const cv=dayCover[di][ri];
+      if(cv&&!cv.lead) return '';                       // 위 칸의 rowspan이 덮는다
+      if(cv){
+        const g=cv.g;
+        if(g.kind==='blk'){
+          const id0=g.ids[0], mt0=state.meetings[id0]||{}, pl=b.placed[id0];
+          const more=g.ids.length-1;
+          const on=state.meetings[id0]?.status==='confirmed';
+          const tip=g.ids.map(id=>{const q=b.placed[id],m0=state.meetings[id]||{};
+            return `${esc(m0.title||'')} ${hm(q.s)}~${hm(q.e)}`;}).join(' · ')+' · 끌어서 옮기기';
+          return `<td class="mtg-cell blk${pick===id0?' cur':''}" rowspan="${g.span}"
+            style="--pc:${typeColor(mt0.type)};--pcs:${typeColorSoft(mt0.type)}">
+            <button type="button" class="pz-fill" data-act="batchpick" data-mtid="${id0}" data-pz="${id0}"
+              title="${tip}" aria-label="${tip}"><span class="pz-ft">${hm(pl.s)}~${hm(pl.e)}${on?' ✓':''}</span>
+              <span class="pz-fn">${esc(mt0.title||'')}${more?` +${more}`:''}</span></button></td>`;
+        }
+        const ev=state.events[g.ids[0]]||{};
+        const more=g.ids.length-1;
+        return `<td class="mtg-cell blk ev-bg" rowspan="${g.span}"
+          style="--pc:${typeColor(ev.type)};--pcs:${typeColorSoft(ev.type)}"
+          title="${esc(ev.title||'')} ${hm(g.s)}~${hm(g.e)}"><span class="pz-fill static">
+          <span class="pz-ft">${hm(g.s)}~${hm(g.e)}</span><span class="pz-fn">${esc(ev.title||'')}${more?` +${more}`:''}</span></span></td>`;
+      }
+      /* 고른 블록이 시작할 수 있는 칸 */
+      if(pmt&&cs>=now&&m+pd<=eM&&pzCanPlace(pick,cs,cs+pd*60000,ign)){
+        const e2=cs+pd*60000;
+        const lbl=`${mdLabel(d.ds)} (${WD[wdOf(d.ds)]}) ${hm(cs)}~${hm(e2)} (${pd}분) 여기에 놓기`;
+        return `<td class="mtg-cell cand" data-cs="${cs}"><button type="button" class="mtg-btn"
+          data-act="pzdrop" data-s="${cs}" title="${lbl}" aria-label="${lbl}"></button></td>`;
+      }
+      const cls=['mtg-cell']; let tip='';
+      if(pmt){
+        const who=pmids.filter(mid=>memberBusy(mid,cs,ce,{ignoreSet:ign}));
+        if(who.length){cls.push('na');tip=`${namesOf(who)} 불가`;}
+        else if(cs<now) cls.push('past');
+      }else if(cs<now) cls.push('past');
+      return `<td class="${cls.join(' ')}" data-cs="${cs}"${tip?` title="${esc(tip)}"`:''}></td>`;
+    }).join('');
+    return `<tr class="${hr?'hr':''}"><td class="mtg-rh${hr?' hour':''}">${hr?minLabel(m):''}</td>${cells}</tr>`;
+  }).join('');
+  return `<div class="mtg-wrap scroll"><table class="mtg wide" id="pzgrid"><thead>${head}</thead><tbody>${body}</tbody></table></div>`;
+}
+
+function viewBatchCard(){
+  const b=state.batch, ids=pzTray();
+  const days=batchDays(b.week);
+  const sem=state.semesters[activeSemesterId()];
+  const pick=b.pick&&state.meetings[b.pick]?b.pick:null;
+  const placedIds=ids.filter(id=>b.placed[id]).sort((x,y)=>b.placed[x].s-b.placed[y].s);
+  const restIds=ids.filter(id=>!b.placed[id]);
+  const df=batchDiff(), dirty=df.add.length+df.move.length+df.drop.length>0;
+  const diffTxt=[df.add.length?`새로 확정 ${df.add.length}`:'',df.move.length?`시간 변경 ${df.move.length}`:'',
+    df.drop.length?`확정 취소 ${df.drop.length}`:''].filter(Boolean).join(' · ');
+  /* 사이드바 블록 한 줄 — 끌어서 보드에 놓는다. 길이도 여기서 바로 바꾼다 */
+  const blockRow=id=>{
+    const mt=state.meetings[id], dur=Number(mt.durationMin)||60, pl=b.placed[id];
+    const durSel=`<select class="pz-dur" data-act="pzdur" data-mtid="${id}" title="미팅 길이">${
+      durChoices(dur).map(v=>`<option value="${v}" ${v===dur?'selected':''}>${v}분</option>`).join('')}</select>`;
+    return `<div class="pz-item${pl?' done':''}${pick===id?' pick':''}" data-pz="${id}"
+      data-act="batchpick" data-mtid="${id}" role="button" tabindex="0"
+      style="--pc:${typeColor(mt.type)};--pcs:${typeColorSoft(mt.type)}"
+      title="${esc(namesOf(participantsOf(mt)))}${pl?` · ${whenLabel(pl.s,pl.e)}`:''} · 끌어서 놓기">
+      <span class="pz-grip">⠿</span>
+      <span class="pz-name">${mt.status==='confirmed'?'✓ ':''}${esc(mt.title)}${pl?`<em>${WD[new Date(pl.s).getDay()]} ${hm(pl.s)}~${hm(pl.e)}</em>`:''}</span>
+      ${durSel}${pl?`<button type="button" class="pz-x" data-act="pzlift" data-mtid="${id}" title="보드에서 내리기">✕</button>`:''}
+    </div>`;
+  };
+  const side=`<div class="pz-side">
+    <div class="pz-side-h">뺀 블록 ${restIds.length}${restIds.length?' — 끌어서 시간표에 넣으세요':''}</div>
+    ${restIds.map(blockRow).join('')||'<div class="pz-empty">전부 놓았습니다 🎉</div>'}
+    ${placedIds.length?`<div class="pz-side-h" style="margin-top:6px">놓은 블록 ${placedIds.length}</div>${placedIds.map(blockRow).join('')}`:''}
+  </div>`;
+  /* 경고 */
+  const outs=days.filter(d=>d.outSem);
+  const semAv=state.availability?.[activeSemesterId()]||{};
+  const allMids=[...new Set(ids.flatMap(id=>participantsOf(state.meetings[id])))];
+  const noAvail=allMids.filter(mid=>{
+    const d=semAv[mid]; if(!d) return true;
+    return !Object.values(d).some(sl=>Object.values(sl||{}).some(Boolean));
+  });
+  const warn=[];
+  if(!sem) warn.push('활성 학기가 없어 주간 반복 불가 시간이 전혀 적용되지 않습니다 — <b>Members</b> 탭에서 학기를 지정하세요.');
+  else if(outs.length) warn.push(`${outs.map(d=>mdLabel(d.ds)).join(', ')}은(는) 학기 밖이라 <b>주간 반복 불가 시간이 적용되지 않습니다</b> — 실제보다 널널해 보일 수 있어요.`);
+  if(noAvail.length) warn.push(`<b>${esc(namesOf(noAvail))}</b> 님은 이 학기 <b>반복 불가 시간</b>을 입력하지 않아 늘 가능한 것으로 계산됩니다. (<b>Availability</b> 탭)`);
+  const failRows=(b.autoFail||[]).map(f=>{
+    const mt=state.meetings[f.mtid]; if(!mt) return '';
+    return `<div class="occ-row fail">
+      <span class="occ-n">✕</span><span class="occ-mt">${esc(mt.title)}</span>
+      <span class="occ-warn">${esc(f.why)}</span>
+      <span class="occ-act"><button class="btn ghost sm" data-act="batchpick" data-mtid="${f.mtid}">직접 놓기</button></span></div>`;
+  }).join('');
+  const hint=pick
+    ?`<div class="pz-hint"><b>${esc(state.meetings[pick].title)}</b><span>블록을 끌어오거나 초록 칸을 누르세요${b.placed[pick]?' — 이미 보드에 있는 블록은 끌어서 옮길 수 있어요':''}</span>
+       <button class="btn ghost sm" data-act="pzunpick">선택 해제</button></div>`
+    :`<div class="pz-hint">왼쪽 블록을 <b>끌어서</b> 시간표에 놓으세요. 누르면 들어갈 수 있는 칸이 초록색으로 표시됩니다.</div>`;
+  return `<div class="card">
+    <div class="card-head">
+      <div><h2>🧩 퍼즐 배치</h2>
+        <div class="sub" style="margin-top:4px">미팅 블록을 끌어서 한 주(월~금) 시간표에 끼워 넣습니다. 참여자가 겹치지 않으면 같은 시간에 나란히 놓을 수 있어요.</div></div>
+      <button class="btn ghost sm" data-act="batchclose">닫기</button>
+    </div>
+    <div class="bt-bar">
+      <button class="btn ghost sm" data-act="batchweek" data-d="-1" aria-label="이전 주">←</button>
+      <span class="bt-week">${mdLabel(b.week)} ~ ${mdLabel(addDays(b.week,4))}</span>
+      <button class="btn ghost sm" data-act="batchweek" data-d="1" aria-label="다음 주">→</button>
+      <button class="btn ghost sm" data-act="batchweek" data-d="0">기준 주로</button>
+      <label class="mtg-dur">자동 <select data-act="batchmode">
+        <option value="spread" ${b.mode==='spread'?'selected':''}>요일 고르게</option>
+        <option value="compact" ${b.mode==='compact'?'selected':''}>붙여서 몰기</option></select></label>
+      <button class="btn ghost sm" data-act="batchauto">🧩 남은 블록 자동 배치</button>
+      <button class="btn ghost sm" data-act="batchclear" ${placedIds.length?'':'disabled'}>전부 내리기</button>
+      <button type="button" class="grp-tog ${b.repeat?'on':''}" data-act="batchrepeat"
+        title="확정할 때 학기 종료일까지 매주 반복 회차를 만듭니다">${b.repeat
+          ?`✓ 매주 반복${sem?.endDate?` (${mdLabel(sem.endDate)}까지)`:''}`:'이 주만'}</button>
+    </div>
+    <div class="pz-body">
+      ${side}
+      <div class="pz-main">
+        ${hint}
+        ${viewPuzzleGrid()}
+        ${warn.length?`<div class="note warn">${warn.join('<br>')}</div>`:''}
+        ${failRows?`<div class="bt-res">${failRows}</div>`:''}
+        <div class="mtg-bar${dirty?' on':''}">
+          <div class="mtg-pick"><b>${placedIds.length}개 놓음</b> <span class="sub">/ ${ids.length}개${
+            diffTxt?` · ${diffTxt}`:' · 바뀐 것 없음'}</span></div>
+          <div class="mtg-bar-act">
+            <button class="btn sm" data-act="batchapply" ${dirty?'':'disabled'}>${dirty?'변경 사항 적용':'적용할 변경 없음'}</button>
+          </div></div>
+      </div>
+    </div>
+  </div>`;
+}
+
 function viewMeetings(){
   const ids=sortedIds(state.meetings);
   const planning=ids.filter(id=>state.meetings[id].status!=='confirmed');
@@ -2332,7 +2922,9 @@ function viewMeetings(){
   let h='';
   if(state.mtDraft) h+=viewMeetingForm();
   else h+=`<div class="card"><button class="btn" data-act="mtnew">+ 새 미팅 만들기</button>
+    ${ids.length&&!state.batch?`<button class="btn ghost" data-act="batchopen" style="margin-left:8px">🧩 퍼즐 배치 (${ids.length}개)</button>`:''}
     <span class="sub" style="margin-left:10px">참여자를 고르면 전원 가능한 시간을 자동으로 찾아줍니다.</span></div>`;
+  if(state.batch) h+=viewBatchCard();
   h+=`<div class="section-label" style="margin:18px 0 10px">시간 조율 중 <span class="count">${planning.length}</span></div>`;
   h+=planning.length?planning.map(viewMeetingCard).join(''):'<div class="card"><div class="empty">조율 중인 미팅이 없습니다.</div></div>';
   h+=`<div class="section-label" style="margin:18px 0 10px">확정된 미팅 <span class="count">${confirmed.length}</span></div>`;
@@ -2380,7 +2972,7 @@ function viewMembers(){
     <div class="section-label">기본 설정</div>
     <div class="agg-edit-grid" style="margin-top:12px">
       <div class="agg-edit-field"><label>칸 단위</label><select data-act="setfield" data-field="slotMinutes">
-        <option value="30" ${cfgSlot()===30?'selected':''}>30분</option><option value="60" ${cfgSlot()===60?'selected':''}>60분</option></select></div>
+        ${[20,30,60].map(v=>`<option value="${v}" ${cfgSlot()===v?'selected':''}>${v}분</option>`).join('')}</select></div>
       <div class="agg-edit-field"><label>하루 시작</label><select data-act="setfield" data-field="dayStart">${hourOpts(cfgDayStart(),7,12)}</select></div>
       <div class="agg-edit-field"><label>하루 종료</label><select data-act="setfield" data-field="dayEnd">${hourOpts(cfgDayEnd(),17,23)}</select></div>
     </div>
@@ -2663,8 +3255,10 @@ function openFind(mtid,cfg={}){
 /* ---------------- 이벤트 바인딩 ---------------- */
 function bindEvents(){
   const app=$('app'), hbar=$('hbar');
+  let pzDidDrag=false;   // 드래그 직후의 click 이벤트를 무시하기 위한 플래그
 
   function handleClick(e){
+    if(pzDidDrag){return;}                    // 방금 드래그를 끝냈다 — 이 클릭은 무시
     const t=e.target.closest('[data-act]'); if(!t)return;
     const act=t.dataset.act;
     if(act==='modal-noop'){e.stopPropagation();return;}
@@ -2808,6 +3402,61 @@ function bindEvents(){
       else confirmMeeting(mtid,s,e);
       return;
     }
+    /* 퍼즐 배치 */
+    if(act==='batchopen'){openBatch();return;}
+    if(act==='batchclose'){state.batch=null;render();return;}
+    if(act==='batchweek'){
+      const b=state.batch; if(!b)return;
+      const d=Number(t.dataset.d)||0;
+      const nw=d?addDays(b.week,7*d):defaultBatchWeek();
+      if(nw===b.week){render();return;}
+      /* 놓인 블록은 주와 함께 이동 — 새 주에서 안 되는 블록만 내려놓는다 */
+      const deltaMs=new Date(nw+'T00:00:00')-new Date(b.week+'T00:00:00');
+      const ign=pzIgnoreSet();
+      const np={}, dropped=[];
+      for(const id in b.placed){
+        const mt=state.meetings[id]; if(!mt) continue;
+        const s2=b.placed[id].s+deltaMs, e2=b.placed[id].e+deltaMs;
+        const bad=participantsOf(mt).some(mid=>memberBusy(mid,s2,e2,{ignoreSet:ign}))
+          ||(String(mt.location||'').trim()&&locationBusy(mt.location,s2,e2,null,ign))||s2<Date.now();
+        if(bad) dropped.push(mt.title); else np[id]={s:s2,e:e2};
+      }
+      const ns={};
+      for(const id in b.seed) ns[id]={s:b.seed[id].s+deltaMs,e:b.seed[id].e+deltaMs};
+      b.placed=np; b.seed=ns; b.week=nw; b.autoFail=null;
+      if(dropped.length) toast(`${dropped.join(', ')} — 새 주에서는 그 시간이 안 되어 내려놓았습니다`);
+      render();return;
+    }
+    if(act==='batchpick'){
+      const b=state.batch; if(!b)return;
+      b.pick=b.pick===t.dataset.mtid?null:t.dataset.mtid;
+      render();return;
+    }
+    if(act==='pzdrop'){
+      const b=state.batch; if(!b||!b.pick)return;
+      const mt=state.meetings[b.pick]; if(!mt)return;
+      const s2=Number(t.dataset.s), e2=s2+(Number(mt.durationMin)||60)*60000;
+      const was=!!b.placed[b.pick];
+      b.placed={...b.placed,[b.pick]:{s:s2,e:e2}};
+      if(b.autoFail){b.autoFail=b.autoFail.filter(f=>f.mtid!==b.pick);if(!b.autoFail.length)b.autoFail=null;}
+      /* 트레이에서 새로 놓았으면 다음 블록으로, 옮긴 거면 선택 해제 */
+      b.pick=was?null:(pzTray().find(id=>!b.placed[id])||null);
+      render();return;
+    }
+    if(act==='pzlift'){
+      const b=state.batch; if(!b)return;
+      const id=t.dataset.mtid||b.pick; if(!id||!b.placed[id])return;
+      const np={...b.placed}; delete np[id]; b.placed=np; b.pick=id;
+      render();return;
+    }
+    if(act==='pzunpick'){if(state.batch){state.batch.pick=null;render();}return;}
+    if(act==='batchauto'){autoPlace();return;}
+    if(act==='batchclear'){
+      const b=state.batch; if(!b)return;
+      b.placed={}; b.autoFail=null; render();return;
+    }
+    if(act==='batchrepeat'){if(state.batch){state.batch.repeat=!state.batch.repeat;render();}return;}
+    if(act==='batchapply'){applyBatch();return;}
     if(act==='mtunconfirm'){unconfirmMeeting(t.dataset.mtid);return;}
     /* Members / Semesters */
     if(act==='memadd'){addMember();return;}
@@ -2900,12 +3549,29 @@ function bindEvents(){
     else if(act==='avsemester'){state.avSemester=v;render();}
     else if(act==='memfield'){updateMember(t.dataset.mid,{[t.dataset.field]:v.trim()});}
     else if(act==='semfield'){FB.update(R('semesters/'+t.dataset.sid),{[t.dataset.field]:v.trim()}).catch(wErr);}
-    else if(act==='setfield'){FB.update(R('settings'),{[t.dataset.field]:Number(v)}).catch(wErr);}
+    else if(act==='setfield'){
+      const f=t.dataset.field, n=Number(v);
+      if(f==='slotMinutes'){ if(!changeSlot(n)) t.value=String(cfgSlot()); }
+      else FB.update(R('settings'),{[f]:n}).catch(wErr);
+    }
     else if(act==='projname'){FB.update(R('projects/'+t.dataset.pid),{name:v.trim()||'이름 없음'}).catch(wErr);}
     else if(act==='mtfield'&&state.mtDraft){state.mtDraft[t.dataset.field]=t.type==='number'?Number(v):v;}
     else if(act==='mtdur'&&state.mtFind){
       const f=state.mtFind;
       openFind(f.mtid,{...f,dur:Number(v)||60});
+    }
+    else if(act==='batchmode'&&state.batch){state.batch.mode=v;}
+    else if(act==='pzdur'&&state.batch){
+      const id=t.dataset.mtid, n=Number(v)||60;
+      if(!state.meetings[id]) return;
+      state.meetings[id]={...state.meetings[id],durationMin:n};
+      FB.update(R('meetings/'+id),{durationMin:n}).catch(wErr);
+      const b=state.batch;
+      if(b.placed[id]){
+        const np={...b.placed}; delete np[id]; b.placed=np; b.pick=id;
+        toast('길이가 바뀌어 블록을 내려놓았습니다 — 다시 놓아주세요');
+      }
+      render();
     }
     else if(act==='mtrecur'&&state.mtDraft){
       syncMtDraft(); state.mtDraft.recur=v;
@@ -2940,6 +3606,7 @@ function bindEvents(){
     if(state.xDraft){state.xDraft=null;render();return;}
     if(state.subscribeFor!==null){state.subscribeFor=null;render();return;}
     if(state.showHelp){state.showHelp=false;render();return;}
+    if(state.batch?.pick){state.batch.pick=null;render();return;}
   });
 
   /* role=button 키보드 활성화 */
@@ -2951,6 +3618,22 @@ function bindEvents(){
   }
   app.addEventListener('keydown',handleActKey);
   hbar.addEventListener('keydown',handleActKey);
+
+  /* 퍼즐 보드 — 초록 칸에 올리면 블록 길이만큼 미리 칠해 보여준다 */
+  app.addEventListener('pointerover',e=>{
+    const t=e.target.closest('[data-act="pzdrop"]'); if(!t)return;
+    const b=state.batch; if(!b||!b.pick)return;
+    const mt=state.meetings[b.pick]; if(!mt)return;
+    const s2=Number(t.dataset.s), e2=s2+(Number(mt.durationMin)||60)*60000;
+    document.querySelectorAll('#pzgrid td[data-cs]').forEach(td=>{
+      const cs=Number(td.dataset.cs);
+      td.classList.toggle('span',cs>=s2&&cs<e2);
+    });
+  });
+  app.addEventListener('pointerout',e=>{
+    if(!e.target.closest('[data-act="pzdrop"]'))return;
+    document.querySelectorAll('#pzgrid td.span').forEach(td=>td.classList.remove('span'));
+  });
 
   /* ---- 주간 그리드 페인팅 (박스 드래그, PC 즉시 / 모바일 long-press) ---- */
   const LONG_PRESS=320;
@@ -3039,6 +3722,129 @@ function bindEvents(){
       document.querySelectorAll('td.av-cell.pv').forEach(c=>c.classList.remove('pv','pv-e'));
       avPaint=null; exitDrag(); deferRender=false; render();
     }
+  });
+
+  /* ---- 퍼즐 블록 드래그&드랍 ----
+     블록을 끌면 실제 크기의 고스트가 따라오고, 초록 칸 위에서는 그 자리에 스냅된다.
+     PC는 6px 움직이면 드래그, 터치는 long-press 280ms (짧은 탭은 클릭 = 선택).
+     매끄럽게 하려고: 포인터 이벤트는 rAF 로 한 프레임에 한 번만 처리하고,
+     칸 목록은 드래그 시작 때 한 번만 모으고, 하이라이트는 '지금 칠해진 칸'만 지운다. */
+  let pzP=null, pzGhost=null, pzTarget=null, pzOverSide=false;
+  let pzCells=[], pzSpanned=[], pzRaf=0, pzAt=null, pzSideEl=null;
+  function pzPaintSpan(startMs){
+    pzSpanned.forEach(td=>td.classList.remove('span'));
+    pzSpanned=[];
+    if(startMs==null||!pzP) return;
+    const end=startMs+pzP.dur*60000;
+    for(const c of pzCells){
+      if(c.cs<startMs||c.cs>=end) continue;
+      c.td.classList.add('span'); pzSpanned.push(c.td);
+    }
+  }
+  /* 드래그 중에는 보드만 다시 그린다 — 전체 재렌더(미팅 카드 20장)는 너무 무겁다 */
+  function pzRepaint(){
+    const wrap=document.getElementById('pzgrid')?.closest('.mtg-wrap');
+    if(!wrap){doRender();return;}
+    const sl=wrap.scrollLeft, st=wrap.scrollTop;
+    wrap.outerHTML=viewPuzzleGrid();
+    const w2=document.getElementById('pzgrid')?.closest('.mtg-wrap');
+    if(w2){w2.scrollLeft=sl;w2.scrollTop=st;}
+    const pick=state.batch?.pick;
+    document.querySelectorAll('.pz-item').forEach(el=>el.classList.toggle('pick',el.dataset.pz===pick));
+  }
+  function pzBegin(){
+    const b=state.batch; if(!b||!pzP) return;
+    const mt=state.meetings[pzP.id]; if(!mt){pzP=null;return;}
+    pzP.started=true;
+    pzDrag=true; enterDrag();
+    if(b.pick!==pzP.id){ b.pick=pzP.id; pzRepaint(); }   // 집는 순간 초록 칸이 켜진다
+    pzCells=[...document.querySelectorAll('#pzgrid td[data-cs]')]
+      .map(td=>({td,cs:Number(td.dataset.cs)}));
+    pzSpanned=[]; pzSideEl=document.querySelector('.pz-side');
+    const cell=pzCells[0]?.td;
+    const r=cell?cell.getBoundingClientRect():{width:150,height:26};
+    pzP.dur=Number(mt.durationMin)||60;
+    pzP.w=r.width; pzP.h=r.height*Math.max(1,Math.round(pzP.dur/cfgSlot()));
+    pzGhost=document.createElement('div'); pzGhost.id='pz-ghost';
+    pzGhost.style.width=pzP.w+'px'; pzGhost.style.height=pzP.h+'px';
+    pzGhost.style.background=typeColor(mt.type);
+    pzGhost.style.transform=`translate3d(${pzP.sx-pzP.w/2}px,${pzP.sy-12}px,0)`;
+    pzGhost.innerHTML=`<span>${esc(mt.title)}</span><em>${pzP.dur}분</em>`;
+    document.body.appendChild(pzGhost);
+    if(navigator.vibrate)navigator.vibrate(8);
+  }
+  function pzFrame(){
+    pzRaf=0;
+    const p=pzP; if(!p||!p.started||!pzAt||!pzGhost) return;
+    const {x,y}=pzAt;
+    const el=document.elementFromPoint(x,y);
+    const td=el?.closest?.('#pzgrid td.cand')||null;
+    const tgt=td?Number(td.dataset.cs):null;
+    if(tgt!==pzTarget){ pzPaintSpan(tgt); pzTarget=tgt; }
+    if(tgt!=null){
+      const r=td.getBoundingClientRect();
+      pzGhost.classList.add('snap');
+      pzGhost.style.transform=`translate3d(${r.left}px,${r.top}px,0)`;
+    }else{
+      pzGhost.classList.remove('snap');
+      pzGhost.style.transform=`translate3d(${x-p.w/2}px,${y-12}px,0)`;
+    }
+    const over=tgt==null&&!!el?.closest?.('.pz-side')&&!!state.batch?.placed[state.batch.pick];
+    if(over!==pzOverSide){ pzOverSide=over; pzSideEl?.classList.toggle('droptarget',over); }
+  }
+  function pzFinish(){
+    if(pzRaf){cancelAnimationFrame(pzRaf);pzRaf=0;}
+    pzPaintSpan(null);
+    pzSideEl?.classList.remove('droptarget');
+    if(pzGhost){pzGhost.remove();pzGhost=null;}
+    pzDrag=false; exitDrag();
+    pzTarget=null; pzOverSide=false; pzP=null; pzAt=null;
+    pzCells=[]; pzSideEl=null;
+    deferRender=false; doRender();
+  }
+  app.addEventListener('pointerdown',e=>{
+    const blk=e.target.closest('[data-pz]');
+    if(!blk||!state.batch) return;
+    if(e.target.closest('select,.pz-x')) return;        // 길이 셀렉트·내리기 버튼은 드래그 아님
+    if(e.pointerType==='mouse'&&e.button!==0) return;
+    pzP={id:blk.dataset.pz,sx:e.clientX,sy:e.clientY,started:false,timer:null};
+    if(e.pointerType!=='mouse')
+      pzP.timer=setTimeout(()=>{if(pzP){pzP.timer=null;pzBegin();}},280);
+  });
+  window.addEventListener('pointermove',e=>{
+    if(!pzP) return;
+    if(!pzP.started){
+      const moved=Math.abs(e.clientX-pzP.sx)+Math.abs(e.clientY-pzP.sy);
+      if(pzP.timer){ if(moved>10){clearTimeout(pzP.timer);pzP=null;} return; }  // 터치: 움직였으면 스크롤
+      if(moved<=6) return;
+      pzP.sx=e.clientX; pzP.sy=e.clientY;
+      pzBegin(); if(!pzP||!pzP.started) return;
+    }
+    pzAt={x:e.clientX,y:e.clientY};
+    if(!pzRaf) pzRaf=requestAnimationFrame(pzFrame);    // 한 프레임에 한 번만 처리
+  },{passive:true});
+  window.addEventListener('pointerup',()=>{
+    if(!pzP) return;
+    if(pzP.timer){clearTimeout(pzP.timer);pzP=null;return;}   // 짧은 탭 → 클릭이 처리
+    if(!pzP.started){pzP=null;return;}
+    pzDidDrag=true; setTimeout(()=>{pzDidDrag=false;},0);     // 직후의 click 한 번을 무시
+    const b=state.batch;
+    if(b&&b.pick){
+      if(pzTarget!=null){                                     // 초록 칸에 드랍 → 놓기/옮기기
+        const s2=pzTarget, e2=s2+pzP.dur*60000, was=!!b.placed[b.pick];
+        b.placed={...b.placed,[b.pick]:{s:s2,e:e2}};
+        if(b.autoFail){b.autoFail=b.autoFail.filter(f=>f.mtid!==b.pick);if(!b.autoFail.length)b.autoFail=null;}
+        b.pick=was?null:(pzTray().find(id=>!b.placed[id])||null);
+      }else if(pzOverSide&&b.placed[b.pick]){                 // 사이드바에 드랍 → 내려놓기
+        const np={...b.placed}; delete np[b.pick]; b.placed=np;
+      }
+    }
+    pzFinish();
+  });
+  window.addEventListener('pointercancel',()=>{
+    if(!pzP) return;
+    if(pzP.timer) clearTimeout(pzP.timer);
+    if(pzP.started) pzFinish(); else pzP=null;
   });
 }
 

@@ -11,12 +11,16 @@
 2. **반복 일정 입력 (각자 1회)** — Availability 탭에서 학기 동안 매주 반복되는 안 되는 시간을 한 번만 입력
 3. **평소** — 출장·휴가·학회는 예외 일정으로 그때그때 추가
 4. **미팅 잡기** — Meetings 탭에서 참여자·길이·후보 기간 선택 → 가능 시간 자동 계산 (반복 일정 + 예외 + 확정 일정 + 장소 충돌 반영) → 클릭으로 확정 → Lab Calendar에 등록
+5. **여러 미팅 한 번에 (🧩 퍼즐 배치)** — 미팅마다 길이가 정해진 블록을 **끌어서** 주간(월~금) 보드에 끼워 넣기.
+   끌면 들어갈 수 있는 칸만 초록색으로 켜지고 그 위에서 블록이 스냅됨. **이미 확정된 미팅도 블록으로 올라와** 있어
+   끌어서 옮기거나 사이드바로 빼놓을 수 있고, 아래 줄에 *새로 확정 / 시간 변경 / 확정 취소* 개수가 집계됨.
+   남은 블록은 자동 배치로 채운 뒤 한 번에 적용 (확정하면 그 자리가 학기 끝까지 매주 반복)
 
 ## Firebase 스키마
 
 ```
 vgi/
-  settings/        { activeSemester, slotMinutes, dayStart, dayEnd }
+  settings/        { activeSemester, slotMinutes(20/30/60), dayStart, dayEnd }
   members/{mid}    { name, email, role, active, ts }
   semesters/{sid}  { name, startDate, endDate, ts }
   availability/{sid}/{mid}/{d0..d6}/{HH:MM}: true   # 주간 반복 불가 슬롯
@@ -48,6 +52,6 @@ npm run generate:feeds -- --output ./_feeds   # 실제 DB로 직접 생성해보
 
 ## 남은 작업
 
-- [ ] 반복 미팅 (매주 고정) — `events`에 rrule성 필드 추가 후 클라이언트에서 전개
+- [ ] 학회 기간 일괄 취소 (유지할 미팅만 체크)
 - [ ] 모바일 실기기 점검
 - [ ] (선택) 관리자 권한 분리 — 현재는 "링크 아는 사람 전부 편집" 모델
