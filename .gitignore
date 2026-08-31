@@ -4,3 +4,4 @@ _feeds/
 .cache/
 .firebase/
 firebase-debug.log*
+.DS_Store

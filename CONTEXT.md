@@ -125,6 +125,14 @@ events/{evid}        { title, type, start(ms), end(ms), participants:{mid:true},
     - 확정은 `applyBatch` → 기존 `confirmMeeting(mtid,s,e,silent)` 재사용(회차 실체화 경로 단일 유지).
       `매주 반복`이면 반복 없는 미팅에 `recurrence:{weekly,1,until:학기종료일}`을 넣고, `이 주만`이면 반복을 지운다.
   - 미구현(다음 단계): 학회 기간 일괄 취소(유지할 미팅만 체크).
+  - **이태영님의 `viewMeetingBoard`(커밋 6eb91fb)는 이 머지에서 되돌렸다** (2026-08-31, 저장소 주인 결정).
+    같은 문제("미팅이 여러 개인데 시간은 한 주 안에서 서로 밀고 당긴다")를 클릭 배정 방식으로 푼 구현이었고,
+    이쪽 퍼즐 보드와 화면·CSS가 정면으로 겹쳐 함께 둘 수 없었다. 그 커밋은 히스토리에 남아 있으니
+    (`git show 6eb91fb`) 되살릴 여지는 있다. **다만 그 커밋의 좋은 부분은 가져왔다**:
+    `tests/`(harness + 앱 테스트)와 `npm test`/`npm run preview` 스크립트는 그대로 살렸고,
+    테스트는 퍼즐 보드에 맞게 고쳐 33개가 통과한다. 그가 지적한 "격자가 두 벌이면 규칙이 갈라진다"는
+    아직 유효한 숙제다 — 지금 `weekGridTable`(Calendar 주간) / `viewMeetingFind`(가능 시간) /
+    `viewPuzzleGrid`(퍼즐 보드) 세 벌이 공존한다. 다음에 정리할 것.
 
 ## 4. 코드 구조 (단일 index.html, vanilla JS)
 
@@ -165,7 +173,10 @@ events/{evid}        { title, type, start(ms), end(ms), participants:{mid:true},
    - 앱 쪽은 준비됨: 구독 모달이 `SITE_BASE/calendars/{mid}.ics` URL을 안내 중 (배포 전 경고 문구 표시).
 2. 반복 미팅 (매주 고정 미팅) — §3의 확장 방향 참고.
 3. 사용 가이드 확장, 모바일 실기기 점검 (기본 대응은 되어 있음 — 터치 페인팅·풀블리드·스크롤 잠금 포팅됨).
-4. (선택) 관리자 권한 분리 — 현재는 밴드 앱과 같은 "링크 아는 사람 전부 편집" 모델. 필요해지면 Firebase Auth + 규칙 강화.
+4. (선택) **관리자 권한 분리 — 아직 미구현.** 현재는 밴드 앱과 같은 "링크 아는 사람 전부 편집" 모델이다.
+   `members/{mid}.role`은 자유 텍스트 표시용일 뿐 권한과 무관하고, 도움말의 "학기 시작 (관리자)"도 안내 문구일 뿐이다.
+   실제로 나누려면 Firebase Auth(구글 로그인) + RTDB 규칙에서 `admins/{uid}` 화이트리스트 확인이 필요하다.
+   지금 RTDB 규칙은 `vgi` 경로 전체가 `.read`/`.write` 공개라, 클라이언트에서 버튼만 숨기는 것은 보호가 되지 않는다.
 
 ## 7. 함정·주의사항
 
