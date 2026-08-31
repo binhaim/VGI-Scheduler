@@ -599,3 +599,59 @@ test("주간↔월간 전환은 보고 있던 날짜를 물려준다", () => {
   app.calSwitchMode("week");
   assert.equal(state.calWeek, app.weekOf(TODAY)[0]);
 });
+
+/* ---------------- 휴가·부재는 배정을 막지 않는다 ---------------- */
+function vacationReset() {
+  reset({ recur: null });
+  /* m1이 WED 하루 종일 휴가 */
+  state.exceptions = { x1: { mid: "m1", title: "휴가", type: "vacation", allDay: true,
+    startDate: WED, endDate: WED, ts: 1 } };
+}
+test("휴가 기간에도 미팅을 넣을 수 있고, 빠지는 사람만 표시된다", () => {
+  vacationReset();
+  const s = D(WED, 14), e = D(WED, 15);
+  assert.equal(app.memberBusy("m1", s, e), false);              // 더는 막지 않는다
+  assert.equal(app.memberAway("m1", s, e), "휴가");              // 대신 부재로 잡힌다
+  assert.deepEqual(app.awayOf(["m1", "m3"], s, e), ["m1"]);
+  const f = app.findMeetingSlots(state.meetings.mt1, { from: WED, to: WED, allDays: true, maxDays: 7 });
+  const day = f.days[0];
+  assert.ok(day.ok[14 * 60], "휴가 중이어도 후보여야 한다");
+  assert.deepEqual(day.cells[14 * 60].away, ["m1"]);            // 칸에 부재자 정보
+  assert.equal(day.cells[14 * 60].kind, "free");
+});
+
+test("퍼즐 보드: 휴가 시간에 놓을 수 있고, 후보 칸과 놓인 블록에 ✈ 표시", () => {
+  vacationReset();
+  app.openBatch();
+  state.batch.week = app.mondayOf(WED);        // 휴가가 있는 주를 보드에 띄운다
+  state.batch.pick = "mt1";
+  let grid = app.viewPuzzleGrid();
+  assert.match(grid, /cand aw[^>]*data-cs/);                    // 휴가 칸도 초록 (✈ 포함)
+  assert.match(grid, /휴가·부재 \(놓을 수는 있음\)/);
+  state.batch.placed.mt1 = { s: D(WED, 14), e: D(WED, 15) };    // 휴가 시간에 배치
+  grid = app.viewPuzzleGrid();
+  assert.match(grid, /pz-aw">✈1</);                             // 블록에 부재자 배지
+  assert.match(grid, /✈ 오경준 휴가·부재/);
+  state.batch = null;
+});
+
+test("회차 목록·주간 블록에도 휴가 부재가 표시된다", () => {
+  vacationReset();
+  app.confirmMeeting("mt1", D(WED, 14), D(WED, 15));
+  state.occOpen.mt1 = true;
+  const occ = app.viewOccurrences("mt1");
+  assert.match(occ, /occ-tag away[^>]*>✈ 오경준/);
+  assert.doesNotMatch(occ, /⚠ 오경준 불가/);                     // 하드 충돌로는 안 잡는다
+  state.tab = "calendar"; state.calWeek = WS;
+  assert.match(app.viewCalWeek(new Date()).html, /✈ 오경준 휴가·부재/);
+});
+
+test("자동 배치는 휴가가 없는 자리를 먼저 고른다", () => {
+  vacationReset();
+  const mids = ["m1", "m3"];
+  const item = { mtid: "mt1", dur: 60, mids, set: new Set(mids), loc: "",
+    cands: [D(WED, 14), D(A(WED, 1), 14)] };                    // 휴가 자리와 정상 자리
+  const { chosen, failed } = app.solveBatch([item], "compact", []);
+  assert.equal(failed.length, 0);
+  assert.equal(chosen[0].s, D(A(WED, 1), 14));                  // 휴가 아닌 목요일을 택한다
+});

@@ -1298,6 +1298,14 @@
   .wk-blk.on{box-shadow:inset 0 0 0 2.5px var(--ink);}
   .wk-blk.off{opacity:.55;} .wk-blk.off .bn{text-decoration:line-through;}
   .wk-blk.x{background:transparent;box-shadow:inset 0 0 0 1.5px var(--line-2);color:var(--muted);}
+  /* 휴가·부재 표시 — 배정은 막지 않는다 */
+  .pz-aw{font-weight:700;opacity:.85;}
+  .occ-tag.away{background:transparent;box-shadow:inset 0 0 0 1px var(--line-2);color:var(--muted);}
+  .wk-cell.cand.aw .mtg-btn,.mtg-cell.cand.aw .mtg-btn{color:rgba(45,117,73,.75);font-size:10px;}
+  .mtg-cell.cand.aw .mtg-btn{background:repeating-linear-gradient(45deg,
+    var(--ok-soft) 0 6px,rgba(45,117,73,.14) 6px 7px);}
+  .wk-cell.cand.aw::after{content:'✈';display:block;text-align:center;font-size:10px;
+    line-height:26px;color:rgba(45,117,73,.7);}
   .cal-mode{display:flex;gap:2px;background:var(--paper);padding:3px;border-radius:8px;
     border:1px solid var(--line);}
   .cal-mode button{border:0;background:transparent;color:var(--muted);cursor:pointer;
@@ -1546,14 +1554,20 @@ function weeklyBusy(mid,s,e){
   }
   return false;
 }
-function memberBusy(mid,s,e,opts={}){
-  if(weeklyBusy(mid,s,e)) return '반복 일정';
+/* 예외(휴가·출장·학회)는 '못 넣는 시간'이 아니라 '그 사람이 빠지는 시간'이다.
+   배정을 막지 않고, 화면에서 빠지는 사람만 표시한다. */
+function memberAway(mid,s,e){
   for(const xid in state.exceptions){
     const x=state.exceptions[xid];
     if(x.mid!==mid) continue;
     const [xs,xe]=excRange(x);
     if(overlap(s,e,xs,xe)) return x.title||EXC_LABEL[x.type]||'예외 일정';
   }
+  return false;
+}
+const awayOf=(mids,s,e)=>mids.filter(mid=>memberAway(mid,s,e));
+function memberBusy(mid,s,e,opts={}){
+  if(weeklyBusy(mid,s,e)) return '반복 일정';
   for(const evid in state.events){
     if(evid===opts.ignoreEventId) continue;
     if(opts.ignoreIds?.includes(evid)) continue;
@@ -1635,7 +1649,7 @@ function findMeetingSlots(mt,opts={}){
       }
       if(cs<now){ cells[m]={kind:'past'}; continue; }
       const who=mids.filter(mid=>memberBusy(mid,cs,ce,{ignoreEventId:opts.ignoreEventId}));
-      cells[m]=who.length?{kind:'na',who}:{kind:'free'};
+      cells[m]=who.length?{kind:'na',who}:{kind:'free',away:awayOf(mids,cs,ce)};
     }
     for(const m of rows){
       if(m+dur>endMin) break;
@@ -1782,9 +1796,12 @@ function solveBatch(items,mode,fixed=[]){
   };
   /* 어떤 자리부터 볼지 — 이미 놓인 배치에 따라 매번 다시 고른다 */
   const order=(it,chosen,cands)=>{
+    /* 휴가·부재자가 있는 자리는 놓을 수는 있지만 뒤로 미룬다 */
+    const awayN=st=>awayOf(it.mids,st,st+it.dur*60000).length;
+    cands=cands.slice().sort((a,b)=>awayN(a)-awayN(b));
     if(mode==='spread'){
       const cnt={}; chosen.forEach(c=>{const k=fmtDate(new Date(c.s));cnt[k]=(cnt[k]||0)+1;});
-      return cands.slice().sort((a,b)=>
+      return cands.slice().sort((a,b)=>awayN(a)-awayN(b)||
         (cnt[fmtDate(new Date(a))]||0)-(cnt[fmtDate(new Date(b))]||0)||a-b);
     }
     const near=[], far=[];                              // 앞뒤로 딱 붙는 자리를 먼저 → 덩어리로 모인다
@@ -2405,10 +2422,11 @@ function weekBlockHtml(o,g){
     :`--pc:${typeColor(o.type)};--pcs:${typeColorSoft(o.type)}`;
   const off=o.status==='cancelled';
   const names=namesOf(participantsOf(o));
-  const tip=`${esc(o.title)} ${time}${o.location?' · '+esc(o.location):''} · ${esc(names)}${off?' · 취소됨':''} · 클릭하여 회차 조작`;
+  const aw=off?[]:awayOf(participantsOf(o),s,e);
+  const tip=`${esc(o.title)} ${time}${o.location?' · '+esc(o.location):''} · ${esc(names)}${off?' · 취소됨':''}${aw.length?` · ✈ ${esc(namesOf(aw))} 휴가·부재`:''} · 클릭하여 회차 조작`;
   return `<button class="wk-blk${off?' off':''}${state.calPick===o.id?' on':''}" style="${style}"
     data-act="calevpick" data-evid="${o.id}" title="${tip}">
-    <span class="bt">${time}${off?' · 취소':''}</span><span class="bn">${esc(o.title)}</span>
+    <span class="bt">${time}${off?' · 취소':''}${aw.length?` <span class="pz-aw">✈${aw.length}</span>`:''}</span><span class="bn">${esc(o.title)}</span>
     ${g.items.length===1&&g.span>1?`<span class="bp">${esc(names)}</span>`:''}</button>`;
 }
 function viewCalWeek(now){
@@ -2463,9 +2481,11 @@ function viewCalWeek(now){
       const when=`${mdLabel(ds)} (${WD[wdOf(ds)]}) ${hm(cs)}`;
       if(cand){
         const e=cand+find.dur*60000;
+        const aw=findDay[ds]?.cells?.[m]?.away||[];
+        if(aw.length) cls.push('aw');
         return `<td class="${cls.join(' ')}" style="${style}" role="button" tabindex="0"
           data-act="mtpick" data-mtid="${find.mtid}" data-s="${cand}" data-e="${e}"
-          title="${when}~${hm(e)} (${find.dur}분)로 옮기기">${inner}</td>`;
+          title="${when}~${hm(e)} (${find.dur}분)로 옮기기${aw.length?` · ✈ ${esc(namesOf(aw))} 휴가·부재 (배정은 가능)`:''}">${inner}</td>`;
       }
       if(!items.length&&!find){
         cls.push('free');
@@ -2773,6 +2793,8 @@ function viewFindBar(mtid,find,pick,mode){
   }else if(find.cur){
     note=` · 원래 ${whenLabel(find.cur.s,find.cur.e)}에서 옮김`;
   }
+  const away=mt?awayOf(participantsOf(mt),pick.s,pick.e):[];
+  if(away.length) note+=` · <span class="occ-warn">✈ ${esc(namesOf(away))} 휴가·부재지만 배정할 수 있습니다</span>`;
   return `<div class="mtg-bar on">
       <div class="mtg-pick"><b>${whenLabel(pick.s,pick.e)}</b>
         <span class="sub">${(pick.e-pick.s)/60000}분${mt?.location?' · '+esc(mt.location):''}${note}</span></div>
@@ -2805,6 +2827,7 @@ function viewOccurrences(mtid){
     const s=Number(ev.start), e=Number(ev.end);
     const off=!isLive(ev), isPast=s<todayMs;
     const busy=(off||isPast)?[]:participantsOf(ev).filter(mid=>memberBusy(mid,s,e,{ignoreEventId:id}));
+    const aw=(off||isPast)?[]:awayOf(participantsOf(ev),s,e);
     return `<div class="occ-row${off?' off':''}${isPast?' past':''}">
       <span class="occ-n">${ids.indexOf(id)+1}</span>
       <span class="occ-when">${mdLabel(fmtDate(new Date(s)))} (${WD[new Date(s).getDay()]}) ${hm(s)}~${hm(e)}</span>
@@ -2812,6 +2835,7 @@ function viewOccurrences(mtid){
       ${ev.moved?'<span class="occ-tag">시간 조정됨</span>':''}
       ${off?'<span class="occ-tag off">취소됨</span>':''}
       ${busy.length?`<span class="occ-warn" title="${esc(namesOf(busy))} 불가">⚠ ${esc(namesOf(busy))} 불가</span>`:''}
+      ${aw.length?`<span class="occ-tag away" title="${esc(namesOf(aw))} — 휴가·출장 등으로 이 회차에 빠집니다">✈ ${esc(namesOf(aw))}</span>`:''}
       <span class="occ-act">
         ${isPast?''
           :off?`<button class="btn ghost sm" data-act="occrestore" data-evid="${id}">되돌리기</button>`
@@ -2937,10 +2961,11 @@ function viewPuzzleGrid(){
           const on=state.meetings[id0]?.status==='confirmed';
           const tip=g.ids.map(id=>{const q=b.placed[id],m0=state.meetings[id]||{};
             return `${esc(m0.title||'')} ${hm(q.s)}~${hm(q.e)}`;}).join(' · ')+' · 끌어서 옮기기';
+          const aw=awayOf(participantsOf(mt0),pl.s,pl.e);
           return `<td class="mtg-cell blk${pick===id0?' cur':''}" rowspan="${g.span}"
             style="--pc:${meetingColor(id0)};--pcb:${meetingColorPastel(id0)};--pcs:${meetingColorSoft(id0)}">
             <button type="button" class="pz-fill" data-act="batchpick" data-mtid="${id0}" data-pz="${id0}"
-              title="${tip}" aria-label="${tip}"><span class="pz-ft">${hm(pl.s)}~${hm(pl.e)}${on?' ✓':''}</span>
+              title="${tip}${aw.length?` · ✈ ${esc(namesOf(aw))} 휴가·부재`:''}" aria-label="${tip}"><span class="pz-ft">${hm(pl.s)}~${hm(pl.e)}${on?' ✓':''}${aw.length?` <span class="pz-aw">✈${aw.length}</span>`:''}</span>
               <span class="pz-fn">${esc(mt0.title||'')}${more?` +${more}`:''}</span>
               ${g.span>1?`<span class="pz-fp">${esc(namesOf(participantsOf(mt0)))}</span>`:''}</button></td>`;
         }
@@ -2955,9 +2980,11 @@ function viewPuzzleGrid(){
       /* 고른 블록이 시작할 수 있는 칸 */
       if(pmt&&cs>=now&&m+pd<=eM&&pzCanPlace(pick,cs,cs+pd*60000,ign)){
         const e2=cs+pd*60000;
-        const lbl=`${mdLabel(d.ds)} (${WD[wdOf(d.ds)]}) ${hm(cs)}~${hm(e2)} (${pd}분) 여기에 놓기`;
-        return `<td class="mtg-cell cand" data-cs="${cs}"><button type="button" class="mtg-btn"
-          data-act="pzdrop" data-s="${cs}" title="${lbl}" aria-label="${lbl}"></button></td>`;
+        const aw=awayOf(pmids,cs,e2);
+        const lbl=`${mdLabel(d.ds)} (${WD[wdOf(d.ds)]}) ${hm(cs)}~${hm(e2)} (${pd}분) 여기에 놓기`
+          +(aw.length?` · ✈ ${namesOf(aw)} 휴가·부재 (놓을 수는 있음)`:'');
+        return `<td class="mtg-cell cand${aw.length?' aw':''}" data-cs="${cs}"><button type="button" class="mtg-btn"
+          data-act="pzdrop" data-s="${cs}" title="${esc(lbl)}" aria-label="${esc(lbl)}">${aw.length?'✈':''}</button></td>`;
       }
       const cls=['mtg-cell']; let tip='';
       if(pmt){
@@ -3319,7 +3346,7 @@ function viewHelp(){
         <div class="tut-section"><h3><span class="tut-num">4</span>미팅 잡기</h3>
           <p><b>Lab Calendar</b>는 <b>주간</b>이 기본입니다. 한 주의 배치를 보고, 그 자리에서 바로 고칩니다 — 빈 칸을 누르면 그 시간에 일정을 추가하고, 일정을 누르면 <b>시간 변경 / 이 주 취소 / + 이 주 추가 / 상세 수정</b>이 뜹니다. 시간 변경 중에는 그 주 후보 칸이 초록색으로, 원래 시간이 주황색으로 표시되고, <b>다른 미팅을 누르면 두 미팅의 자리가 바뀝니다</b>. 매주 반복 미팅은 다음 주로 넘겨도 같은 자리에 나타나고, 한 주만 바꾼 것은 그 주에만 반영됩니다. 월간 보기는 오른쪽 위 <b>월간</b> 버튼으로 전환합니다.</p>
           <p><b>Meetings</b> 탭에서 새 미팅을 만들고 참여자·길이·후보 날짜 범위를 고른 뒤 <b>가능 시간 찾기</b>를 누르면, 반복 일정 + 예외 + 이미 확정된 일정을 모두 계산해 전원 가능한 시간을 보여줍니다. 날짜×시간 격자에서 초록색 칸을 고르면 아래에 그 시간대가 표시되고, ‘이 시간으로 확정’을 누르면 Lab Calendar에 등록됩니다.</p>
-          <p><b>반복 미팅</b>을 ‘매주/격주’로 만들면 반복 종료일까지 회차가 한 번에 만들어집니다. 확정된 미팅 카드의 <b>회차 목록</b>에서 그 주만 <b>시간 변경</b>하거나, 학회 등으로 <b>취소</b>(캘린더에 회색 취소선으로 남고 되돌릴 수 있음)하거나, <b>+ 이 주 추가</b>로 같은 주에 회차를 하나 더 잡을 수 있습니다. 참여자가 겹치는 회차에는 ⚠ 표시가 붙습니다.</p>
+          <p><b>반복 미팅</b>을 ‘매주/격주’로 만들면 반복 종료일까지 회차가 한 번에 만들어집니다. 확정된 미팅 카드의 <b>회차 목록</b>에서 그 주만 <b>시간 변경</b>하거나, 학회 등으로 <b>취소</b>(캘린더에 회색 취소선으로 남고 되돌릴 수 있음)하거나, <b>+ 이 주 추가</b>로 같은 주에 회차를 하나 더 잡을 수 있습니다. 참여자가 겹치는 회차에는 ⚠ 표시가 붙습니다. 휴가·출장 같은 <b>예외 기간은 배정을 막지 않습니다</b> — 그 시간에도 미팅을 넣을 수 있고, 빠지는 사람이 ✈로 표시됩니다.</p>
           <p><b>회차 시간 변경</b>을 누르면 그 주 전체가 격자로 열립니다. <b>현재 시간대</b>가 주황색으로 표시되고, 그 주에 이미 잡힌 일정들도 함께 보이므로 배치를 보고 옮길 수 있습니다. 위쪽 <b>길이</b>를 바꾸면 그 회차만 길이를 조정할 수 있고, 고른 시간은 길이만큼(예: 90분이면 칸 3개) 통째로 표시됩니다. <b>다른 미팅 칸을 누르면 두 미팅의 시간이 서로 맞바뀝니다</b> — 미팅 순서를 바꿀 때 쓰세요.</p></div>
         <div class="tut-section"><h3><span class="tut-num">5</span>Lab Calendar</h3>
           <p>모든 확정 일정과 출장·휴가가 한 달력에 표시됩니다. 멤버·프로젝트·종류로 필터링하고, PNG/.ics로 내보내거나 개인 구독 링크를 쓸 수 있어요. 날짜 칸을 누르면 일정을 직접 추가할 수도 있습니다.</p></div>

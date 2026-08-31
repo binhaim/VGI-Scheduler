@@ -10,7 +10,7 @@ const EXPORTS = [
   "state", "FB",
   "confirmMeeting", "unconfirmMeeting", "moveOccurrence", "addOccurrence", "swapOccurrence",
   "setOccCancel", "deleteOccurrence", "occurrencesOf", "seriesStarts", "syncSeries",
-  "findMeetingSlots", "memberBusy", "locationBusy", "calEventsByDate",
+  "findMeetingSlots", "memberBusy", "memberAway", "awayOf", "locationBusy", "calEventsByDate",
   "weekOf", "addDays", "recurKey", "isLive",
   "viewCalendar", "viewCalWeek", "viewMeetings", "viewMeetingCard", "viewOccurrences",
   "viewFindWarn", "viewMeetingFind", "openFind", "doRender",
