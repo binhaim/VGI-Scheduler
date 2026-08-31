@@ -243,7 +243,7 @@ test("매주 반복은 주를 넘겨도 같은 자리에 나오고, 취소한 �
   assert.deepEqual(seen, [true, true, true, true]);
   app.setOccCancel(app.occurrencesOf("mt1")[2], true);
   state.calWeek = A(WS, 14);
-  assert.match(app.viewCalWeek(new Date()).html, /wk-chip off/);
+  assert.match(app.viewCalWeek(new Date()).html, /wk-blk off/);
 });
 
 test("주간 뷰에서 일정을 고르면 그 회차를 바로 고칠 수 있다", () => {
@@ -555,4 +555,47 @@ test("시간표 블록에 참석자 이름이 들어간다 (한 칸짜리 블록
   assert.doesNotMatch(html, /pz-fp">이태영</);                  // 한 칸 블록엔 공간이 없다
   assert.match(html, /짧은 미팅/);                              // 제목은 그대로
   state.batch = null;
+});
+
+test("주간 뷰 보기 모드는 퍼즐 보드처럼 블록으로 그린다 — 미팅색·rowspan·참석자", () => {
+  reset({ recur: null });
+  state.tab = "calendar";
+  app.confirmMeeting("mt1", D(WED, 14), D(WED, 15));           // 60분 = 두 칸 블록
+  state.events.solo = { title: "외부 세미나", type: "seminar", start: D(WED, 10), end: D(WED, 11),
+    participants: { m2: true }, ts: 2 };
+  const { html } = app.viewCalWeek(new Date());
+  assert.match(html, /table class="wk blocky"/);
+  assert.match(html, /rowspan="2"/);                            // 60분 = 30분 두 칸
+  assert.ok(html.includes(`--pc:${app.meetingColor("mt1")}`));  // 미팅은 미팅색
+  assert.ok(html.includes(`--pc:${"hsl(260,48%,42%)"}`));       // 미팅 아닌 일정은 타입색(세미나 260°)
+  assert.match(html, /bp">오경준, 박경문</);                     // 두 칸 블록엔 참석자 이름
+  assert.match(html, /data-act="calevpick"/);
+  assert.match(html, /data-act="calslot"/);                     // 빈 칸은 여전히 일정 추가
+  /* 시간 변경을 열면 칸 단위 격자로 돌아간다 (후보를 칸으로 골라야 하므로) */
+  const evid = app.occurrencesOf("mt1")[0];
+  app.openFind("mt1", { mode: "move", evid, from: WS, to: WE, dur: 60, maxDays: 7,
+    allDays: true, inCal: "cal", scope: "주", cur: { s: D(WED, 14), e: D(WED, 15) } });
+  const edit = app.viewCalWeek(new Date()).html;
+  assert.match(edit, /table class="wk"/);
+  assert.doesNotMatch(edit, /blocky/);
+  assert.match(edit, /현재 14:00~15:00/);
+  state.mtFind = null;
+});
+
+test("주간↔월간 전환은 보고 있던 날짜를 물려준다", () => {
+  reset();
+  state.tab = "calendar";
+  /* 다음 달 주간을 보다가 월간으로 → 그 달이 떠야 한다 (오늘의 달이 아니라) */
+  const far = A(TODAY, 40);
+  state.calMode = "week"; state.calWeek = app.weekOf(far)[0];
+  app.calSwitchMode("month");
+  assert.equal(state.calMonth, A(state.calWeek, 3).slice(0, 7));
+  assert.notEqual(state.calMonth === TODAY.slice(0, 7), far.slice(0, 7) !== TODAY.slice(0, 7));
+  /* 그 달 월간에서 주간으로 → 그 달 1일이 낀 주 */
+  app.calSwitchMode("week");
+  assert.equal(state.calWeek, app.weekOf(state.calMonth + "-01")[0]);
+  /* 이번 달이면 오늘이 낀 주로 */
+  state.calMode = "month"; state.calMonth = TODAY.slice(0, 7);
+  app.calSwitchMode("week");
+  assert.equal(state.calWeek, app.weekOf(TODAY)[0]);
 });

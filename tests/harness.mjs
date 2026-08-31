@@ -18,7 +18,7 @@ const EXPORTS = [
   "openBatch", "pzTray", "pzSeed", "pzIgnoreSet", "pzCanPlace", "pzConflict",
   "batchDays", "batchDiff", "applyBatch", "autoPlace", "solveBatch",
   "viewBatchCard", "viewPuzzleGrid", "mondayOf", "durChoices", "remapAvailability",
-  "meetingHue", "meetingColor", "meetingColorPastel",
+  "meetingHue", "meetingColor", "meetingColorPastel", "calSwitchMode",
 ];
 
 function installDomStubs() {
