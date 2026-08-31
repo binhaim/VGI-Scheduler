@@ -1286,18 +1286,18 @@
   .wk td.wk-stack{position:relative;padding:0;}
   .wk-stackwrap{position:absolute;inset:1px 2px;display:flex;flex-direction:column;gap:2px;}
   .wk-blk{flex:1;min-height:0;display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:1px;
-    border:0;border-radius:7px;padding:2px 7px;overflow:hidden;text-align:left;cursor:pointer;
-    background:var(--pcs);box-shadow:inset 0 0 0 1.5px var(--pc);color:var(--pc);
-    font-family:'Bricolage Grotesque',sans-serif;}
+    border:1.5px solid var(--pc);border-radius:7px;padding:2px 7px;overflow:hidden;text-align:left;cursor:pointer;
+    background:var(--pcs);color:var(--pc);
+    font-family:'Bricolage Grotesque',sans-serif;}   /* PNG 저장이 inset shadow를 두껍게 그려 실제 border 사용 */
   .wk-blk:hover{background:var(--pcb,var(--pcs));}
   .wk-blk .bt{font-size:9.5px;font-weight:600;opacity:.75;line-height:1;white-space:nowrap;}
   .wk-blk .bn{font-size:11px;font-weight:700;line-height:1.15;max-width:100%;
     white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
   .wk-blk .bp{font-size:9.5px;font-weight:600;opacity:.72;line-height:1.2;max-width:100%;
     white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-  .wk-blk.on{box-shadow:inset 0 0 0 2.5px var(--ink);}
+  .wk-blk.on{border:2px solid var(--ink);}
   .wk-blk.off{opacity:.55;} .wk-blk.off .bn{text-decoration:line-through;}
-  .wk-blk.x{background:transparent;box-shadow:inset 0 0 0 1.5px var(--line-2);color:var(--muted);}
+  .wk-blk.x{background:transparent;border-color:var(--line-2);color:var(--muted);}
   /* 휴가·부재 표시 — 배정은 막지 않는다 */
   .pz-aw{font-weight:700;opacity:.85;}
   .occ-tag.away{background:transparent;box-shadow:inset 0 0 0 1px var(--line-2);color:var(--muted);}
