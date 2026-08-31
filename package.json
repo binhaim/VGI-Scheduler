@@ -6,9 +6,10 @@
     "node": ">=22"
   },
   "scripts": {
-    "check": "node --check calendar/calendar.js && node --check calendar/generate.js",
+    "check": "node --check calendar/calendar.js && node --check calendar/generate.js && node --check tests/harness.mjs",
     "generate:feeds": "node calendar/generate.js",
-    "test": "node --test calendar/*.test.js"
+    "test": "node --test calendar/*.test.js tests/*.test.mjs",
+    "preview": "node tests/preview.mjs"
   },
   "dependencies": {
     "ical-generator": "^11.1.0"

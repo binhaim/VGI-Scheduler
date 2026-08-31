@@ -89,7 +89,13 @@ events/{evid}        { title, type, start(ms), end(ms), participants:{mid:true},
     `noClamp:true`로 전체를 보면 학기 밖 날짜는 헤더 `학기밖` + 빗금으로 구분하고 `outTotal`로 따로 센다.
     반복 불가 시간을 입력하지 않은 참여자(`noAvail`)도 이름으로 경고한다 — 그 사람은 늘 가능으로 계산되기 때문.
     주간 뷰도 보고 있는 주가 학기 밖이면 같은 배너를 띄운다.
-  - 미구현(다음 단계): 학회 기간 일괄 취소(유지할 미팅만 체크).
+  - **Meetings 탭 = 하나의 주간 배정 보드**(`viewMeetingBoard`). 미팅 칩을 고르면 `openBoardFind`가
+    그 주 후보를 계산해 같은 격자에 초록 칸으로 얹고, 누르면 배정(`mode:'assign'` → `confirmMeeting`,
+    이미 배정된 미팅이면 `'extra'` → `addOccurrence`)한다. 보드 아래에 고른 미팅의 상세 카드가 붙는다.
+  - **주간 격자는 `weekGridTable` 하나**로 통일했다 (Calendar 주간 뷰 + Meetings 보드가 공용).
+    `find`/`pick`을 넘기면 후보·현재 시간·선택 구간을 겹쳐 그린다. 예전의 미팅 카드 안 격자
+    (`viewMeetingFind`)는 제거했다 — 격자가 두 벌이면 규칙이 갈라진다.
+  - 미구현(다음 단계): 학회 기간 일괄 취소(유지할 미팅만 체크), 관리자 권한 분리(아래 8절).
 
 ## 4. 코드 구조 (단일 index.html, vanilla JS)
 
@@ -129,7 +135,10 @@ events/{evid}        { title, type, start(ms), end(ms), participants:{mid:true},
    - 앱 쪽은 준비됨: 구독 모달이 `SITE_BASE/calendars/{mid}.ics` URL을 안내 중 (배포 전 경고 문구 표시).
 2. 반복 미팅 (매주 고정 미팅) — §3의 확장 방향 참고.
 3. 사용 가이드 확장, 모바일 실기기 점검 (기본 대응은 되어 있음 — 터치 페인팅·풀블리드·스크롤 잠금 포팅됨).
-4. (선택) 관리자 권한 분리 — 현재는 밴드 앱과 같은 "링크 아는 사람 전부 편집" 모델. 필요해지면 Firebase Auth + 규칙 강화.
+4. (선택) **관리자 권한 분리 — 아직 미구현.** 현재는 밴드 앱과 같은 "링크 아는 사람 전부 편집" 모델이다.
+   `members/{mid}.role`은 자유 텍스트 표시용일 뿐 권한과 무관하고, 도움말의 "학기 시작 (관리자)"도 안내 문구일 뿐이다.
+   실제로 나누려면 Firebase Auth(구글 로그인) + RTDB 규칙에서 `admins/{uid}` 화이트리스트 확인이 필요하다.
+   지금 RTDB 규칙은 `vgi` 경로 전체가 `.read`/`.write` 공개라, 클라이언트에서 버튼만 숨기는 것은 보호가 되지 않는다.
 
 ## 7. 함정·주의사항
 
