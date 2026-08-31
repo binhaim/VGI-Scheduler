@@ -527,3 +527,32 @@ test("트레이·보드 블록·선택 패널이 미팅 색을 쓰고, 패널에
   assert.match(app.viewBatchCard(), /아직 안 놓음/);
   state.batch = null;
 });
+
+test("회차 목록은 접힌 채로 시작하고, 눌러야 펼쳐진다", () => {
+  reset();
+  app.confirmMeeting("mt1", D(MON, 14), D(MON, 15));
+  let html = app.viewOccurrences("mt1");
+  assert.match(html, /occ-wrap collapsed/);
+  assert.match(html, /data-act="occtoggle"/);
+  assert.match(html, /회차 <b>4<\/b>개/);                     // 접혀도 요약은 보인다
+  assert.doesNotMatch(html, /occ-row/);                       // 행은 없다
+  state.occOpen.mt1 = true;
+  html = app.viewOccurrences("mt1");
+  assert.doesNotMatch(html, /collapsed/);
+  assert.equal((html.match(/occ-row/g) || []).length, 4);
+  assert.match(html, /data-act="occtoggle"/);                 // 다시 접을 수 있다
+});
+
+test("시간표 블록에 참석자 이름이 들어간다 (한 칸짜리 블록은 제외)", () => {
+  reset({ recur: null });
+  state.meetings.mt2 = { ...state.meetings.mt1, title: "짧은 미팅", durationMin: 30,
+    participants: { m2: true }, ts: 2 };
+  app.confirmMeeting("mt1", D(WED, 14), D(WED, 15));          // 60분 = 두 칸
+  app.confirmMeeting("mt2", D(WED, 16), D(WED, 16, 30));      // 30분 = 한 칸
+  app.openBatch();
+  const html = app.viewPuzzleGrid();
+  assert.match(html, /pz-fp">오경준, 박경문</);                 // 두 칸 블록엔 이름
+  assert.doesNotMatch(html, /pz-fp">이태영</);                  // 한 칸 블록엔 공간이 없다
+  assert.match(html, /짧은 미팅/);                              // 제목은 그대로
+  state.batch = null;
+});

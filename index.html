@@ -1202,6 +1202,8 @@
   #pzgrid .pz-fill.static{cursor:default;opacity:.72;}
   #pzgrid .pz-fill:hover:not(.static){background:var(--pcb,var(--pc));color:var(--pc,#fff);}
   #pzgrid .pz-ft{font-size:9.5px;font-weight:600;opacity:.75;line-height:1;}
+  #pzgrid .pz-fp{font-size:9.5px;font-weight:600;line-height:1.2;opacity:.72;max-width:100%;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
   #pzgrid .pz-fn{font-size:11px;font-weight:700;line-height:1.15;white-space:nowrap;
     overflow:hidden;text-overflow:ellipsis;max-width:100%;}
   #pzgrid td.blk.cur .pz-fill{box-shadow:inset 0 0 0 2px var(--ink);}
@@ -1289,6 +1291,12 @@
   .occ-head{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;
     font-size:12.5px;color:var(--muted);margin-bottom:2px;}
   .occ-head b{color:var(--ink);}
+  .occ-toggle{border:0;background:transparent;padding:2px 4px 2px 0;cursor:pointer;
+    font-size:12.5px;color:var(--muted);display:inline-flex;align-items:center;gap:6px;}
+  .occ-toggle:hover{color:var(--ink);}
+  .occ-toggle b{color:var(--ink);}
+  .occ-arr{font-size:10px;color:var(--muted-2);}
+  .occ-wrap.collapsed{gap:0;}
   .occ-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:13px;
     padding:6px 8px;border:1px solid var(--line);border-radius:var(--r-sm);background:var(--paper);}
   .occ-row.off{opacity:.62;}
@@ -1354,7 +1362,8 @@ let state={
   mtDraft:null,      // 새 미팅/수정 폼 {id?,title,...} | null
   mtFind:null,       // {mtid, rows:[분], days:[{ds,ok,n}], dur, total, truncated} | null
   mtPick:null,       // 격자에서 고른 후보 {mtid, s, e} | null
-  occPast:{},        // {mtid:true} — 지난 회차까지 펼쳐 보기
+  occPast:{},        // {mtid:true} — 지난 회차까지 보기
+  occOpen:{},        // {mtid:true} — 회차 목록 펼침 (기본은 접힘)
   batch:null,        // 퍼즐 배치 {week(월),placed:{mtid:{s,e}},pick,mode,repeat,autoFail} | null
   // 모달
   evEdit:null, xDraft:null, subscribeFor:null, showHelp:false,
@@ -2675,6 +2684,13 @@ function viewOccurrences(mtid){
   const cancelled=ids.filter(id=>!isLive(state.events[id]));
   const upcoming=ids.filter(id=>Number(state.events[id].start)>=todayMs&&isLive(state.events[id]));
   const showPast=!!state.occPast[mtid];
+  const open=!!state.occOpen[mtid];
+  const summary=`회차 <b>${ids.length}</b>개 · 남은 회차 ${upcoming.length}개${cancelled.length?` · 취소 ${cancelled.length}개`:''}`;
+  if(!open)
+    return `<div class="occ-wrap collapsed">
+      <button type="button" class="occ-toggle" data-act="occtoggle" data-mtid="${mtid}"
+        title="회차 목록 펼치기"><span class="occ-arr">▸</span> ${summary}</button>
+    </div>`;
   const shown=showPast?ids:ids.filter(id=>Number(state.events[id].start)>=todayMs);
   const rows=shown.map(id=>{
     const ev=state.events[id];
@@ -2700,7 +2716,8 @@ function viewOccurrences(mtid){
   }).join('')||'<div class="note">남은 회차가 없습니다.</div>';
   return `<div class="occ-wrap">
     <div class="occ-head">
-      <span>회차 <b>${ids.length}</b>개 · 남은 회차 ${upcoming.length}개${cancelled.length?` · 취소 ${cancelled.length}개`:''}</span>
+      <button type="button" class="occ-toggle" data-act="occtoggle" data-mtid="${mtid}"
+        title="회차 목록 접기"><span class="occ-arr">▾</span> ${summary}</button>
       ${past.length?`<button class="btn ghost sm" data-act="occpast" data-mtid="${mtid}">${showPast?'지난 회차 숨기기':`지난 회차 ${past.length}개 보기`}</button>`:''}
     </div>
     ${rows}
@@ -2816,14 +2833,16 @@ function viewPuzzleGrid(){
             style="--pc:${meetingColor(id0)};--pcb:${meetingColorPastel(id0)};--pcs:${meetingColorSoft(id0)}">
             <button type="button" class="pz-fill" data-act="batchpick" data-mtid="${id0}" data-pz="${id0}"
               title="${tip}" aria-label="${tip}"><span class="pz-ft">${hm(pl.s)}~${hm(pl.e)}${on?' ✓':''}</span>
-              <span class="pz-fn">${esc(mt0.title||'')}${more?` +${more}`:''}</span></button></td>`;
+              <span class="pz-fn">${esc(mt0.title||'')}${more?` +${more}`:''}</span>
+              ${g.span>1?`<span class="pz-fp">${esc(namesOf(participantsOf(mt0)))}</span>`:''}</button></td>`;
         }
         const ev=state.events[g.ids[0]]||{};
         const more=g.ids.length-1;
         return `<td class="mtg-cell blk ev-bg" rowspan="${g.span}"
           style="--pc:${typeColor(ev.type)};--pcs:${typeColorSoft(ev.type)}"
-          title="${esc(ev.title||'')} ${hm(g.s)}~${hm(g.e)}"><span class="pz-fill static">
-          <span class="pz-ft">${hm(g.s)}~${hm(g.e)}</span><span class="pz-fn">${esc(ev.title||'')}${more?` +${more}`:''}</span></span></td>`;
+          title="${esc(ev.title||'')} ${hm(g.s)}~${hm(g.e)} · ${esc(namesOf(participantsOf(ev)))}"><span class="pz-fill static">
+          <span class="pz-ft">${hm(g.s)}~${hm(g.e)}</span><span class="pz-fn">${esc(ev.title||'')}${more?` +${more}`:''}</span>
+          ${g.span>1?`<span class="pz-fp">${esc(namesOf(participantsOf(ev)))}</span>`:''}</span></td>`;
       }
       /* 고른 블록이 시작할 수 있는 칸 */
       if(pmt&&cs>=now&&m+pd<=eM&&pzCanPlace(pick,cs,cs+pd*60000,ign)){
@@ -3413,6 +3432,10 @@ function bindEvents(){
     if(act==='occcancel'){setOccCancel(t.dataset.evid,true);return;}
     if(act==='occrestore'){setOccCancel(t.dataset.evid,false);return;}
     if(act==='occdelete'){deleteOccurrence(t.dataset.evid);return;}
+    if(act==='occtoggle'){
+      const k=t.dataset.mtid;
+      state.occOpen={...state.occOpen,[k]:!state.occOpen[k]}; render();return;
+    }
     if(act==='occpast'){
       const k=t.dataset.mtid;
       state.occPast={...state.occPast,[k]:!state.occPast[k]}; render();return;
