@@ -61,6 +61,28 @@
     flex-shrink:0;}
   .help-btn:hover{border-color:var(--ink);background:var(--paper);color:var(--accent);}
   .tabs ~ .help-btn{margin-left:8px;}
+  .me-sel{display:flex;align-items:center;gap:6px;margin-left:8px;font-size:12px;color:var(--muted);
+    font-family:'Bricolage Grotesque',sans-serif;font-weight:700;}
+  .me-sel select{padding:6px 8px;font-size:12.5px;border-radius:999px;max-width:140px;}
+  details.fold{padding:0;}
+  details.fold>summary{cursor:pointer;list-style:none;padding:16px 20px;font-family:'Bricolage Grotesque',sans-serif;
+    font-weight:700;font-size:15px;display:flex;align-items:baseline;gap:10px;}
+  details.fold>summary::-webkit-details-marker{display:none;}
+  details.fold>summary::before{content:'▸';font-size:12px;color:var(--muted);}
+  details.fold[open]>summary::before{content:'▾';}
+  details.fold>summary .sub{font-weight:500;font-size:12.5px;}
+  details.fold .fold-body{padding:0 20px 18px;}
+  .btn.ghost.sm.on{border-color:var(--ink);color:var(--ink);}
+  .av-status{display:flex;align-items:center;gap:6px;flex-wrap:wrap;font-size:13px;color:var(--ink-2);
+    padding:10px 12px;margin-bottom:12px;border:1px solid var(--line);border-radius:var(--r-sm);background:var(--surface);}
+  .av-status b{font-family:'Bricolage Grotesque',sans-serif;font-size:15px;}
+  .chip-btn{border:1px solid var(--line-2);background:var(--paper);border-radius:999px;padding:2px 9px;font-size:12px;cursor:pointer;color:var(--ink);}
+  .chip-btn:hover{border-color:var(--ink);}
+  .mt-top{display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
+  .mt-more{margin-top:12px;}
+  .mt-more>summary{cursor:pointer;font-size:12.5px;color:var(--muted);user-select:none;}
+  .mt-more>summary:hover{color:var(--ink);}
+  .agg-edit-actions{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;}
 
   .tabs{display:flex;gap:2px;margin-left:auto;background:var(--paper);
     padding:3px;border-radius:8px;border:1px solid var(--line);}
@@ -369,7 +391,9 @@
     position:sticky;left:0;max-width:100vw;box-sizing:border-box;}   /* 가로 스크롤에도 제목은 왼쪽 고정 */
   .agg-export-title span{font-family:'Archivo',sans-serif;font-size:11px;font-weight:500;
     color:var(--muted);margin-left:5px;}
-  .agg-weekdays,.agg-month-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));}
+  .agg-weekdays,.agg-month-grid{display:grid;grid-template-columns:.62fr repeat(5,minmax(0,1fr)) .62fr;}
+  .agg-event.mt{background:var(--pcb);border-color:var(--pcb);}
+  .agg-event.mt .agg-event-song{color:var(--pc);}
   .agg-weekday{background:var(--ink);color:var(--paper);font-size:11px;font-weight:600;
     padding:7px 8px;text-align:center;border-right:1px solid #000;}
   .agg-weekday:last-child{border-right:0;}
@@ -779,12 +803,17 @@
   .note.warn{background:var(--accent-soft);color:var(--accent-d);
     box-shadow:inset 3px 0 0 var(--accent);}
   .note.warn b{color:var(--accent-d);}
+  .note.info{background:var(--surface);color:var(--ink-2);border-left:3px solid var(--line-2);}
+  .note.info b{color:var(--ink);}
   .note.warn .btn{margin-left:6px;vertical-align:1px;}
   code{background:var(--paper);padding:1px 6px;border-radius:4px;font-size:13px;
     font-family:ui-monospace,'SF Mono',Menlo,monospace;}
   #net-banner{position:fixed;top:0;left:0;right:0;z-index:9999;display:none;
     background:#c0392b;color:#fff;text-align:center;padding:8px 12px;
     font-size:13px;font-weight:600;}
+  .toast-undo{border:0;background:transparent;color:inherit;text-decoration:underline;font-weight:700;
+    cursor:pointer;font-size:inherit;padding:0 2px;margin-left:6px;}
+  .toast.has-undo{display:flex;align-items:center;gap:6px;}
   .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);
     background:var(--ink);color:var(--paper);padding:10px 18px;border-radius:999px;
     font-size:13px;z-index:50;font-weight:500;box-shadow:var(--shadow);
@@ -1050,9 +1079,6 @@
   .mt-type{font-size:10.5px;font-weight:700;color:#fff;background:var(--pc,var(--accent));
     border-radius:999px;padding:2px 8px;white-space:nowrap;}
   .mt-actions{display:flex;gap:6px;flex-wrap:wrap;align-items:center;}
-  .mt-cands{margin-top:12px;padding-top:12px;border-top:1px dashed var(--line-2);
-    display:flex;flex-direction:column;gap:8px;}
-  .mt-find-head{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:12.5px;color:var(--muted);}
   .mtg-wrap{overflow:auto;max-height:60vh;border:1px solid var(--line);border-radius:var(--r-sm);
     background:var(--surface);overscroll-behavior:contain;-webkit-overflow-scrolling:touch;}
   .mtg{border-collapse:collapse;width:100%;}
@@ -1160,6 +1186,20 @@
     opacity:.65;padding:0 2px;flex-shrink:0;}
   .pz-x:hover{opacity:1;}
   .pz-empty{font-size:12px;color:var(--muted);padding:6px 4px;}
+  .pz-side-note{font-size:11.5px;color:var(--muted);padding:4px 4px 8px;border-bottom:1px dashed var(--line-2);margin-bottom:4px;}
+  .pz-cur.cal-edit{margin-bottom:10px;}
+  .pz-load{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums;}
+  .pz-load b{color:var(--ink);font-family:'Bricolage Grotesque',sans-serif;}
+  .wc-list{display:flex;flex-direction:column;gap:4px;max-height:52vh;overflow:auto;}
+  .wc-row{cursor:pointer;border-left:3px solid var(--pc);}
+  .wc-row.off{opacity:.55;}
+  .wc-title{font-family:'Bricolage Grotesque',sans-serif;}
+  .wk-hint{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;}
+  #pzgrid .pz-fill.swappable{cursor:copy;border:0;}
+  #pzgrid .pz-fill.swappable:hover,#pzgrid .pz-fill.swap-hover{outline:2px dashed var(--ink);outline-offset:-2px;background:var(--pcb,var(--pcs));}
+  #pzgrid td.blk.ev-bg.off .pz-fill{opacity:.45;text-decoration:line-through;}
+  .pz-side-note b{color:var(--accent-d);}
+  .linkish{border:0;background:transparent;padding:0;color:var(--accent-d);text-decoration:underline;cursor:pointer;font-size:inherit;}
   .pz-hint{font-size:12.5px;color:var(--muted);display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
   /* 선택된 미팅 패널 — 무엇을 들고 있는지, 누가 참석하는지 */
   .pz-cur{display:flex;align-items:center;gap:12px;flex-wrap:wrap;
@@ -1378,6 +1418,7 @@ const SITE_BASE = location.origin + location.pathname.replace(/[^/]*$/, "");
 let DB=null, FB={}, fbReady=false;
 let state={
   tab:'calendar', loading:true, fbError:false, noConfig:false,
+  me:'',                                  // '나' — 이 브라우저에서 고른 멤버 (localStorage vgi.me)
   // 실시간 데이터
   settings:{}, members:{}, semesters:{}, projects:{},
   meetings:{}, events:{}, exceptions:{}, availability:{},
@@ -1385,15 +1426,17 @@ let state={
   calMode:'week',                         // 'week'(기본) | 'month' — start()에서 저장값 복원
   calMonth:'', calWeek:'', calPick:null,  // calWeek = 그 주 일요일 "YYYY-MM-DD"
   calMember:'', calProject:'', calType:'',
+  calWeekend:false,                       // 주간 뷰에 토·일 열을 보일지 (기본은 월~금)
   // Availability 탭
   avMember:'', avSemester:'',
   // Meetings 탭
   mtDraft:null,      // 새 미팅/수정 폼 {id?,title,...} | null
-  mtFind:null,       // {mtid, rows:[분], days:[{ds,ok,n}], dur, total, truncated} | null
-  mtPick:null,       // 격자에서 고른 후보 {mtid, s, e} | null
   occPast:{},        // {mtid:true} — 지난 회차까지 보기
   occOpen:{},        // {mtid:true} — 회차 목록 펼침 (기본은 접힘)
-  batch:null,        // 퍼즐 배치 {week(월),placed:{mtid:{s,e}},pick,mode,repeat,autoFail} | null
+  batch:null,        // 배치 보드 {week(월),placed:{mtid:{s,e}},seed,pick,mode,repeat,autoFail,
+                     //   single?:{evid,mtid,mode:'move'|'extra',scope:'week'|'series',dur?}} — single이면 캘린더의 회차 편집
+  mtListOpen:false,  // 미팅 탭 아래 '미팅 목록' 펼침
+  weekCancel:null,   // 이 주 회차 일괄 정리 모달 {week, keep:{evid:true}} | null
   // 모달
   evEdit:null, xDraft:null, subscribeFor:null, showHelp:false,
 };
@@ -1404,9 +1447,21 @@ const esc=s=>(s==null?'':String(s)).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;
 const genId=p=>p+'_'+Math.random().toString(36).slice(2,9);
 const lsGet=k=>{try{return localStorage.getItem(k);}catch(e){return null;}};
 const lsSet=(k,v)=>{try{localStorage.setItem(k,v);}catch(e){}};
-function toast(m){const t=document.createElement('div');t.className='toast';t.textContent=m;
+/* 토스트 — 되돌릴 수 있는 동작은 확인창 대신 여기서 '되돌리기'를 준다 */
+function toast(m,opts){
+  const t=document.createElement('div');t.className='toast'+(opts?.undo?' has-undo':'');
   t.setAttribute('role','status');t.setAttribute('aria-live','polite');
-  document.body.appendChild(t);setTimeout(()=>t.remove(),2200);}
+  const sp=document.createElement('span');sp.textContent=m;t.appendChild(sp);
+  let timer=null;
+  if(opts?.undo){
+    const b=document.createElement('button');b.type='button';b.className='toast-undo';b.textContent=opts.undoLabel||'되돌리기';
+    b.addEventListener('click',()=>{clearTimeout(timer);t.remove();opts.undo();});
+    t.appendChild(b);
+    document.querySelectorAll('.toast.has-undo').forEach(x=>x.remove());
+  }
+  document.body.appendChild(t);
+  timer=setTimeout(()=>t.remove(),opts?.ms||(opts?.undo?6500:2200));
+}
 async function copyText(value){
   try{ await navigator.clipboard.writeText(value); return true; }
   catch(_){
@@ -1455,7 +1510,7 @@ const meetingColorPastel=mtid=>`hsl(${meetingHue(mtid)},62%,82%)`;  // 블록 �
 const meetingColorSoft=mtid=>`hsla(${meetingHue(mtid)},58%,66%,.20)`; // 옅은 틴트
 const typeColorSoft=t=>`hsla(${TYPE_HUE[t]??0},48%,42%,.13)`;
 /* 반복 — 주 단위만 (interval 1=매주, 2=격주) */
-const RECUR_OPTS=[['','반복 없음'],['w1','매주'],['w2','격주']];
+const RECUR_OPTS=[['w1','매주'],['w2','격주'],['','반복 없음 (한 번만)']];
 const RECUR_LABEL={w1:'매주',w2:'격주'};
 const recurKey=mt=>mt?.recurrence?.freq==='weekly'?(Number(mt.recurrence.interval)===2?'w2':'w1'):'';
 const recurStepDays=k=>k==='w2'?14:7;
@@ -1592,81 +1647,6 @@ function locationBusy(loc,s,e,ignoreEventId,ignoreSet){
   }
   return false;
 }
-/* 미팅 후보 시간 계산 — 날짜(열) x 슬롯(행) 격자.
-   칸마다 무엇이 막고 있는지(기존 일정 / 개인 불가 / 지난 시간)까지 담아 그대로 그릴 수 있게 한다. */
-const MT_MAX_DAYS=14;
-function findMeetingSlots(mt,opts={}){
-  const mids=participantsOf(mt);
-  const empty={rows:[],days:[],dur:0,slot:cfgSlot(),total:0,outTotal:0,truncated:false,
-    clamped:null,sem:null,noAvail:[]};
-  if(!mids.length) return {...empty,error:'참여자를 먼저 선택하세요'};
-  const dur=Number(opts.dur||mt.durationMin)||60;
-  const slot=cfgSlot();
-  const startMin=cfgDayStart()*60, endMin=cfgDayEnd()*60;
-  const todayDs=fmtDate(new Date());
-  const rangeStart=opts.from||mt.rangeStart, rangeEnd=opts.to||mt.rangeEnd;
-  /* 주간 반복 불가 시간은 '활성 학기 안'에서만 적용된다 — 학기 밖 날짜는 제약이 없어
-     전원 가능처럼 보인다. 그래서 기본 검색은 학기 시작일부터 한다. */
-  const sid=activeSemesterId();
-  const sem=sid?state.semesters[sid]:null;
-  let from=(opts.allDays||rangeStart>=todayDs)?rangeStart:todayDs;
-  let clamped=null;
-  if(!opts.allDays&&!opts.noClamp&&sem&&from<sem.startDate&&sem.startDate<=(rangeEnd||'')){
-    clamped=from; from=sem.startDate;
-  }
-  if(!rangeEnd||from>rangeEnd) return {...empty,dur,sem:sem?{id:sid,...sem}:null,
-    error:'남은 날짜가 없습니다. 날짜 범위를 확인하세요'};
-  const maxDays=opts.maxDays||MT_MAX_DAYS;
-  const rows=[]; for(let m=startMin;m<endMin;m+=slot) rows.push(m);
-  const locKey=String(mt.location||'').trim().toLocaleLowerCase('ko-KR');
-  const now=Date.now();
-  const semAv=state.availability?.[sid]||{};
-  const noAvail=mids.filter(mid=>{
-    const d=semAv[mid]; if(!d) return true;
-    return !Object.values(d).some(slots=>Object.values(slots||{}).some(Boolean));
-  });
-  const days=[]; let total=0, outTotal=0, truncated=false;
-  for(const ds of dateList(from,rangeEnd)){
-    const base=new Date(ds+'T00:00:00').getTime();
-    const dayS=base+startMin*60000, dayE=base+endMin*60000;
-    /* 이 날 이 미팅과 부딪히는 일정만 미리 추린다 (참여자가 겹치거나 같은 장소) */
-    const evs=Object.keys(state.events).filter(id=>{
-      if(id===opts.ignoreEventId) return false;
-      const ev=state.events[id];
-      if(!isLive(ev)||!overlap(dayS,dayE,Number(ev.start),Number(ev.end))) return false;
-      return mids.some(mid=>ev.participants?.[mid])
-        ||(locKey&&String(ev.location||'').trim().toLocaleLowerCase('ko-KR')===locKey);
-    });
-    const cells={}; const ok={}; let n=0;
-    for(const m of rows){
-      const cs=base+m*60000, ce=cs+slot*60000;
-      const hit=evs.find(id=>overlap(cs,ce,Number(state.events[id].start),Number(state.events[id].end)));
-      if(hit){
-        const ev=state.events[hit], es=Number(ev.start), ee=Number(ev.end);
-        cells[m]={kind:'ev',evid:hit,title:ev.title||'일정',type:ev.type,s:es,e:ee,
-          head:es>=cs&&es<ce,mine:(ev.seriesId||ev.meetingId)===opts.mtid};
-        continue;
-      }
-      if(cs<now){ cells[m]={kind:'past'}; continue; }
-      const who=mids.filter(mid=>memberBusy(mid,cs,ce,{ignoreEventId:opts.ignoreEventId}));
-      cells[m]=who.length?{kind:'na',who}:{kind:'free',away:awayOf(mids,cs,ce)};
-    }
-    for(const m of rows){
-      if(m+dur>endMin) break;
-      let good=true;
-      for(let t=m;t<m+dur;t+=slot){ if(cells[t]?.kind!=='free'){good=false;break;} }
-      if(!good) continue;
-      ok[m]=base+m*60000; n++;
-    }
-    if(!n&&!opts.allDays) continue;
-    if(days.length>=maxDays){ truncated=true; break; }
-    const outSem=!sem||ds<sem.startDate||ds>sem.endDate;
-    days.push({ds,base,cells,ok,n,outSem}); total+=n; if(outSem) outTotal+=n;
-  }
-  return {rows,days,dur,slot,total,outTotal,truncated,maxDays,clamped,
-    sem:sem?{id:sid,...sem}:null,noAvail,error:null};
-}
-
 /* ---------------- 한 번에 배치 (퍼즐 보드) ----------------
    미팅마다 길이가 다른 '블록'을 한 주(월~금) 시간표 위에 직접 놓는다.
    블록을 고르면 그 블록이 들어갈 수 있는 시작 칸만 초록색으로 켜진다. */
@@ -1684,11 +1664,27 @@ function defaultBatchWeek(){
   return mondayOf(sem&&sem.startDate>today?sem.startDate:today);
 }
 const locKeyOf=l=>String(l||'').trim().toLocaleLowerCase('ko-KR');
-/* 보드에 올릴 블록 = 모든 미팅. 확정된 것도 빼서 다시 놓을 수 있어야 한다 */
-function pzTray(){ return sortedIds(state.meetings); }
+/* 보드에 올릴 블록 = 모든 미팅. 확정된 것도 빼서 다시 놓을 수 있어야 한다.
+   캘린더에서 회차 하나를 고치는 중(single)이면 그 미팅 하나만 */
+function pzTray(){
+  const sg=state.batch?.single;
+  return sg?[sg.mtid]:sortedIds(state.meetings);
+}
+/* 고른 블록의 길이 — 회차를 옮기는 중이면 그 회차의 실제 길이 (미팅 기본 길이와 다를 수 있다) */
+function pzDurOf(mtid){
+  const sg=state.batch?.single;
+  if(sg&&sg.mtid===mtid){
+    if(sg.dur) return sg.dur;
+    if(sg.mode==='move'){ const ev=state.events[sg.evid]; if(ev) return (Number(ev.end)-Number(ev.start))/60000; }
+  }
+  return Number(state.meetings[mtid]?.durationMin)||60;
+}
 /* 보드에 올라온 미팅의 확정 회차는 '남의 일정'이 아니다 — 가용성 계산에서 뺀다
-   (안 그러면 자기 자신 때문에 놓을 자리가 없다고 나온다) */
+   (안 그러면 자기 자신 때문에 놓을 자리가 없다고 나온다).
+   회차 하나만 옮기는 중이면 그 회차만 뺀다 — 같은 주의 다른 회차와는 겹치면 안 되니까 */
 function pzIgnoreSet(){
+  const sg=state.batch?.single;
+  if(sg) return sg.mode==='move'?new Set([sg.evid]):new Set();
   const mts=new Set(pzTray());
   const out=new Set();
   for(const evid in state.events){
@@ -1870,6 +1866,112 @@ function autoPlace(){
   b.pick=null;
   render();
 }
+/* ---- 캘린더에서 회차 하나 고치기 — 같은 보드 엔진, 놓는 순간 바로 저장 ---- */
+function openCalEdit(evid,mode){
+  const ev=state.events[evid]; if(!ev) return;
+  const mtid=ev.seriesId||ev.meetingId, mt=mtid?state.meetings[mtid]:null;
+  if(!mt){toast('미팅에 속한 회차만 옮길 수 있습니다 — 상세 수정을 쓰세요');return;}
+  const ds=fmtDate(new Date(Number(ev.start)));
+  const placed={}; if(mode==='move') placed[mtid]={s:Number(ev.start),e:Number(ev.end)};
+  state.batch={week:mondayOf(ds),placed,seed:{...placed},pick:mtid,mode:'spread',repeat:false,autoFail:null,
+    single:{evid,mtid,mode:mode||'move',scope:'week'}};
+  state.tab='calendar'; state.calMode='week'; state.calWeek=weekOf(ds)[0]; state.calPick=null;
+  if(typeof history!=='undefined') history.replaceState(null,'','#calendar');
+  render();
+}
+function applySingle(s,e){
+  const sg=state.batch?.single; if(!sg) return;
+  if(sg.mode==='extra') addOccurrence(sg.mtid,s,e);
+  else if(sg.scope==='series'&&recurKey(state.meetings[sg.mtid])) moveSeriesFrom(sg.mtid,sg.evid,s,e);
+  else moveOccurrence(sg.evid,s,e);
+  state.batch=null; render();
+}
+/* 이번 주부터 남은 회차를 전부 같은 요일·시각으로 — 지난 회차는 그대로 둔다 */
+function moveSeriesFrom(mtid,evid,s,e){
+  const mt=state.meetings[mtid], ev=state.events[evid]; if(!mt||!ev) return;
+  const from=Number(ev.start);
+  occurrencesOf(mtid).forEach(id=>{
+    if(Number(state.events[id].start)<from) return;
+    FB.remove(R('events/'+id)).catch(wErr); delete state.events[id];
+  });
+  const dur=e-s, starts=seriesStarts(s,mt);
+  starts.forEach(st=>{
+    const id=genId('ev'), obj=occEvent(mt,mtid,st,st+dur);
+    state.events[id]=obj; FB.set(R('events/'+id),obj).catch(wErr);
+  });
+  const upd={confirmedStart:s,confirmedEnd:e,confirmedEventId:occurrencesOf(mtid)[0]||null};
+  state.meetings[mtid]={...mt,...upd}; FB.update(R('meetings/'+mtid),upd).catch(wErr);
+  toast(`${mt.title} — 이번 주부터 회차 ${starts.length}개를 ${whenLabel(s,e)}로 옮겼습니다`);
+}
+/* 옮기는 중 다른 미팅 블록에 놓으면 두 회차의 시간을 맞바꾼다 */
+function pzSwap(targetEvid){
+  const sg=state.batch?.single; if(!sg||sg.mode!=='move') return;
+  const a=state.events[sg.evid], b=state.events[targetEvid]; if(!a||!b||targetEvid===sg.evid) return;
+  const aS=Number(a.start),aE=Number(a.end),bS=Number(b.start),bE=Number(b.end);
+  if(overlap(bS,bS+(aE-aS),aS,aS+(bE-bS))){toast('길이가 달라 서로 겹칩니다 — 초록 칸에 직접 놓아주세요');return;}
+  swapOccurrence(sg.evid,targetEvid);
+  state.batch=null; render();
+}
+/* ---- 이 주 회차 정리 — 학회 주간처럼 한 주를 통째로 손볼 때 ---- */
+function weekOccurrences(week){                        // week = 일요일 "YYYY-MM-DD"
+  const ws=week, we=addDays(week,6);
+  return Object.keys(state.events).filter(id=>{
+    const ev=state.events[id]; if(!(ev.seriesId||ev.meetingId)) return false;
+    const ds=fmtDate(new Date(Number(ev.start))); return ds>=ws&&ds<=we;
+  }).sort((a,b)=>Number(state.events[a].start)-Number(state.events[b].start));
+}
+function openWeekCancel(week){
+  const keep={};
+  /* 기본값: 빠지는 사람이 없는 회차는 진행, ✈ 부재자가 있는 회차는 취소 후보 */
+  weekOccurrences(week).forEach(id=>{
+    const ev=state.events[id]; if(!isLive(ev)) return;
+    if(!awayOf(participantsOf(ev),Number(ev.start),Number(ev.end)).length) keep[id]=true;
+  });
+  state.weekCancel={week,keep}; render();
+}
+function applyWeekCancel(){
+  const wc=state.weekCancel; if(!wc) return;
+  const ids=weekOccurrences(wc.week).filter(id=>isLive(state.events[id])&&!wc.keep[id]);
+  ids.forEach(id=>setOccCancel(id,true,true));
+  state.weekCancel=null;
+  if(!ids.length){toast('취소할 회차가 없습니다');render();return;}
+  toast(`이 주 회차 ${ids.length}개를 취소했습니다`,{undo:()=>{ids.forEach(id=>setOccCancel(id,false,true));render();}});
+  render();
+}
+function viewWeekCancelModal(){
+  const wc=state.weekCancel, ids=weekOccurrences(wc.week);
+  const ws=addDays(wc.week,1), we=addDays(wc.week,5);
+  const rows=ids.map(id=>{
+    const ev=state.events[id], s=Number(ev.start), e=Number(ev.end), off=!isLive(ev);
+    const mtid=ev.seriesId||ev.meetingId;
+    const aw=awayOf(participantsOf(ev),s,e);
+    return `<label class="list-item wc-row${off?' off':''}" style="--pc:${meetingColor(mtid)}">
+      <input type="checkbox" data-act="wkkeep" data-evid="${id}" ${wc.keep[id]?'checked':''} ${off?'disabled':''} style="width:auto">
+      <span class="occ-when">${WD[new Date(s).getDay()]} ${hm(s)}~${hm(e)}</span>
+      <b class="wc-title">${esc(ev.title)}</b>
+      <span class="sub" style="flex:1">${esc(namesOf(participantsOf(ev)))}</span>
+      ${aw.length?`<span class="occ-tag away">✈ ${esc(namesOf(aw))}</span>`:''}
+      ${off?'<span class="occ-tag off">이미 취소됨</span>':''}
+    </label>`;
+  }).join('')||'<div class="empty">이 주에는 회차가 없습니다.</div>';
+  const nCancel=ids.filter(id=>isLive(state.events[id])&&!wc.keep[id]).length;
+  return `<div class="modal-backdrop" data-act="wkclose">
+    <div class="modal" data-act="modal-noop" style="max-width:640px" role="dialog" aria-modal="true">
+      <div class="modal-head"><h2>이 주 회차 정리 — ${mdLabel(ws)}~${mdLabel(we)}</h2><button class="modal-x" data-act="wkclose" title="닫기">×</button></div>
+      <div class="modal-body">
+        <p class="sub" style="margin-bottom:10px"><b>체크한 미팅은 진행</b>하고, 나머지는 이 주 회차를 취소합니다. 빠지는 사람(✈)이 있는 회차는 미리 체크를 풀어 뒀습니다. 취소는 되돌릴 수 있습니다.</p>
+        <div style="display:flex;gap:6px;margin-bottom:8px">
+          <button class="btn ghost sm" data-act="wkkeepall" data-v="all">전부 진행</button>
+          <button class="btn ghost sm" data-act="wkkeepall" data-v="none">전부 취소</button></div>
+        <div class="wc-list">${rows}</div>
+        <div class="agg-edit-actions" style="margin-top:14px">
+          <span class="sub">${nCancel?`${nCancel}개를 취소합니다`:'취소할 회차가 없습니다'}</span>
+          <div class="agg-edit-actions-right">
+            <button class="btn ghost sm" data-act="wkclose">닫기</button>
+            <button class="btn sm" data-act="wkapply" ${nCancel?'':'disabled'}>${nCancel?`${nCancel}개 취소하기`:'취소할 것 없음'}</button>
+          </div></div>
+      </div></div></div>`;
+}
 /* 보드 상태를 그대로 반영한다 — 놓인 블록은 확정, 뺀 블록은 확정 취소 */
 function batchDiff(){
   const b=state.batch, out={add:[],move:[],drop:[]};
@@ -1914,13 +2016,11 @@ function applyBatch(){
   move.forEach(id=>{                                    // 시간이 바뀐 확정 미팅 — 회차를 다시 만든다
     const pl=b.placed[id];
     removeSeriesEvents(id);
-    occurrencesOf(id).forEach(evid=>{delete state.events[evid];});
     confirmMeeting(id,pl.s,pl.e,true);
   });
   drop.forEach(id=>{
     removeSeriesEvents(id);
-    occurrencesOf(id).forEach(evid=>{delete state.events[evid];});
-    state.meetings[id]={...state.meetings[id],status:'planning'};
+    state.meetings[id]={...state.meetings[id],status:'planning',confirmedEventId:null,confirmedStart:null,confirmedEnd:null};
     FB.update(R('meetings/'+id),{status:'planning',confirmedEventId:null,
       confirmedStart:null,confirmedEnd:null}).catch(wErr);
   });
@@ -2016,7 +2116,12 @@ function saveMeetingDraft(){
   const title=String(d.title||'').trim();
   if(!title){toast('미팅 이름을 입력하세요');return;}
   if(!participantsOf(d).length){toast('참여자를 한 명 이상 선택하세요');return;}
-  if(!d.rangeStart||!d.rangeEnd||d.rangeStart>d.rangeEnd){toast('후보 날짜 범위를 확인하세요');return;}
+  /* 후보 기간은 폼에서 받지 않는다 — 시간은 보드에서 정한다. 학기 범위를 기본으로 채워 둔다 */
+  if(!d.rangeStart||!d.rangeEnd||d.rangeStart>d.rangeEnd){
+    const sem=state.semesters[activeSemesterId()], today=fmtDate(new Date());
+    d.rangeStart=sem?.startDate&&sem.startDate>today?sem.startDate:today;
+    d.rangeEnd=sem?.endDate||addDays(today,120);
+  }
   const id=d.id||genId('mt');
   const rk=d.recur||'';
   if(rk&&!d.recurUntil){toast('반복 종료일을 정해주세요');return;}
@@ -2026,9 +2131,11 @@ function saveMeetingDraft(){
     description:String(d.description||'').trim(),
     recurrence:rk?{freq:'weekly',interval:rk==='w2'?2:1,until:d.recurUntil}:null,
     status:d.status||'planning',ts:d.ts||Date.now()};
+  state.meetings[id]={...(state.meetings[id]||{}),...obj};
   FB.update(R('meetings/'+id),obj).catch(wErr);
   if(d.id&&d.status==='confirmed') syncSeries(d.id,obj);
-  state.mtDraft=null; state.mtFind=null; state.mtPick=null; render();
+  state.mtDraft=null; if(state.batch&&!state.batch.single) state.batch=null;   // 보드는 새 미팅을 넣어 다시 연다
+  render();
 }
 /* 미팅 정보를 고치면 아직 오지 않은 회차에도 반영한다 (시간은 회차별로 관리하므로 건드리지 않음) */
 function syncSeries(mtid,obj){
@@ -2056,11 +2163,12 @@ function syncSeries(mtid,obj){
 function deleteMeeting(mtid){
   const mt=state.meetings[mtid]; if(!mt) return;
   const n=occurrencesOf(mtid).length;
-  if(!confirm(`'${mt.title}' 미팅을 삭제할까요?${n?`\n등록된 회차 ${n}개도 함께 삭제됩니다.`:''}`)) return;
+  if(!confirm(`'${mt.title}' 미팅을 삭제합니다.${n?`\n회차 ${n}개가 함께 사라지고`:'\n'} 되돌릴 수 없습니다.`)) return;
   removeSeriesEvents(mtid);
+  delete state.meetings[mtid];
   FB.remove(R('meetings/'+mtid)).catch(wErr);
-  if(state.mtFind?.mtid===mtid) state.mtFind=null;
-  if(state.mtPick?.mtid===mtid) state.mtPick=null;
+  if(state.batch){ const np={...state.batch.placed}; delete np[mtid]; state.batch.placed=np;
+    if(state.batch.pick===mtid) state.batch.pick=null; if(state.batch.single?.mtid===mtid) state.batch=null; }
   render();
 }
 /* ---- 회차(시리즈) ---- */
@@ -2076,7 +2184,7 @@ function occurrencesOf(mtid){
     .sort((a,b)=>Number(state.events[a].start)-Number(state.events[b].start));
 }
 function removeSeriesEvents(mtid){
-  occurrencesOf(mtid).forEach(id=>FB.remove(R('events/'+id)).catch(wErr));
+  occurrencesOf(mtid).forEach(id=>{ FB.remove(R('events/'+id)).catch(wErr); delete state.events[id]; });
 }
 /* 첫 회차 시각 + 반복 규칙 → 회차 시작 시각 목록 */
 function seriesStarts(firstMs,mt){
@@ -2096,11 +2204,13 @@ function confirmMeeting(mtid,s,e,silent){
   let first=null;
   starts.forEach(st=>{
     const evid=genId('ev'); if(!first) first=evid;
-    FB.set(R('events/'+evid),occEvent(mt,mtid,st,st+dur)).catch(wErr);
+    const obj=occEvent(mt,mtid,st,st+dur);
+    state.events[evid]=obj;                              // 낙관적 — 서버 에코가 같은 값으로 덮는다
+    FB.set(R('events/'+evid),obj).catch(wErr);
   });
-  FB.update(R('meetings/'+mtid),{status:'confirmed',confirmedEventId:first,
-    confirmedStart:starts[0],confirmedEnd:starts[0]+dur}).catch(wErr);
-  state.mtFind=null; state.mtPick=null;
+  const upd={status:'confirmed',confirmedEventId:first,confirmedStart:starts[0],confirmedEnd:starts[0]+dur};
+  state.meetings[mtid]={...mt,...upd};
+  FB.update(R('meetings/'+mtid),upd).catch(wErr);
   if(silent) return;
   toast(starts.length>1?`회차 ${starts.length}개가 Lab Calendar에 등록되었습니다`
                        :'미팅이 확정되어 Lab Calendar에 등록되었습니다');
@@ -2108,26 +2218,31 @@ function confirmMeeting(mtid,s,e,silent){
 function unconfirmMeeting(mtid){
   const mt=state.meetings[mtid]; if(!mt) return;
   const n=occurrencesOf(mtid).length;
-  if(!confirm(`'${mt.title}' 확정을 취소할까요? 등록된 회차 ${n}개가 삭제되고 다시 조율 상태가 됩니다.`)) return;
+  if(!confirm(`'${mt.title}' 확정을 취소합니다.\n회차 ${n}개가 사라지고 '아직 시간 없음'으로 돌아갑니다. 보드에서 다시 놓을 수 있습니다.`)) return;
   removeSeriesEvents(mtid);
+  state.meetings[mtid]={...mt,status:'planning',confirmedEventId:null,confirmedStart:null,confirmedEnd:null};
   FB.update(R('meetings/'+mtid),{status:'planning',confirmedEventId:null,confirmedStart:null,confirmedEnd:null}).catch(wErr);
-  state.mtFind=null; state.mtPick=null;
+  state.batch=null; render();
 }
 /* 회차 하나만 옮기기 — 시리즈의 나머지는 그대로 */
 function moveOccurrence(evid,s,e){
   const ev=state.events[evid]; if(!ev) return;
+  state.events[evid]={...ev,start:s,end:e,moved:true};
   FB.update(R('events/'+evid),{start:s,end:e,moved:true}).catch(wErr);
   const mtid=ev.seriesId||ev.meetingId;
-  if(mtid&&state.meetings[mtid]?.confirmedEventId===evid)
+  if(mtid&&state.meetings[mtid]?.confirmedEventId===evid){
+    state.meetings[mtid]={...state.meetings[mtid],confirmedStart:s,confirmedEnd:e};
     FB.update(R('meetings/'+mtid),{confirmedStart:s,confirmedEnd:e}).catch(wErr);
-  state.mtFind=null; state.mtPick=null; toast('회차 시간을 옮겼습니다');
+  }
+  toast(`이 주 회차를 ${whenLabel(s,e)}로 옮겼습니다`);
 }
 /* 그 주에 회차 하나 더 (학회 전 몰아서 2~3회 하는 경우) */
 function addOccurrence(mtid,s,e){
   const mt=state.meetings[mtid]; if(!mt) return;
-  const evid=genId('ev');
-  FB.set(R('events/'+evid),occEvent(mt,mtid,s,e,{extra:true})).catch(wErr);
-  state.mtFind=null; state.mtPick=null; toast('회차를 추가했습니다');
+  const evid=genId('ev'), obj=occEvent(mt,mtid,s,e,{extra:true});
+  state.events[evid]=obj;
+  FB.set(R('events/'+evid),obj).catch(wErr);
+  toast(`${whenLabel(s,e)}에 회차를 추가했습니다`);
 }
 /* 두 일정의 시작 시각을 맞바꾼다 — 각자 길이는 그대로 (미팅 순서 바꾸기) */
 function swapOccurrence(aid,bid){
@@ -2138,25 +2253,31 @@ function swapOccurrence(aid,bid){
     toast('길이가 달라 서로 겹칩니다. 시간을 직접 골라주세요'); return;
   }
   [[aid,na],[bid,nb]].forEach(([id,v])=>{
-    FB.update(R('events/'+id),{...v,moved:true}).catch(wErr);
     const ev=state.events[id], mtid=ev.seriesId||ev.meetingId;
-    if(mtid&&state.meetings[mtid]?.confirmedEventId===id)
+    state.events[id]={...ev,...v,moved:true};
+    FB.update(R('events/'+id),{...v,moved:true}).catch(wErr);
+    if(mtid&&state.meetings[mtid]?.confirmedEventId===id){
+      state.meetings[mtid]={...state.meetings[mtid],confirmedStart:v.start,confirmedEnd:v.end};
       FB.update(R('meetings/'+mtid),{confirmedStart:v.start,confirmedEnd:v.end}).catch(wErr);
+    }
   });
-  state.mtFind=null; state.mtPick=null;
   toast(`'${a.title}' ↔ '${b.title}' 시간을 맞바꿨습니다`);
 }
 /* 취소는 삭제가 아니라 표시 — 캘린더에 회색으로 남고 되돌릴 수 있다 */
-function setOccCancel(evid,on){
-  if(!state.events[evid]) return;
+function setOccCancel(evid,on,quiet){
+  const ev=state.events[evid]; if(!ev) return;
   state.calPick=null;
+  const nv={...ev}; if(on) nv.status='cancelled'; else delete nv.status;
+  state.events[evid]=nv;
   FB.update(R('events/'+evid),{status:on?'cancelled':null}).catch(wErr);
-  toast(on?'회차를 취소했습니다':'취소를 되돌렸습니다');
+  if(!quiet) toast(on?`${whenLabel(Number(ev.start),Number(ev.end))} 회차를 취소했습니다`:'취소를 되돌렸습니다',
+    {undo:()=>{setOccCancel(evid,!on,true);render();}});
+  render();
 }
 function deleteOccurrence(evid){
   const ev=state.events[evid]; if(!ev) return;
   const when=`${mdLabel(fmtDate(new Date(Number(ev.start))))} ${hm(Number(ev.start))}`;
-  if(!confirm(`${when} 회차를 완전히 삭제할까요?`)) return;
+  if(!confirm(`${when} 회차를 삭제합니다.\n취소와 달리 목록에서도 사라지고 되돌릴 수 없습니다. 잠시 쉬는 거면 '이 주 취소'를 쓰세요.`)) return;
   const mtid=ev.seriesId||ev.meetingId;
   FB.remove(R('events/'+evid)).catch(wErr);
   if(mtid&&state.meetings[mtid]&&occurrencesOf(mtid).filter(id=>id!==evid).length===0)
@@ -2222,6 +2343,8 @@ function render(){
   doRender();
 }
 function doRender(){
+  if(!state.loading&&state.me&&!state.members[state.me]){ state.me=''; lsSet('vgi.me',''); }
+  if(!state.loading&&state.calMember&&!state.members[state.calMember]) state.calMember='';
   const scrolls=[...$('app').querySelectorAll('.scroll')]
     .map(sc=>({sl:sc.scrollLeft,st:sc.scrollTop}));
   const ws=window.scrollY||0;
@@ -2233,13 +2356,13 @@ function doRender(){
 }
 let _lockY=0;
 function syncScrollLock(){
-  const need=!!(state.evEdit||state.xDraft||state.subscribeFor||state.showHelp);
+  const need=!!(state.evEdit||state.xDraft||state.subscribeFor||state.showHelp||state.weekCancel);
   const has=document.body.classList.contains('no-scroll');
   if(need&&!has){ _lockY=window.scrollY||0; document.body.classList.add('no-scroll'); document.body.style.top=(-_lockY)+'px'; }
   else if(!need&&has){ document.body.classList.remove('no-scroll'); document.body.style.top=''; window.scrollTo(0,_lockY); }
 }
 
-const NAV=[['calendar','Calendar'],['meetings','Meetings'],['members','Members'],['availability','Availability'],['projects','Projects']];
+const NAV=[['calendar','시간표'],['meetings','미팅'],['availability','내 시간'],['members','설정']];
 function renderHeader(){
   let h='<button type="button" class="brand" data-act="nav" data-tab="calendar" aria-label="Calendar로 이동">VGI<span class="dot">.</span>LAB</button>';
   h+='<div class="tabs">';
@@ -2247,6 +2370,10 @@ function renderHeader(){
     h+='<button class="tab '+(state.tab===k?'on':'')+'" data-act="nav" data-tab="'+k+'">'+l+'</button>';
   });
   h+='</div>';
+  /* '나' — 한 번 고르면 시간표·내 시간·새 미팅·구독이 나를 기준으로 시작한다 */
+  const mids=state.loading?[]:membersSorted(false);
+  h+=`<label class="me-sel" title="이 브라우저에서 나로 쓸 멤버"><span>나</span><select data-act="setme" aria-label="나 선택">
+    <option value="">선택</option>${mids.map(mid=>`<option value="${mid}" ${state.me===mid?'selected':''}>${esc(memberName(mid))}</option>`).join('')}</select></label>`;
   h+='<button class="help-btn" data-act="help" title="사용 안내" aria-label="사용 안내 열기">?</button>';
   $('hbar').innerHTML=h;
 }
@@ -2259,13 +2386,13 @@ function renderBody(){
   else{
     if(state.tab==='calendar') html=viewCalendar();
     else if(state.tab==='meetings') html=viewMeetings();
-    else if(state.tab==='members') html=viewMembers();
+    else if(state.tab==='members'||state.tab==='projects') html=viewMembers();
     else if(state.tab==='availability') html=viewAvailability();
-    else if(state.tab==='projects') html=viewProjects();
   }
   if(state.evEdit) html+=viewEventModal();
   if(state.xDraft) html+=viewExceptionModal();
   if(state.subscribeFor!==null) html+=viewSubscribeModal();
+  if(state.weekCancel) html+=viewWeekCancelModal();
   if(state.showHelp) html+=viewHelp();
   app.innerHTML=html;
 }
@@ -2327,8 +2454,9 @@ function viewCalendar(){
   const typeOpts='<option value="">전체 종류</option>'+EVENT_TYPES.map(([k,l])=>
     `<option value="${k}" ${state.calType===k?'selected':''}>${l}</option>`).join('');
   const filterName=state.calMember?memberName(state.calMember):'';
+  const subFor=state.calMember||state.me;
   const view=week?viewCalWeek(now):viewCalMonth(now);
-  const [ws,we]=[state.calWeek,addDays(state.calWeek,6)];
+  const ws=state.calWeekend?state.calWeek:addDays(state.calWeek,1), we=state.calWeekend?addDays(state.calWeek,6):addDays(state.calWeek,5);
   const navTitle=week?`${mdLabel(ws)} ~ ${mdLabel(we)}`
     :`${state.calMonth.split('-')[0]}년 ${Number(state.calMonth.split('-')[1])}월`;
   return `<div class="card">
@@ -2342,13 +2470,17 @@ function viewCalendar(){
         <button class="btn sm" data-act="caladd" data-date="">+ 일정 추가</button>
         <button class="btn ghost sm" data-act="calpng" ${view.count?'':'disabled'}>📷 PNG</button>
         <button class="btn ghost sm" data-act="calics" ${view.count?'':'disabled'}>📅 .ics</button>
-        <button class="btn ghost sm" data-act="calsub" ${state.calMember?'':'disabled'} title="${state.calMember?esc(filterName)+' 개인 구독':'멤버를 먼저 선택하세요'}">🔗 개인 구독</button>
+        <button class="btn ghost sm" data-act="calsub" data-mid="${subFor}" ${subFor?'':'disabled'} title="${subFor?esc(memberName(subFor))+' 개인 구독':'위에서 나를 고르거나 멤버 필터를 선택하세요'}">🔗 개인 구독</button>
         <div class="agg-nav">
           <button data-act="${week?'calweekgo':'calmonth'}" data-d="-1" title="이전" aria-label="이전">‹</button>
           <div class="agg-month-title">${navTitle}</div>
           <button data-act="${week?'calweekgo':'calmonth'}" data-d="1" title="다음" aria-label="다음">›</button>
         </div>
         <button class="btn ghost sm" data-act="caltoday">오늘</button>
+        ${state.me?`<div class="cal-mode" title="내 일정만 / 전원">
+          <button class="${state.calMember===state.me?'on':''}" data-act="calmine" data-v="me">나</button>
+          <button class="${state.calMember?'':'on'}" data-act="calmine" data-v="all">전체</button></div>`:''}
+        ${week?`<button class="btn ghost sm${state.calWeekend?' on':''}" data-act="calweekend" title="토·일 열 보이기/숨기기">${state.calWeekend?'주말 숨김':'주말 보기'}</button>`:''}
         <select class="agg-member" data-act="calmember" aria-label="멤버 필터">${memberOpts}</select>
         <select class="agg-project" data-act="calproject" aria-label="프로젝트 필터">${projectOpts}</select>
         <select class="agg-member" data-act="caltype" aria-label="종류 필터">${typeOpts}</select>
@@ -2430,15 +2562,25 @@ function weekBlockHtml(o,g){
     ${g.items.length===1&&g.span>1?`<span class="bp">${esc(names)}</span>`:''}</button>`;
 }
 function viewCalWeek(now){
-  const ws=state.calWeek, days=dateList(ws,addDays(ws,6));
+  const ws=state.calWeek;
+  /* 미팅은 월~금에 잡힌다 — 주말 열은 기본으로 접고 토글로 연다 */
+  const days=state.calWeekend?dateList(ws,addDays(ws,6)):dateList(addDays(ws,1),addDays(ws,5));
+  const last=days[days.length-1];
   const todayDs=fmtDate(now);
   const slot=cfgSlot(), startMin=cfgDayStart()*60, endMin=cfgDayEnd()*60;
   const rows=[]; for(let m=startMin;m<endMin;m+=slot) rows.push(m);
+  const sid=activeSemesterId(), sem=sid?state.semesters[sid]:null;
+  const outSem=!sem||last<sem.startDate||days[0]>sem.endDate;
+  const partSem=!outSem&&sem&&(days[0]<sem.startDate||last>sem.endDate);
+  const semWarn=!sem
+    ?`<div class="note warn">활성 학기가 없어 반복 불가 시간이 적용되지 않습니다. <b>설정</b> 탭에서 학기를 지정하세요.</div>`
+    :(outSem||partSem)
+      ?`<div class="note info">${outSem?'이 주는':'이 주 일부는'} 학기 <b>${esc(sem.name)}</b>(${mdLabel(sem.startDate)}~${mdLabel(sem.endDate)}) 밖 — 그 날짜엔 반복 불가 시간이 적용되지 않아 실제보다 비어 보일 수 있습니다.</div>`
+      :'';
+  /* 회차를 옮기거나 추가하는 중 — 미팅 보드와 같은 렌더러·드래그로 */
+  const sg=state.batch?.single;
+  if(sg&&state.meetings[sg.mtid]) return {html:semWarn+viewCalEditBar()+viewPuzzleGrid(),count:0};
   const byDate=calEventsByDate();
-  /* 수정 중이면(시간 변경/회차 추가) 그 주 후보를 겹쳐 그린다 */
-  const find=state.mtFind&&state.mtFind.inCal?state.mtFind:null;
-  const pick=find&&state.mtPick&&state.mtPick.mtid===find.mtid?state.mtPick:null;
-  const findDay={}; if(find) find.days.forEach(d=>findDay[d.ds]=d);
   let count=0;
   const head='<tr><th class="wk-corner">시간</th>'+days.map(ds=>{
     const wd=wdOf(ds);
@@ -2453,103 +2595,42 @@ function viewCalWeek(now){
         data-act="xopen" data-xid="${o.id}" title="${esc(memberName(o.mid))} · ${esc(o.title)} (${EXC_LABEL[o.type]||'예외'}) · 클릭하여 수정"
         ><span class="wk-n">${esc(memberName(o.mid))} · ${esc(o.title)}</span></button>`).join('')||''}</td>`;
   }).join('');
-  const flatBody=()=>rows.map(m=>{
-    const cells=days.map(ds=>{
-      const base=new Date(ds+'T00:00:00').getTime();
-      const cs=base+m*60000, ce=cs+slot*60000;
-      const items=(byDate[ds]||[]).filter(o=>{
-        if(o.kind==='x'&&o.allDay) return false;
-        return overlap(cs,ce,Number(o.start),Number(o.end));
-      });
-      /* 하루 시작 전에 시작한 일정은 첫 줄을 머리로 삼아 이름이 보이게 한다 */
-      const heads=items.filter(o=>(Number(o.start)>=cs&&Number(o.start)<ce)||(m===startMin&&Number(o.start)<cs));
-      heads.forEach(()=>count++);
-      const cand=findDay[ds]?.ok[m];
-      const inPick=!!(pick&&pick.s!=null&&cs>=pick.s&&cs<pick.e);
-      const inCur=!!(find?.cur&&cs>=find.cur.s&&cs<find.cur.e);
-      const cls=['wk-cell']; if(m%60===0) cls.push('h0');
-      const lead=items[0];
-      if(items.length&&!heads.length) cls.push('cont');
-      if(cs<Date.now()&&!items.length&&!cand) cls.push('past');
-      if(cand) cls.push('cand');
-      if(inCur) cls.push('cur');
-      if(inPick) cls.push('sel');
-      const style=lead?`--pc:${typeColor(lead.kind==='x'?(lead.type==='personal'?'other':lead.type):lead.type)};--pcs:${typeColorSoft(lead.kind==='x'?(lead.type==='personal'?'other':lead.type):lead.type)}`:'';
-      let inner=heads.map(o=>chipHtml(o,find,pick)).join('');
-      if(inPick&&cs===pick.s) inner=`<span class="wk-mark">✓ ${hm(pick.s)}~${hm(pick.e)}</span>`+inner;
-      else if(inCur&&cs===find.cur.s) inner=`<span class="wk-mark">현재 ${hm(find.cur.s)}~${hm(find.cur.e)}</span>`+inner;
-      const when=`${mdLabel(ds)} (${WD[wdOf(ds)]}) ${hm(cs)}`;
-      if(cand){
-        const e=cand+find.dur*60000;
-        const aw=findDay[ds]?.cells?.[m]?.away||[];
-        if(aw.length) cls.push('aw');
-        return `<td class="${cls.join(' ')}" style="${style}" role="button" tabindex="0"
-          data-act="mtpick" data-mtid="${find.mtid}" data-s="${cand}" data-e="${e}"
-          title="${when}~${hm(e)} (${find.dur}분)로 옮기기${aw.length?` · ✈ ${esc(namesOf(aw))} 휴가·부재 (배정은 가능)`:''}">${inner}</td>`;
-      }
-      if(!items.length&&!find){
-        cls.push('free');
-        return `<td class="${cls.join(' ')}" role="button" tabindex="0" data-act="calslot"
-          data-date="${ds}" data-min="${m}" title="${when} 일정 추가">${inner}</td>`;
-      }
-      return `<td class="${cls.join(' ')}" style="${style}">${inner}</td>`;
-    }).join('');
-    return `<tr><td class="wk-rh${m%60===0?' hour':''}">${minLabel(m)}</td>${cells}</tr>`;
-  }).join('');
-  /* 시간 변경 중엔 칸 단위 격자(후보·현재를 칸으로 고름), 평소엔 퍼즐 보드처럼 블록으로 */
-  let body;
-  if(find) body=flatBody();
-  else{
-    const r=weekBlockBody({days,byDate,rows,slot,startMin,endMin});
-    body=r.body; count+=r.count;
-  }
-  const title=`${mdLabel(ws)}~${mdLabel(addDays(ws,6))} VGI Lab Calendar`
+  const r=weekBlockBody({days,byDate,rows,slot,startMin,endMin});
+  count+=r.count;
+  const title=`${mdLabel(days[0])}~${mdLabel(last)} VGI Lab Calendar`
     +(state.calMember?` · ${esc(memberName(state.calMember))}`:'')
     +(state.calProject?` · ${esc(projectName(state.calProject))}`:'');
-  const sid=activeSemesterId(), sem=sid?state.semesters[sid]:null;
-  const outSem=!sem||days[6]<sem.startDate||days[0]>sem.endDate;
-  const partSem=!outSem&&sem&&(days[0]<sem.startDate||days[6]>sem.endDate);
-  const semWarn=(!sem||outSem||partSem)
-    ?`<div class="note warn">${!sem
-        ?'활성 학기가 없어 주간 반복 불가 시간이 적용되지 않습니다. <b>Members</b> 탭에서 학기를 지정하세요.'
-        :`이 주는 학기 <b>${esc(sem.name)}</b>(${mdLabel(sem.startDate)}~${mdLabel(sem.endDate)}) ${outSem?'밖입니다':'경계에 걸쳐 있습니다'} — `
-         +`학기 밖 날짜에는 <b>주간 반복 불가 시간이 적용되지 않습니다</b>.`}</div>`
-    :'';
   const html=`${semWarn}<div class="wk-wrap scroll"><div id="cal-export">
       <div class="agg-export-title">${title}</div>
-      <table class="wk${find?'':' blocky'}"><colgroup><col class="wk-c0">${days.map(()=>'<col>').join('')}</colgroup>
+      <table class="wk blocky"><colgroup><col class="wk-c0">${days.map(()=>'<col>').join('')}</colgroup>
         <thead>${head}</thead>
-        <tbody><tr><td class="wk-rh">종일</td>${allDay}</tr>${body}</tbody></table>
+        <tbody><tr><td class="wk-rh">종일</td>${allDay}</tr>${r.body}</tbody></table>
     </div></div>
-    ${find?viewFindControls(find.mtid,find)+viewFindWarn(find.mtid,find)+viewFindBar(find.mtid,find,pick,FIND_MODE[find.mode]||FIND_MODE.first)
-          :viewWeekSelBar()}`;
+    ${viewWeekSelBar()}`;
   return {html,count};
 }
-/* 주간 격자의 일정 조각 */
-function chipHtml(o,find,pick){
-  const isEv=o.kind==='ev';
-  const t=isEv?o.type:(o.type==='personal'?'other':o.type);
-  const style=`--pc:${typeColor(t)};--pcs:${typeColorSoft(t)}`;
-  const time=`${hm(Number(o.start))}~${hm(Number(o.end))}`;
-  if(!isEv){
-    const lbl=EXC_LABEL[o.type]||'예외';
-    return `<button class="wk-chip x" style="${style}" data-act="xopen" data-xid="${o.id}"
-      title="${esc(memberName(o.mid))} · ${esc(o.title)} (${lbl}) ${time} · 클릭하여 수정"
-      ><span class="wk-n">${esc(memberName(o.mid))} · ${esc(o.title)}</span></button>`;
-  }
-  const off=o.status==='cancelled';
-  const swap=find&&find.mode==='move'&&o.id!==find.evid&&!off;
-  const on=(!find&&state.calPick===o.id)||(pick&&pick.swap===o.id);
-  const tip=`${esc(o.title)} ${time}${o.location?' · '+esc(o.location):''} · ${esc(namesOf(participantsOf(o)))}`
-    +(off?' · 취소됨':'')+(swap?' · 클릭하면 이 일정과 자리 바꾸기':'');
-  return `<button class="wk-chip${off?' off':''}${on?' on':''}" style="${style}"
-    data-act="${swap?'mtswap':'calevpick'}"${swap?` data-mtid="${find.mtid}"`:''} data-evid="${o.id}"
-    title="${tip}"><span class="wk-t">${hm(Number(o.start))}</span> <span class="wk-n">${esc(o.title)}</span></button>`;
+/* 회차 편집 줄 — 무엇을 옮기는지, 이 주만인지 매주인지, 길이 */
+function viewCalEditBar(){
+  const b=state.batch, sg=b.single, mt=state.meetings[sg.mtid], ev=state.events[sg.evid];
+  const rk=recurKey(mt), dur=pzDurOf(sg.mtid);
+  const durSel=`<label class="mtg-dur">길이 <select data-act="pzsdur">${durChoices(dur).map(v=>`<option value="${v}" ${v===dur?'selected':''}>${v}분</option>`).join('')}</select></label>`;
+  const what=sg.mode==='extra'
+    ?'이 주에 회차 추가 — 초록 칸에 놓으세요'
+    :`시간 변경 · 지금 ${ev?whenLabel(Number(ev.start),Number(ev.end)):''} — 블록을 끌거나 초록 칸을 누르세요. 다른 미팅 블록에 놓으면 자리를 바꿉니다`;
+  return `<div class="pz-cur cal-edit" style="--pc:${meetingColor(sg.mtid)};--pcs:${meetingColorSoft(sg.mtid)}">
+    <div class="pz-cur-t"><b>${esc(mt.title)}</b><span class="pz-cur-sub">${what}</span></div>
+    ${sg.mode==='move'&&rk?`<div class="cal-mode" title="이 주 회차만 옮길지, 이번 주부터 남은 회차를 전부 옮길지">
+      <button class="${sg.scope!=='series'?'on':''}" data-act="pzscope" data-v="week">이 주만</button>
+      <button class="${sg.scope==='series'?'on':''}" data-act="pzscope" data-v="series">이번 주부터 매주</button></div>`:''}
+    ${durSel}
+    <button class="btn ghost sm" data-act="batchclose">닫기</button>
+  </div>`;
 }
 /* 주간 뷰에서 일정을 고르면 뜨는 조작 줄 */
 function viewWeekSelBar(){
   const evid=state.calPick, ev=evid?state.events[evid]:null;
-  if(!ev) return `<div class="wk-hint">칸을 누르면 그 시간에 일정을 추가하고, 일정을 누르면 그 회차를 바로 고칠 수 있습니다. 이 주의 배치는 매주 반복됩니다.</div>`;
+  if(!ev) return `<div class="wk-hint"><span>빈 칸을 누르면 일정을 추가하고, 블록을 누르면 그 회차를 바로 고칩니다. 이 배치는 매주 반복됩니다.</span>
+    <button class="btn ghost sm" data-act="wkcancel" data-week="${state.calWeek}" title="학회 주간처럼 이 주 회차를 한꺼번에 취소/유지">이 주 회차 정리</button></div>`;
   const s=Number(ev.start), e=Number(ev.end);
   const mtid=ev.seriesId||ev.meetingId;
   const mt=mtid?state.meetings[mtid]:null;
@@ -2561,8 +2642,8 @@ function viewWeekSelBar(){
       <span class="sub">${whenLabel(s,e)} · ${(e-s)/60000}분${ev.location?' · '+esc(ev.location):''}${rk?` · ${RECUR_LABEL[rk]} 반복`:''}${off?' · 취소됨':''}</span>
     </div>
     <div class="wk-sel-act">
-      ${mt&&!off?`<button class="btn sm" data-act="occmove" data-mtid="${mtid}" data-evid="${evid}" data-cal="1">시간 변경</button>
-                  <button class="btn ghost sm" data-act="occadd" data-mtid="${mtid}" data-evid="${evid}" data-cal="1">+ 이 주 추가</button>`:''}
+      ${mt&&!off?`<button class="btn sm" data-act="caledit" data-evid="${evid}" data-mode="move">시간 변경</button>
+                  <button class="btn ghost sm" data-act="caledit" data-evid="${evid}" data-mode="extra">+ 이 주 추가</button>`:''}
       ${mt?(off?`<button class="btn ghost sm" data-act="occrestore" data-evid="${evid}">취소 되돌리기</button>`
               :`<button class="btn ghost sm" data-act="occcancel" data-evid="${evid}">이 주 취소</button>`):''}
       <button class="btn ghost sm" data-act="evedit" data-evid="${evid}">상세 수정</button>
@@ -2588,7 +2669,9 @@ function viewCalMonth(now){
     const html=items.map(o=>{
       if(o.kind==='ev'){
         const title=`${o.status==='cancelled'?'[취소] ':''}${esc(o.title)} · ${hm(Number(o.start))}–${hm(Number(o.end))}`+(o.location?` · ${esc(o.location)}`:'')+` · ${namesOf(participantsOf(o))}`;
-        return `<button class="agg-event${o.status==='cancelled'?' ev-off':''}" style="--pc:${typeColor(o.type)}" data-act="evedit" data-evid="${o.id}" title="${title}${o.status==='cancelled'?' · 취소됨':''} · 클릭하여 수정">
+        const emt=o.seriesId||o.meetingId, isMt=!!(emt&&state.meetings[emt]);
+        const st=isMt?`--pc:${meetingColor(emt)};--pcb:${meetingColorPastel(emt)}`:`--pc:${typeColor(o.type)}`;
+        return `<button class="agg-event${isMt?' mt':''}${o.status==='cancelled'?' ev-off':''}" style="${st}" data-act="evedit" data-evid="${o.id}" title="${title}${o.status==='cancelled'?' · 취소됨':''} · 클릭하여 수정">
           <span class="agg-event-time">${hm(Number(o.start))}~${hm(Number(o.end))}</span>
           <span class="agg-event-song-row"><span class="agg-event-song">${esc(o.title)}</span>${o.location?`<span class="agg-ext">${esc(o.location)}</span>`:''}</span>
         </button>`;
@@ -2631,22 +2714,30 @@ function viewMeetingForm(){
   const projOpts='<option value="">프로젝트 없음</option>'+sortedIds(state.projects).map(pid=>
     `<option value="${pid}" ${d.projectId===pid?'selected':''}>${esc(projectName(pid))}</option>`).join('');
   const recurOpts=RECUR_OPTS.map(([k,l])=>`<option value="${k}" ${(d.recur||'')===k?'selected':''}>${l}</option>`).join('');
+  /* 자세히는 기본으로 접는다 — 실제로 쓰는 건 이름·길이·참여자 세 칸이다.
+     고치는 중이고 거기에 값이 있으면 펼친 채로 연다 */
+  const more=!!(d.id&&(d.location||d.description||d.projectId||(d.type&&d.type!=='meeting')||(d.recur||'')!=='w1'));
+  const alwaysN=membersSorted(false).filter(mid=>state.members[mid]?.always).length;
   return `<div class="card" id="mtForm">
     <div class="section-label">${d.id?'미팅 수정':'새 미팅'}</div>
-    <div class="agg-edit-grid" style="margin-top:12px">
-      <div class="agg-edit-field"><label for="mtTitle">이름</label><input id="mtTitle" type="text" value="${esc(d.title||'')}" placeholder="예: FacePlex Weekly" data-act="mtfield" data-field="title"></div>
-      <div class="agg-edit-field"><label for="mtType">종류</label><select id="mtType" data-act="mtfield" data-field="type">${typeOpts}</select></div>
+    <div class="agg-edit-grid mt-grid" style="margin-top:12px">
+      <div class="agg-edit-field"><label for="mtTitle">이름</label><input id="mtTitle" type="text" value="${esc(d.title||'')}" placeholder="예: FacePlex Weekly" data-act="mtfield" data-field="title" autofocus></div>
       <div class="agg-edit-field"><label for="mtDur">길이</label><select id="mtDur" data-act="mtfield" data-field="durationMin">${durOpts}</select></div>
-      <div class="agg-edit-field"><label for="mtProj">프로젝트</label><select id="mtProj" data-act="mtfield" data-field="projectId">${projOpts}</select></div>
-      <div class="agg-edit-field"><label for="mtFrom">후보 시작일</label><input id="mtFrom" type="date" value="${esc(d.rangeStart||'')}" data-act="mtfield" data-field="rangeStart"></div>
-      <div class="agg-edit-field"><label for="mtTo">후보 종료일</label><input id="mtTo" type="date" value="${esc(d.rangeEnd||'')}" data-act="mtfield" data-field="rangeEnd"></div>
-      <div class="agg-edit-field"><label for="mtLoc">장소 (선택)</label><input id="mtLoc" type="text" value="${esc(d.location||'')}" placeholder="예: 세미나실" data-act="mtfield" data-field="location"></div>
-      <div class="agg-edit-field"><label for="mtRecur">반복</label><select id="mtRecur" data-act="mtrecur">${recurOpts}</select></div>
-      <div class="agg-edit-field"><label for="mtUntil">반복 종료일</label><input id="mtUntil" type="date" value="${esc(d.recurUntil||'')}" ${d.recur?'':'disabled'} data-act="mtfield" data-field="recurUntil"></div>
-      <div class="agg-edit-field full"><label>참여자</label><div class="grp-row">${memberChips(d.participants,'mtmember')}</div></div>
-      <div class="agg-edit-field full"><label for="mtDesc">메모 (선택)</label><input id="mtDesc" type="text" value="${esc(d.description||'')}" data-act="mtfield" data-field="description"></div>
+      <div class="agg-edit-field full"><label>참여자${alwaysN?` <span class="sub">— 항상 참여 멤버${state.me?'와 나':''}는 미리 체크됩니다</span>`:''}</label><div class="grp-row">${memberChips(d.participants,'mtmember')}</div></div>
     </div>
+    <details class="mt-more" ${more?'open':''}>
+      <summary>자세히 — 반복 · 종류 · 장소 · 메모</summary>
+      <div class="agg-edit-grid" style="margin-top:10px">
+        <div class="agg-edit-field"><label for="mtRecur">반복</label><select id="mtRecur" data-act="mtrecur">${recurOpts}</select></div>
+        <div class="agg-edit-field"><label for="mtUntil">반복 종료일</label><input id="mtUntil" type="date" value="${esc(d.recurUntil||'')}" ${d.recur?'':'disabled'} data-act="mtfield" data-field="recurUntil"></div>
+        <div class="agg-edit-field"><label for="mtType">종류</label><select id="mtType" data-act="mtfield" data-field="type">${typeOpts}</select></div>
+        <div class="agg-edit-field"><label for="mtLoc">장소</label><input id="mtLoc" type="text" value="${esc(d.location||'')}" placeholder="예: 세미나실 — 같은 장소는 겹쳐 잡히지 않습니다" data-act="mtfield" data-field="location"></div>
+        ${sortedIds(state.projects).length?`<div class="agg-edit-field"><label for="mtProj">프로젝트</label><select id="mtProj" data-act="mtfield" data-field="projectId">${projOpts}</select></div>`:''}
+        <div class="agg-edit-field full"><label for="mtDesc">메모</label><input id="mtDesc" type="text" value="${esc(d.description||'')}" data-act="mtfield" data-field="description"></div>
+      </div>
+    </details>
     <div class="agg-edit-actions" style="margin-top:14px">
+      <span class="sub">시간은 저장한 뒤 아래 보드에서 끌어다 놓습니다.</span>
       <div class="agg-edit-actions-right">
         <button class="btn ghost sm" data-act="mtcancel">취소</button>
         <button class="btn sm" data-act="mtsave">${d.id?'변경 저장':'미팅 만들기'}</button>
@@ -2655,155 +2746,6 @@ function viewMeetingForm(){
   </div>`;
 }
 const minLabel=m=>String(Math.floor(m/60)).padStart(2,'0')+':'+String(m%60).padStart(2,'0');
-/* 후보 시간 격자 — 날짜(열) x 시작시각(행), 칸을 골라서 확정 */
-const FIND_MODE={
-  first:{title:'첫 회차(기본 시간) 고르기',apply:'이 시간으로 확정'},
-  move: {title:'회차 시간 변경',apply:'이 시간으로 옮기기'},
-  extra:{title:'이 주에 회차 추가',apply:'이 시간에 회차 추가'},
-};
-/* 계산이 '전원 가능'으로 보이게 만드는 원인을 짚어준다 — 침묵보다 낫다 */
-function viewFindWarn(mtid,find){
-  const w=[];
-  const sem=find.sem;
-  if(find.clamped){
-    w.push(`학기 <b>${esc(sem.name)}</b> 시작일(${mdLabel(sem.startDate)})부터 찾고 있습니다 — `
-      +`${mdLabel(find.clamped)}~${mdLabel(addDays(sem.startDate,-1))} 구간은 학기 밖이라 <b>주간 반복 불가 시간이 적용되지 않아</b> 전원 가능으로 나옵니다.`
-      +`<button class="btn ghost sm" data-act="mtfindall" data-mtid="${mtid}">${mdLabel(find.clamped)}부터 전체 보기</button>`);
-  }else if(find.outTotal){
-    w.push(`지금 보는 날짜 일부가 ${sem?`학기 <b>${esc(sem.name)}</b>(${mdLabel(sem.startDate)}~${mdLabel(sem.endDate)})`:'활성 학기'} 밖입니다(빗금 표시). `
-      +`그 날짜에는 <b>주간 반복 불가 시간이 적용되지 않아</b> 전원 가능처럼 보입니다 — 후보 ${find.outTotal}개.`
-      +(sem?`<button class="btn ghost sm" data-act="mtfindsem" data-mtid="${mtid}">학기 안에서만 보기</button>`:''));
-  }
-  if(!sem) w.push('활성 학기가 없어 주간 반복 불가 시간이 전혀 적용되지 않습니다. <b>Members</b> 탭에서 학기를 만들고 활성으로 지정하세요.');
-  if(find.noAvail?.length) w.push(`<b>${esc(namesOf(find.noAvail))}</b> 님은 이 학기 <b>반복 불가 시간</b>을 아직 입력하지 않았습니다 — 늘 가능한 것으로 계산됩니다. (<b>Availability</b> 탭)`);
-  return w.length?`<div class="note warn">${w.join('<br>')}</div>`:'';
-}
-/* 격자 위 조작 줄 — 무엇을 하는 중인지 + 길이 조정 + 닫기 */
-function viewFindControls(mtid,find){
-  const mode=FIND_MODE[find.mode]||FIND_MODE.first;
-  const durSel=(find.mode==='move'||find.mode==='extra')?`<label class="mtg-dur">길이
-    <select data-act="mtdur">${durChoices(find.dur).map(v=>`<option value="${v}" ${v===find.dur?'selected':''}>${v}분</option>`).join('')}</select></label>`:'';
-  return `<div class="mtg-mode" style="margin-top:10px">
-      <span><b>${mode.title}</b>${find.scope?' · '+esc(find.scope):''}${find.inCal?' · 초록색 칸을 누르세요':''}</span>
-      <span class="mtg-mode-r">${durSel}<button class="btn ghost sm" data-act="mtfindclose">닫기</button></span>
-    </div>`;
-}
-/* 후보 격자 — 기존 일정 배치까지 같이 보여주고, 고른 시간은 길이만큼 통째로 표시한다 */
-function viewMeetingFind(mtid,find){
-  const mt=state.meetings[mtid];
-  const mode=FIND_MODE[find.mode]||FIND_MODE.first;
-  const modeBar=viewFindControls(mtid,find)+viewFindWarn(mtid,find);
-  if(find.error) return `<div class="mt-cands">${modeBar}<div class="note">${esc(find.error)}</div></div>`;
-  if(!find.days.length) return `<div class="mt-cands">${modeBar}<div class="note">조건에 맞는 시간이 없습니다. 날짜 범위를 넓히거나 참여자·길이를 조정해보세요.</div></div>`;
-  const pick=state.mtPick&&state.mtPick.mtid===mtid?state.mtPick:null;
-  const wide=find.days.length<=7;
-  const head='<tr><th class="mtg-corner">시간</th>'+find.days.map(d=>{
-    const wd=wdOf(d.ds);
-    return `<th class="mtg-day${d.outSem?' nosem':''}${wd===0?' sun':wd===6?' sat':''}"
-      ${d.outSem?'title="학기 밖 — 주간 반복 불가 시간이 적용되지 않습니다"':''}>${mdLabel(d.ds)}<em>${d.outSem?'학기밖':WD[wd]}</em></th>`;
-  }).join('')+'</tr>';
-  const slotMs=find.slot*60000;
-  const body=find.rows.map(m=>{
-    const cells=find.days.map(d=>{
-      const c=d.cells[m]||{kind:'free'};
-      const cs=d.base+m*60000, ce=cs+slotMs;
-      const cand=d.ok[m];
-      const inPick=!!(pick&&pick.s!=null&&cs>=pick.s&&cs<pick.e);
-      const inCur=!!(find.cur&&cs>=find.cur.s&&cs<find.cur.e);
-      const cls=['mtg-cell'];
-      if(c.kind!=='free') cls.push(c.kind);
-      if(cand) cls.push('cand');
-      if(d.outSem) cls.push('nosem');
-      if(inCur) cls.push('cur');
-      if(inPick) cls.push('sel');
-      if(c.kind==='ev'&&pick?.swap===c.evid) cls.push('swap-on');
-      const when=`${mdLabel(d.ds)} (${WD[wdOf(d.ds)]}) ${hm(cs)}`;
-      let inner='';
-      if(inPick&&cs===pick.s) inner=`<span class="mtg-in mark">✓ ${hm(pick.s)}~${hm(pick.e)}</span>`;
-      else if(inCur&&cs===find.cur.s) inner=`<span class="mtg-in mark">현재 ${hm(find.cur.s)}~${hm(find.cur.e)}</span>`;
-      else if(c.kind==='ev'&&c.head&&wide) inner=`<span class="mtg-in">${esc(c.title)}</span>`;
-      if(cand){
-        const e=cand+find.dur*60000;
-        const lbl=`${when}~${hm(e)} (${find.dur}분)`+(d.outSem?' · 학기 밖이라 반복 불가 시간 미적용':'');
-        return `<td class="${cls.join(' ')}"><button type="button" class="mtg-btn" data-act="mtpick"
-          data-mtid="${mtid}" data-s="${cand}" data-e="${e}" title="${lbl}" aria-label="${lbl}"
-          aria-pressed="${inPick&&cs===pick.s}">${inner}</button></td>`;
-      }
-      if(c.kind==='ev'){
-        const range=`${hm(c.s)}~${hm(c.e)}`;
-        /* 시간 변경 중이라면 다른 미팅을 눌러 자리를 맞바꿀 수 있다 */
-        const swappable=find.mode==='move'&&c.evid!==find.evid;
-        const tip=`${esc(c.title)} · ${range}${swappable?' · 클릭하면 이 일정과 자리 바꾸기':''}`;
-        const style=`--pc:${typeColor(c.type)};--pcs:${typeColorSoft(c.type)}`;
-        return swappable
-          ?`<td class="${cls.join(' ')} swap" style="${style}"><button type="button" class="mtg-ev"
-              data-act="mtswap" data-mtid="${mtid}" data-evid="${c.evid}" title="${tip}" aria-label="${tip}">${inner}</button></td>`
-          :`<td class="${cls.join(' ')}" style="${style}" title="${tip}">${inner}</td>`;
-      }
-      const tip=c.kind==='na'?`${esc(namesOf(c.who))} 불가`:c.kind==='past'?'지난 시간':`${find.dur}분이 들어가지 않습니다`;
-      return `<td class="${cls.join(' ')}" title="${when} · ${tip}">${inner}</td>`;
-    }).join('');
-    return `<tr><td class="mtg-rh${m%60===0?' hour':''}">${minLabel(m)}</td>${cells}</tr>`;
-  }).join('');
-  return `<div class="mt-cands">
-    ${modeBar}
-    <div class="mt-find-head">전원 가능한 ${find.dur}분 자리 <b>${find.total}</b>개${find.outTotal?` (학기 밖 ${find.outTotal}개 포함)`:''} · ${find.days.length}일${find.truncated?` (가능한 날이 많아 앞쪽 ${find.maxDays}일만 표시)`:''}
-      <span class="mtg-legend"><i class="lg-ok"></i>가능<i class="lg-ev"></i>기존 일정<i class="lg-na"></i>참여자 불가${find.cur?'<i class="lg-cur"></i>현재 시간':''}</span></div>
-    <div class="mtg-wrap scroll"><table class="mtg${wide?' wide':''}"><thead>${head}</thead><tbody>${body}</tbody></table></div>
-    ${viewFindBar(mtid,find,pick,mode)}
-  </div>`;
-}
-/* 격자 아래 확인 바 — 고른 시간(또는 자리 바꿀 상대)을 글자로 다시 보여준다 */
-function viewFindBar(mtid,find,pick,mode){
-  const mt=state.meetings[mtid];
-  if(pick&&pick.swap){
-    const a=state.events[find.evid], b=state.events[pick.swap];
-    if(!a||!b) return '<div class="mtg-bar"><div class="mtg-pick sub">일정이 바뀌었습니다. 다시 골라주세요.</div></div>';
-    const aS=Number(a.start),aE=Number(a.end),bS=Number(b.start),bE=Number(b.end);
-    const na={s:bS,e:bS+(aE-aS)}, nb={s:aS,e:aS+(bE-bS)};
-    const clash=overlap(na.s,na.e,nb.s,nb.e);
-    const ignoreIds=[find.evid,pick.swap];
-    const warn=[...participantsOf(a).filter(mid=>memberBusy(mid,na.s,na.e,{ignoreIds})),
-                ...participantsOf(b).filter(mid=>memberBusy(mid,nb.s,nb.e,{ignoreIds}))];
-    const uniq=[...new Set(warn)];
-    return `<div class="mtg-bar on swap">
-      <div class="mtg-pick">
-        <b>${esc(a.title)}</b> ${whenLabel(aS,aE)} <span class="mtg-arrow">↔</span>
-        <b>${esc(b.title)}</b> ${whenLabel(bS,bE)}
-        <span class="sub">바꾼 뒤 · ${esc(a.title)} ${whenLabel(na.s,na.e)} / ${esc(b.title)} ${whenLabel(nb.s,nb.e)}</span>
-        ${clash?'<span class="occ-warn">⚠ 길이가 달라 서로 겹칩니다 — 시간을 직접 골라주세요</span>'
-               :uniq.length?`<span class="occ-warn">⚠ 바꾸면 ${esc(namesOf(uniq))} 불가</span>`:''}
-      </div>
-      <div class="mtg-bar-act">
-        <button class="btn ghost sm" data-act="mtpickclear">선택 해제</button>
-        <button class="btn sm" data-act="mtswapdo" data-a="${find.evid}" data-b="${pick.swap}" ${clash?'disabled':''}>자리 바꾸기</button>
-      </div>
-    </div>`;
-  }
-  if(!pick) return `<div class="mtg-bar"><div class="mtg-pick sub">초록색 칸을 눌러 시간을 고르세요${find.mode==='move'?' · 다른 미팅 칸을 누르면 그 미팅과 자리를 바꿉니다':''}.</div></div>`;
-  let note='';
-  if(find.mode==='first'){
-    const rk=recurKey(mt);
-    if(rk){
-      /* 첫 회차만 보고 확정하면 뒤 회차가 겹치는 걸 나중에 알게 된다 — 미리 세어 알려준다 */
-      const starts=seriesStarts(pick.s,mt), span=pick.e-pick.s, mids=participantsOf(mt);
-      const clash=starts.filter(st=>mids.some(mid=>memberBusy(mid,st,st+span))||locationBusy(mt.location,st,st+span)).length;
-      note=` · ${RECUR_LABEL[rk]} 회차 ${starts.length}개 생성`+(clash?` (그중 ${clash}개는 겹침 — 만든 뒤 회차별로 조정)`:'');
-    }
-  }else if(find.cur){
-    note=` · 원래 ${whenLabel(find.cur.s,find.cur.e)}에서 옮김`;
-  }
-  const away=mt?awayOf(participantsOf(mt),pick.s,pick.e):[];
-  if(away.length) note+=` · <span class="occ-warn">✈ ${esc(namesOf(away))} 휴가·부재지만 배정할 수 있습니다</span>`;
-  return `<div class="mtg-bar on">
-      <div class="mtg-pick"><b>${whenLabel(pick.s,pick.e)}</b>
-        <span class="sub">${(pick.e-pick.s)/60000}분${mt?.location?' · '+esc(mt.location):''}${note}</span></div>
-      <div class="mtg-bar-act">
-        <button class="btn ghost sm" data-act="mtpickclear">선택 해제</button>
-        <button class="btn sm" data-act="mtapply" data-mtid="${mtid}" data-s="${pick.s}" data-e="${pick.e}">${mode.apply}</button>
-      </div>
-    </div>`;
-}
 const whenLabel=(s,e)=>`${mdLabel(fmtDate(new Date(s)))} (${WD[new Date(s).getDay()]}) ${hm(s)}~${hm(e)}`;
 /* 회차 목록 — 회차별 시간 변경 / 취소 / 그 주에 추가 */
 function viewOccurrences(mtid){
@@ -2839,8 +2781,8 @@ function viewOccurrences(mtid){
       <span class="occ-act">
         ${isPast?''
           :off?`<button class="btn ghost sm" data-act="occrestore" data-evid="${id}">되돌리기</button>`
-              :`<button class="btn ghost sm" data-act="occmove" data-mtid="${mtid}" data-evid="${id}">시간 변경</button>
-                <button class="btn ghost sm" data-act="occadd" data-mtid="${mtid}" data-evid="${id}" title="이 주에 회차를 하나 더 잡습니다">+ 이 주 추가</button>
+              :`<button class="btn ghost sm" data-act="caledit" data-evid="${id}" data-mode="move" title="시간표에서 끌어서 옮깁니다">시간 변경</button>
+                <button class="btn ghost sm" data-act="caledit" data-evid="${id}" data-mode="extra" title="이 주에 회차를 하나 더 잡습니다">+ 이 주 추가</button>
                 <button class="btn ghost sm" data-act="occcancel" data-evid="${id}">취소</button>`}
         <button class="btn danger sm" data-act="occdelete" data-evid="${id}">삭제</button>
       </span>
@@ -2859,8 +2801,6 @@ function viewMeetingCard(mtid){
   const mt=state.meetings[mtid];
   const mids=participantsOf(mt);
   const confirmed=mt.status==='confirmed';
-  const find=state.mtFind&&state.mtFind.mtid===mtid&&!state.mtFind.inCal?state.mtFind:null;
-  const findHtml=find?viewMeetingFind(mtid,find):'';
   const rk=recurKey(mt);
   const occIds=confirmed?occurrencesOf(mtid):[];
   const nextId=occIds.find(id=>Number(state.events[id].start)>=Date.now()&&isLive(state.events[id]));
@@ -2874,7 +2814,7 @@ function viewMeetingCard(mtid){
             ?(rk
               ?`🔁 <b>${RECUR_LABEL[rk]} ${WD[new Date(mt.confirmedStart).getDay()]} ${hm(mt.confirmedStart)}~${hm(mt.confirmedEnd)}</b> · ${mdLabel(mt.recurrence.until)}까지${nextEv?` · 다음 ${mdLabel(fmtDate(new Date(Number(nextEv.start))))} (${WD[new Date(Number(nextEv.start)).getDay()]}) ${hm(Number(nextEv.start))}`:' · 남은 회차 없음'}${mt.location?` · ${esc(mt.location)}`:''}`
               :`✅ <b>${mdLabel(fmtDate(new Date(mt.confirmedStart)))} (${WD[new Date(mt.confirmedStart).getDay()]}) ${hm(mt.confirmedStart)}~${hm(mt.confirmedEnd)}</b>${mt.location?` · ${esc(mt.location)}`:''}`)
-            :`${Number(mt.durationMin)||60}분${rk?` · ${RECUR_LABEL[rk]}`:''} · 후보 ${mdLabel(mt.rangeStart)}~${mdLabel(mt.rangeEnd)}${mt.location?` · ${esc(mt.location)}`:''}`}
+            :`${Number(mt.durationMin)||60}분${rk?` · ${RECUR_LABEL[rk]}`:''} · 아직 시간 없음${mt.location?` · ${esc(mt.location)}`:''}`}
           · ${esc(namesOf(mids))}
         </div>
         ${mt.description?`<div class="sub" style="margin-top:2px">${esc(mt.description)}</div>`:''}
@@ -2883,23 +2823,22 @@ function viewMeetingCard(mtid){
         ${confirmed
           ?`<button class="btn ghost sm" data-act="mtedit" data-mtid="${mtid}">수정</button>
             <button class="btn ghost sm" data-act="mtunconfirm" data-mtid="${mtid}">확정 취소</button>`
-          :`<button class="btn sm" data-act="mtfind" data-mtid="${mtid}">🔍 가능 시간 찾기</button>
+          :`<button class="btn sm" data-act="mtboard" data-mtid="${mtid}">🧩 보드에 놓기</button>
             <button class="btn ghost sm" data-act="mtedit" data-mtid="${mtid}">수정</button>`}
         <button class="btn danger sm" data-act="mtdelete" data-mtid="${mtid}">삭제</button>
       </div>
     </div>
     ${confirmed?viewOccurrences(mtid):''}
-    ${findHtml}
   </div>`;
 }
 /* ---- 퍼즐 배치 화면 ---- */
-function openBatch(){
-  const week=defaultBatchWeek(), seed=pzSeed(week);
+function initBatch(week){
+  week=week||defaultBatchWeek();
+  const seed=pzSeed(week);
   const rest=pzTray().filter(id=>!seed[id]);
-  state.batch={week,placed:{...seed},seed,pick:rest[0]||null,
-    mode:'spread',repeat:true,autoFail:null};
-  render();
+  return {week,placed:{...seed},seed,pick:rest[0]||null,mode:'spread',repeat:true,autoFail:null};
 }
+function openBatch(){ state.batch=initBatch(); render(); }
 /* 주간 보드 — 블록은 rowspan 한 칸으로 이어 그린다(20분 구분선 없음).
    블록을 골랐으면 들어갈 수 있는 시작 칸이 초록색. */
 function viewPuzzleGrid(){
@@ -2909,9 +2848,10 @@ function viewPuzzleGrid(){
   const rows=[]; for(let m=sM;m<eM;m+=slot) rows.push(m);
   const pick=b.pick&&state.meetings[b.pick]?b.pick:null;
   const pmt=pick?state.meetings[pick]:null;
-  const pd=pmt?(Number(pmt.durationMin)||60):0;
+  const pd=pmt?pzDurOf(pick):0;
   const pmids=pmt?participantsOf(pmt):[];
   const ign=pzIgnoreSet();
+  const swapOK=!!(b.single&&b.single.mode==='move');
   const evIds=Object.keys(state.events).filter(id=>isLive(state.events[id])&&!ign.has(id));
   /* 하루치 덩어리 — 겹치는 것끼리 묶어 한 칸으로 (참여자가 다르면 같은 시간에 겹칠 수 있다) */
   const dayCover=days.map(d=>{
@@ -2969,13 +2909,21 @@ function viewPuzzleGrid(){
               <span class="pz-fn">${esc(mt0.title||'')}${more?` +${more}`:''}</span>
               ${g.span>1?`<span class="pz-fp">${esc(namesOf(participantsOf(mt0)))}</span>`:''}</button></td>`;
         }
-        const ev=state.events[g.ids[0]]||{};
+        const evid0=g.ids[0], ev=state.events[evid0]||{};
         const more=g.ids.length-1;
-        return `<td class="mtg-cell blk ev-bg" rowspan="${g.span}"
-          style="--pc:${typeColor(ev.type)};--pcs:${typeColorSoft(ev.type)}"
-          title="${esc(ev.title||'')} ${hm(g.s)}~${hm(g.e)} · ${esc(namesOf(participantsOf(ev)))}"><span class="pz-fill static">
-          <span class="pz-ft">${hm(g.s)}~${hm(g.e)}</span><span class="pz-fn">${esc(ev.title||'')}${more?` +${more}`:''}</span>
-          ${g.span>1?`<span class="pz-fp">${esc(namesOf(participantsOf(ev)))}</span>`:''}</span></td>`;
+        const emt=ev.seriesId||ev.meetingId;
+        const estyle=emt&&state.meetings[emt]
+          ?`--pc:${meetingColor(emt)};--pcb:${meetingColorPastel(emt)};--pcs:${meetingColorSoft(emt)}`
+          :`--pc:${typeColor(ev.type)};--pcs:${typeColorSoft(ev.type)}`;
+        const off=ev.status==='cancelled';
+        const canSwap=swapOK&&!more&&!off&&isLive(ev);
+        const tip=`${esc(ev.title||'')} ${hm(g.s)}~${hm(g.e)} · ${esc(namesOf(participantsOf(ev)))}${off?' · 취소됨':''}${canSwap?' · 여기에 놓으면 자리를 바꿉니다':''}`;
+        const inner=`<span class="pz-ft">${hm(g.s)}~${hm(g.e)}</span><span class="pz-fn">${esc(ev.title||'')}${more?` +${more}`:''}</span>
+          ${g.span>1?`<span class="pz-fp">${esc(namesOf(participantsOf(ev)))}</span>`:''}`;
+        return canSwap
+          ?`<td class="mtg-cell blk ev-bg" rowspan="${g.span}" style="${estyle}"><button type="button" class="pz-fill static swappable"
+              data-act="pzswap" data-swap="${evid0}" title="${tip}" aria-label="${tip}">${inner}</button></td>`
+          :`<td class="mtg-cell blk ev-bg${off?' off':''}" rowspan="${g.span}" style="${estyle}" title="${tip}"><span class="pz-fill static">${inner}</span></td>`;
       }
       /* 고른 블록이 시작할 수 있는 칸 */
       if(pmt&&cs>=now&&m+pd<=eM&&pzCanPlace(pick,cs,cs+pd*60000,ign)){
@@ -3009,6 +2957,19 @@ function viewBatchCard(){
   const df=batchDiff(), dirty=df.add.length+df.move.length+df.drop.length>0;
   const diffTxt=[df.add.length?`새로 확정 ${df.add.length}`:'',df.move.length?`시간 변경 ${df.move.length}`:'',
     df.drop.length?`확정 취소 ${df.drop.length}`:''].filter(Boolean).join(' · ');
+  /* 경고 */
+  const outs=days.filter(d=>d.outSem);
+  const semAv=state.availability?.[activeSemesterId()]||{};
+  const allMids=[...new Set(ids.flatMap(id=>participantsOf(state.meetings[id])))];
+  const noAvail=allMids.filter(mid=>{
+    const d=semAv[mid]; if(!d) return true;
+    return !Object.values(d).some(sl=>Object.values(sl||{}).some(Boolean));
+  });
+  const warn=[];
+  if(!sem) warn.push('활성 학기가 없어 반복 불가 시간이 전혀 적용되지 않습니다 — <b>설정</b> 탭에서 학기를 지정하세요.');
+  const sideNote=noAvail.length
+    ?`<div class="pz-side-note" title="${esc(namesOf(noAvail))}">반복 불가 미입력 <b>${noAvail.length}명</b> — 늘 가능으로 계산됩니다
+       <button type="button" class="linkish" data-act="nav" data-tab="availability">입력 현황</button></div>`:'';
   /* 사이드바 블록 한 줄 — 끌어서 보드에 놓는다. 길이도 여기서 바로 바꾼다 */
   const blockRow=id=>{
     const mt=state.meetings[id], dur=Number(mt.durationMin)||60, pl=b.placed[id];
@@ -3023,23 +2984,11 @@ function viewBatchCard(){
       ${durSel}${pl?`<button type="button" class="pz-x" data-act="pzlift" data-mtid="${id}" title="보드에서 내리기">✕</button>`:''}
     </div>`;
   };
-  const side=`<div class="pz-side">
-    <div class="pz-side-h">뺀 블록 ${restIds.length}${restIds.length?' — 끌어서 시간표에 넣으세요':''}</div>
+  const side=`<div class="pz-side">${sideNote}
+    <div class="pz-side-h">아직 안 놓은 블록 ${restIds.length}${restIds.length?' — 끌어서 시간표에 넣으세요':''}</div>
     ${restIds.map(blockRow).join('')||'<div class="pz-empty">전부 놓았습니다 🎉</div>'}
     ${placedIds.length?`<div class="pz-side-h" style="margin-top:6px">놓은 블록 ${placedIds.length}</div>${placedIds.map(blockRow).join('')}`:''}
   </div>`;
-  /* 경고 */
-  const outs=days.filter(d=>d.outSem);
-  const semAv=state.availability?.[activeSemesterId()]||{};
-  const allMids=[...new Set(ids.flatMap(id=>participantsOf(state.meetings[id])))];
-  const noAvail=allMids.filter(mid=>{
-    const d=semAv[mid]; if(!d) return true;
-    return !Object.values(d).some(sl=>Object.values(sl||{}).some(Boolean));
-  });
-  const warn=[];
-  if(!sem) warn.push('활성 학기가 없어 주간 반복 불가 시간이 전혀 적용되지 않습니다 — <b>Members</b> 탭에서 학기를 지정하세요.');
-  else if(outs.length) warn.push(`${outs.map(d=>mdLabel(d.ds)).join(', ')}은(는) 학기 밖이라 <b>주간 반복 불가 시간이 적용되지 않습니다</b> — 실제보다 널널해 보일 수 있어요.`);
-  if(noAvail.length) warn.push(`<b>${esc(namesOf(noAvail))}</b> 님은 이 학기 <b>반복 불가 시간</b>을 입력하지 않아 늘 가능한 것으로 계산됩니다. (<b>Availability</b> 탭)`);
   const failRows=(b.autoFail||[]).map(f=>{
     const mt=state.meetings[f.mtid]; if(!mt) return '';
     return `<div class="occ-row fail">
@@ -3047,6 +2996,16 @@ function viewBatchCard(){
       <span class="occ-warn">${esc(f.why)}</span>
       <span class="occ-act"><button class="btn ghost sm" data-act="batchpick" data-mtid="${f.mtid}">직접 놓기</button></span></div>`;
   }).join('');
+  /* 부하 계기 — 미팅에 가장 많이 들어가는 사람(보통 교수님)의 주간 합계와 요일별 시간 */
+  const loadMin={};
+  placedIds.forEach(id=>{const pl=b.placed[id], m=(pl.e-pl.s)/60000;
+    participantsOf(state.meetings[id]).forEach(mid=>{loadMin[mid]=(loadMin[mid]||0)+m;});});
+  const topMid=Object.keys(loadMin).sort((x,y)=>loadMin[y]-loadMin[x])[0];
+  const fmtH=m=>m>=60?`${Math.round(m/60*10)/10}h`:`${m}분`;
+  const load=topMid?`<div class="pz-load"><b>${esc(memberName(topMid))}</b> 주 <b>${fmtH(loadMin[topMid])}</b> · ${
+    days.map(d=>{const t=placedIds.reduce((n,id)=>{const pl=b.placed[id];
+      return n+((state.meetings[id].participants||{})[topMid]&&fmtDate(new Date(pl.s))===d.ds?(pl.e-pl.s)/60000:0);},0);
+      return `${WD[wdOf(d.ds)]} ${t?fmtH(t):'—'}`;}).join(' · ')}</div>`:'';
   let hint;
   if(pick){
     const mt=state.meetings[pick], pl=b.placed[pick], mids=participantsOf(mt), rk=recurKey(mt);
@@ -3065,20 +3024,20 @@ function viewBatchCard(){
   }
   return `<div class="card">
     <div class="card-head">
-      <div><h2>🧩 퍼즐 배치</h2>
-        <div class="sub" style="margin-top:4px">미팅 블록을 끌어서 한 주(월~금) 시간표에 끼워 넣습니다. 참여자가 겹치지 않으면 같은 시간에 나란히 놓을 수 있어요.</div></div>
-      <button class="btn ghost sm" data-act="batchclose">닫기</button>
+      <div><h2>🧩 미팅 배치 보드</h2>
+        <div class="sub" style="margin-top:4px">블록을 끌어서 한 주(월~금) 시간표에 끼워 넣습니다. 확정된 미팅도 끌어서 옮기거나 빼놓을 수 있고, 아래 <b>변경 사항 적용</b>을 눌러야 저장됩니다.</div></div>
     </div>
     <div class="bt-bar">
       <button class="btn ghost sm" data-act="batchweek" data-d="-1" aria-label="이전 주">←</button>
       <span class="bt-week">${mdLabel(b.week)} ~ ${mdLabel(addDays(b.week,4))}</span>
       <button class="btn ghost sm" data-act="batchweek" data-d="1" aria-label="다음 주">→</button>
-      <button class="btn ghost sm" data-act="batchweek" data-d="0">기준 주로</button>
+      <button class="btn ghost sm" data-act="batchweek" data-d="0">이번 주</button>
       <label class="mtg-dur">자동 <select data-act="batchmode">
         <option value="spread" ${b.mode==='spread'?'selected':''}>요일 고르게</option>
         <option value="compact" ${b.mode==='compact'?'selected':''}>붙여서 몰기</option></select></label>
       <button class="btn ghost sm" data-act="batchauto">🧩 남은 블록 자동 배치</button>
       <button class="btn ghost sm" data-act="batchclear" ${placedIds.length?'':'disabled'}>전부 내리기</button>
+      <button class="btn ghost sm" data-act="wkcancel" data-week="${addDays(b.week,-1)}" title="학회 주간처럼 이 주 회차를 한꺼번에 취소/유지">이 주 회차 정리</button>
       <button type="button" class="grp-tog ${b.repeat?'on':''}" data-act="batchrepeat"
         title="확정할 때 학기 종료일까지 매주 반복 회차를 만듭니다">${b.repeat
           ?`✓ 매주 반복${sem?.endDate?` (${mdLabel(sem.endDate)}까지)`:''}`:'이 주만'}</button>
@@ -3087,6 +3046,7 @@ function viewBatchCard(){
       ${side}
       <div class="pz-main">
         ${hint}
+        ${load}
         ${viewPuzzleGrid()}
         ${warn.length?`<div class="note warn">${warn.join('<br>')}</div>`:''}
         ${failRows?`<div class="bt-res">${failRows}</div>`:''}
@@ -3102,20 +3062,28 @@ function viewBatchCard(){
 }
 
 function viewMeetings(){
+  if(!state.batch||state.batch.single) state.batch=initBatch();   // 보드가 첫 화면
   const ids=sortedIds(state.meetings);
   const planning=ids.filter(id=>state.meetings[id].status!=='confirmed');
   const confirmed=ids.filter(id=>state.meetings[id].status==='confirmed')
     .sort((a,b)=>(state.meetings[a].confirmedStart||0)-(state.meetings[b].confirmedStart||0));
   let h='';
   if(state.mtDraft) h+=viewMeetingForm();
-  else h+=`<div class="card"><button class="btn" data-act="mtnew">+ 새 미팅 만들기</button>
-    ${ids.length&&!state.batch?`<button class="btn ghost" data-act="batchopen" style="margin-left:8px">🧩 퍼즐 배치 (${ids.length}개)</button>`:''}
-    <span class="sub" style="margin-left:10px">참여자를 고르면 전원 가능한 시간을 자동으로 찾아줍니다.</span></div>`;
-  if(state.batch) h+=viewBatchCard();
-  h+=`<div class="section-label" style="margin:18px 0 10px">시간 조율 중 <span class="count">${planning.length}</span></div>`;
-  h+=planning.length?planning.map(viewMeetingCard).join(''):'<div class="card"><div class="empty">조율 중인 미팅이 없습니다.</div></div>';
-  h+=`<div class="section-label" style="margin:18px 0 10px">확정된 미팅 <span class="count">${confirmed.length}</span></div>`;
-  h+=confirmed.length?confirmed.map(viewMeetingCard).join(''):'<div class="card"><div class="empty">확정된 미팅이 없습니다.</div></div>';
+  else h+=`<div class="card mt-top"><button class="btn" data-act="mtnew">+ 새 미팅</button>
+    <span class="sub">이름·길이·참여자만 고르면 됩니다. 시간은 아래 보드에서 블록을 끌어다 놓으세요.</span></div>`;
+  h+=viewBatchCard();
+  const open=state.mtListOpen;
+  h+=`<div class="section-label" style="margin:18px 0 10px">
+    <button type="button" class="occ-toggle" data-act="mtlist"><span class="occ-arr">${open?'▾':'▸'}</span> 미팅 목록 <span class="count">${ids.length}</span>
+      <span class="sub" style="margin-left:6px">수정 · 삭제 · 회차 관리</span></button></div>`;
+  if(open){
+    if(planning.length){
+      h+=`<div class="section-label" style="margin:10px 0 8px">아직 시간이 없는 미팅 <span class="count">${planning.length}</span></div>`;
+      h+=planning.map(viewMeetingCard).join('');
+    }
+    h+=`<div class="section-label" style="margin:14px 0 8px">확정된 미팅 <span class="count">${confirmed.length}</span></div>`;
+    h+=confirmed.length?confirmed.map(viewMeetingCard).join(''):'<div class="card"><div class="empty">확정된 미팅이 없습니다.</div></div>';
+  }
   return h;
 }
 
@@ -3128,7 +3096,7 @@ function viewMembers(){
       <span class="idx">${i+1}</span>
       <input type="text" value="${esc(m.name||'')}" placeholder="이름" data-act="memfield" data-mid="${mid}" data-field="name" style="flex:1.2">
       <input type="email" value="${esc(m.email||'')}" placeholder="email (선택)" data-act="memfield" data-mid="${mid}" data-field="email" style="flex:1.6">
-      <input type="text" value="${esc(m.role||'')}" placeholder="역할 (선택)" data-act="memfield" data-mid="${mid}" data-field="role" style="flex:1">
+      <button type="button" class="grp-tog ${m.always?'on':''}" data-act="memalways" data-mid="${mid}" title="새 미팅을 만들 때 참여자로 미리 체크됩니다 (예: 교수님)">${m.always?'✓ 항상 참여':'항상 참여'}</button>
       <button type="button" class="grp-tog ${m.active!==false?'on':''}" data-act="memactive" data-mid="${mid}" title="비활성 멤버는 미팅 참여자 선택에서 숨겨집니다">${m.active!==false?'활성':'비활성'}</button>
       <button class="proj-del" data-act="memdelete" data-mid="${mid}">삭제</button>
     </div>`;
@@ -3146,30 +3114,33 @@ function viewMembers(){
   }).join('');
   const hourOpts=(sel,from,to)=>{let o='';for(let h=from;h<=to;h++)o+=`<option value="${h}" ${h===sel?'selected':''}>${h}시</option>`;return o;};
   return `<div class="card">
-    <div class="card-head"><div><h2>Lab Members</h2><div class="sub" style="margin-top:4px">모든 미팅·일정은 여기 등록된 멤버 ID를 참조합니다. 이름을 바꿔도 일정은 유지돼요.</div></div>
+    <div class="card-head"><div><h2>멤버</h2><div class="sub" style="margin-top:4px">모든 미팅·일정은 여기 등록된 멤버를 가리킵니다. 이름을 바꿔도 일정은 유지돼요. <b>항상 참여</b>를 켜 두면 새 미팅에 자동으로 들어갑니다.</div></div>
       <button class="btn sm" data-act="memadd">+ 멤버 추가</button></div>
     ${mids.length?rows:'<div class="empty">아직 멤버가 없습니다. 먼저 멤버를 추가하세요.</div>'}
   </div>
   <div class="card">
-    <div class="card-head"><div><h2>학기 (Semester)</h2><div class="sub" style="margin-top:4px">멤버의 반복 일정은 활성 학기 기간 동안 매주 반복됩니다.</div></div>
+    <div class="card-head"><div><h2>학기</h2><div class="sub" style="margin-top:4px">반복 불가 시간과 매주 미팅은 활성 학기 기간 동안 반복됩니다.</div></div>
       <button class="btn sm" data-act="semadd">+ 학기 추가</button></div>
     ${semRows||'<div class="empty">학기를 추가하고 기간을 지정하세요. (예: 2026 Fall, 9/1 ~ 12/21)</div>'}
   </div>
   <div class="card">
-    <div class="section-label">기본 설정</div>
+    <div class="card-head"><div><h2>시간표 칸</h2><div class="sub" style="margin-top:4px">칸 단위를 바꾸면 저장된 반복 불가 시간을 새 격자로 옮깁니다.</div></div></div>
     <div class="agg-edit-grid" style="margin-top:12px">
       <div class="agg-edit-field"><label>칸 단위</label><select data-act="setfield" data-field="slotMinutes">
         ${[20,30,60].map(v=>`<option value="${v}" ${cfgSlot()===v?'selected':''}>${v}분</option>`).join('')}</select></div>
       <div class="agg-edit-field"><label>하루 시작</label><select data-act="setfield" data-field="dayStart">${hourOpts(cfgDayStart(),7,12)}</select></div>
       <div class="agg-edit-field"><label>하루 종료</label><select data-act="setfield" data-field="dayEnd">${hourOpts(cfgDayEnd(),17,23)}</select></div>
     </div>
-  </div>`;
+  </div>
+  <details class="card fold"><summary>프로젝트 (선택) <span class="sub">미팅을 분류하는 이름표 — 쓰지 않아도 됩니다</span></summary>
+    ${viewProjects()}
+  </details>`;
 }
 
 /* ======== Availability (주간 반복 + 예외) ======== */
 function viewAvailability(){
   const mids=membersSorted(false);
-  if(!state.avMember||!state.members[state.avMember]) state.avMember=mids[0]||'';
+  if(!state.avMember||!state.members[state.avMember]) state.avMember=(state.me&&state.members[state.me])?state.me:(mids[0]||'');
   const semIds=sortedIds(state.semesters);
   if(!state.avSemester||!state.semesters[state.avSemester]) state.avSemester=activeSemesterId();
   const sid=state.avSemester, mid=state.avMember;
@@ -3201,9 +3172,17 @@ function viewAvailability(){
       <button class="proj-del" data-act="xdelete" data-xid="${xid}">삭제</button>
     </div>`;
   }).join('');
+  /* 누가 아직 안 냈나 — 미입력자는 모든 계산에서 '늘 가능'으로 잡힌다 */
+  const semAvAll=state.availability?.[sid]||{};
+  const filled=m=>{const d=semAvAll[m]; return !!d&&Object.values(d).some(sl=>Object.values(sl||{}).some(Boolean));};
+  const missing=mids.filter(m=>!filled(m));
+  const strip=`<div class="av-status"><b>${mids.length-missing.length}/${mids.length}</b> 입력${
+    missing.length?` · 미입력 ${missing.length}명 ${missing.map(m=>`<button type="button" class="chip-btn" data-act="avpick" data-mid="${m}">${esc(memberName(m))}</button>`).join('')}
+      <span class="sub">— 이름을 누르면 그 사람 격자가 열립니다. 미입력자는 늘 가능한 것으로 계산됩니다.</span>`:' · 전원 입력 완료 🎉'}</div>`;
   return `<div class="card">
-    <div class="card-head"><div><h2>주간 반복 일정</h2>
+    <div class="card-head"><div><h2>주간 반복 일정${state.me===mid?' — 나':''}</h2>
       <div class="sub" style="margin-top:4px">학기 동안 <b>매주 반복되는 안 되는 시간</b>을 칠하세요. 한 학기에 한 번만 입력하면 됩니다. (${esc(sem.startDate||'')} ~ ${esc(sem.endDate||'')})</div></div></div>
+    ${strip}
     <div class="mode-row" style="margin-bottom:12px">
       <span class="mode-lbl">멤버</span><select data-act="avmember">${memberOpts}</select>
       <span class="mode-lbl" style="margin-left:10px">학기</span><select data-act="avsemester">${semOpts}</select>
@@ -3212,8 +3191,8 @@ function viewAvailability(){
     <div class="note">칠해진 칸 = <b>안 되는 시간</b> (수업·랩미팅 외 고정 일정). PC는 드래그, 모바일은 꾹 눌러 드래그. 즉시 저장됩니다.</div>
   </div>
   <div class="card">
-    <div class="card-head"><div><h2>예외 일정 (출장·휴가·학회)</h2>
-      <div class="sub" style="margin-top:4px">특정 날짜에만 적용되는 일정. 이 기간에는 미팅 계산에서 자동으로 제외됩니다.</div></div>
+    <div class="card-head"><div><h2>예외 일정 — ${esc(memberName(mid))}</h2>
+      <div class="sub" style="margin-top:4px">출장·휴가·학회처럼 특정 날짜만 빠지는 일정. 배정을 막지는 않고, 그 시간 미팅에 <b>✈ 빠지는 사람</b>으로 표시됩니다. 다른 멤버 것은 위에서 멤버를 바꿔 보세요.</div></div>
       <button class="btn sm" data-act="xnew" data-mid="${mid}">+ 예외 추가</button></div>
     ${xRows||'<div class="empty">등록된 예외 일정이 없습니다.</div>'}
   </div>`;
@@ -3236,10 +3215,8 @@ function viewProjects(){
       }).join('')}</div>
     </div>`;
   }).join('');
-  return `<div class="card"><div class="card-head"><div><h2>Projects / Teams</h2>
-    <div class="sub" style="margin-top:4px">미팅과 일정을 분류하는 선택적 메타데이터입니다. 프로젝트 없이도 미팅을 만들 수 있어요.</div></div>
-    <button class="btn sm" data-act="projadd">+ 프로젝트 추가</button></div></div>
-  ${rows||'<div class="card"><div class="empty">아직 프로젝트가 없습니다.</div></div>'}`;
+  return `<div class="fold-body"><div style="display:flex;justify-content:flex-end;margin-bottom:8px"><button class="btn ghost sm" data-act="projadd">+ 프로젝트 추가</button></div>
+  ${rows||'<div class="empty">아직 프로젝트가 없습니다.</div>'}</div>`;
 }
 
 /* ======== 모달들 ======== */
@@ -3261,6 +3238,7 @@ function viewEventModal(){
     <div class="modal" data-act="modal-noop" style="max-width:560px" role="dialog" aria-modal="true">
       <div class="modal-head"><h2>${d.id?'일정 수정':'일정 추가'}</h2><button class="modal-x" data-act="evclose" title="닫기">×</button></div>
       <div class="modal-body">
+        ${d.id?'':'<div class="note info" style="margin-bottom:10px">세미나·행사처럼 한 번 있는 일정용입니다. 매주 하는 미팅은 <b>미팅</b> 탭에서 만들어 보드에 놓으면 회차 관리가 됩니다.</div>'}
         <div class="agg-edit-grid">
           <div class="agg-edit-field full"><label for="evTitle">이름</label><input id="evTitle" type="text" value="${esc(d.title||'')}" placeholder="예: Full Lab Meeting" data-act="evfield" data-field="title"></div>
           <div class="agg-edit-field"><label for="evType">종류</label><select id="evType" data-act="evfield" data-field="type">${typeOpts}</select></div>
@@ -3337,19 +3315,20 @@ function viewHelp(){
     <div class="modal help-modal" data-act="modal-noop" role="dialog" aria-modal="true">
       <div class="modal-head"><h2>VGI Lab Scheduler 사용 안내</h2><button class="modal-x" data-act="closehelp" title="닫기">×</button></div>
       <div class="modal-body">
-        <div class="tut-section"><h3><span class="tut-num">1</span>학기 시작 (관리자)</h3>
-          <p><b>Members</b> 탭에서 멤버를 등록하고, 학기를 만들어 기간을 지정한 뒤 <b>활성 학기</b>로 설정합니다.</p></div>
-        <div class="tut-section"><h3><span class="tut-num">2</span>내 반복 일정 입력 (각자 1회)</h3>
-          <p><b>Availability</b> 탭에서 본인을 선택하고, 학기 동안 매주 반복되는 <b>안 되는 시간</b>(수업 등)을 한 번만 칠합니다. 매주 다시 입력할 필요가 없어요.</p></div>
+        <div class="tut-section"><h3><span class="tut-num">1</span>나 고르기</h3>
+          <p>오른쪽 위 <b>나</b>에서 본인을 고르면 이 브라우저에 기억됩니다. 그때부터 <b>시간표</b>는 내 주간을, <b>내 시간</b>은 내 격자를 먼저 보여주고, 새 미팅에 내가 자동으로 들어가며, <b>개인 구독</b> 버튼이 바로 켜집니다. 전원을 보려면 시간표의 <b>전체</b>를 누르세요.</p></div>
+        <div class="tut-section"><h3><span class="tut-num">2</span>내 시간 (학기에 한 번)</h3>
+          <p><b>내 시간</b> 탭에서 학기 동안 매주 반복되는 <b>안 되는 시간</b>(수업 등)을 칠합니다. 드래그로 여러 칸을 한 번에. 매주 다시 입력할 필요가 없어요. 위쪽 <b>입력 현황</b>에서 아직 안 낸 사람을 볼 수 있는데, <b>안 낸 사람은 늘 가능한 것으로 계산</b>되니 배치 전에 채우는 게 좋습니다.</p></div>
         <div class="tut-section"><h3><span class="tut-num">3</span>출장·휴가·학회</h3>
-          <p>특별한 일정이 생기면 <b>Availability</b> 탭에서 예외 일정으로 추가합니다. 해당 기간엔 미팅 계산에서 자동 제외되고 Lab Calendar에도 표시됩니다.</p></div>
-        <div class="tut-section"><h3><span class="tut-num">4</span>미팅 잡기</h3>
-          <p><b>Lab Calendar</b>는 <b>주간</b>이 기본입니다. 한 주의 배치를 보고, 그 자리에서 바로 고칩니다 — 빈 칸을 누르면 그 시간에 일정을 추가하고, 일정을 누르면 <b>시간 변경 / 이 주 취소 / + 이 주 추가 / 상세 수정</b>이 뜹니다. 시간 변경 중에는 그 주 후보 칸이 초록색으로, 원래 시간이 주황색으로 표시되고, <b>다른 미팅을 누르면 두 미팅의 자리가 바뀝니다</b>. 매주 반복 미팅은 다음 주로 넘겨도 같은 자리에 나타나고, 한 주만 바꾼 것은 그 주에만 반영됩니다. 월간 보기는 오른쪽 위 <b>월간</b> 버튼으로 전환합니다.</p>
-          <p><b>Meetings</b> 탭에서 새 미팅을 만들고 참여자·길이·후보 날짜 범위를 고른 뒤 <b>가능 시간 찾기</b>를 누르면, 반복 일정 + 예외 + 이미 확정된 일정을 모두 계산해 전원 가능한 시간을 보여줍니다. 날짜×시간 격자에서 초록색 칸을 고르면 아래에 그 시간대가 표시되고, ‘이 시간으로 확정’을 누르면 Lab Calendar에 등록됩니다.</p>
-          <p><b>반복 미팅</b>을 ‘매주/격주’로 만들면 반복 종료일까지 회차가 한 번에 만들어집니다. 확정된 미팅 카드의 <b>회차 목록</b>에서 그 주만 <b>시간 변경</b>하거나, 학회 등으로 <b>취소</b>(캘린더에 회색 취소선으로 남고 되돌릴 수 있음)하거나, <b>+ 이 주 추가</b>로 같은 주에 회차를 하나 더 잡을 수 있습니다. 참여자가 겹치는 회차에는 ⚠ 표시가 붙습니다. 휴가·출장 같은 <b>예외 기간은 배정을 막지 않습니다</b> — 그 시간에도 미팅을 넣을 수 있고, 빠지는 사람이 ✈로 표시됩니다.</p>
-          <p><b>회차 시간 변경</b>을 누르면 그 주 전체가 격자로 열립니다. <b>현재 시간대</b>가 주황색으로 표시되고, 그 주에 이미 잡힌 일정들도 함께 보이므로 배치를 보고 옮길 수 있습니다. 위쪽 <b>길이</b>를 바꾸면 그 회차만 길이를 조정할 수 있고, 고른 시간은 길이만큼(예: 90분이면 칸 3개) 통째로 표시됩니다. <b>다른 미팅 칸을 누르면 두 미팅의 시간이 서로 맞바뀝니다</b> — 미팅 순서를 바꿀 때 쓰세요.</p></div>
-        <div class="tut-section"><h3><span class="tut-num">5</span>Lab Calendar</h3>
-          <p>모든 확정 일정과 출장·휴가가 한 달력에 표시됩니다. 멤버·프로젝트·종류로 필터링하고, PNG/.ics로 내보내거나 개인 구독 링크를 쓸 수 있어요. 날짜 칸을 누르면 일정을 직접 추가할 수도 있습니다.</p></div>
+          <p>같은 탭 아래 <b>예외 일정</b>에 추가합니다. 예외는 배정을 <b>막지 않습니다</b> — 그 시간에도 미팅을 넣을 수 있고, 빠지는 사람이 ✈로 표시됩니다. 학회 주간처럼 여러 회차를 한꺼번에 쉬려면 시간표의 <b>이 주 회차 정리</b>를 쓰세요.</p></div>
+        <div class="tut-section"><h3><span class="tut-num">4</span>미팅 — 보드에 끌어다 놓기</h3>
+          <p><b>미팅</b> 탭의 <b>+ 새 미팅</b>에서 이름·길이·참여자만 고르면 됩니다(반복·장소·메모는 '자세히' 안). 만든 미팅은 왼쪽 목록에 <b>블록</b>으로 나타납니다.</p>
+          <p>블록을 <b>끌면</b> 그 블록이 들어갈 수 있는 칸만 <b>초록색</b>으로 켜지고(참여자 가용성·장소·다른 블록까지 반영), 초록 칸 위에서 자석처럼 붙습니다. 놓으면 다음 블록이 자동으로 선택돼 연달아 놓을 수 있어요. 참여자가 겹치지 않으면 같은 시간에 나란히 놓을 수 있습니다.</p>
+          <p><b>확정된 미팅도 블록</b>입니다. 보드 위 블록을 끌어 옮기거나 왼쪽으로 끌어 빼놓을 수 있고, 아래 줄에 <b>새로 확정 / 시간 변경 / 확정 취소</b> 개수가 집계됩니다. <b>변경 사항 적용</b>을 눌러야 저장되고, 그때 학기 종료일까지 매주 회차가 만들어집니다. 남은 블록은 <b>자동 배치</b>로 채울 수 있고, 손으로 놓은 블록은 그대로 둡니다.</p></div>
+        <div class="tut-section"><h3><span class="tut-num">5</span>시간표 — 이번 주 회차 고치기</h3>
+          <p><b>시간표</b>는 월~금 주간이 기본입니다(<b>주말 보기</b>로 토·일 열을 엽니다). 블록을 누르면 <b>시간 변경 / + 이 주 추가 / 이 주 취소 / 상세 수정</b>이 뜹니다. <b>시간 변경</b>은 같은 자리에서 보드로 바뀌어 블록을 끌어 놓으면 되고, 매주 미팅이면 <b>이 주만</b> 옮길지 <b>이번 주부터 매주</b> 옮길지 고릅니다. 다른 미팅 블록 위에 놓으면 두 미팅의 자리가 바뀝니다. 빈 칸을 누르면 세미나 같은 한 번짜리 일정을 추가합니다. 월간은 오른쪽 위 <b>월간</b>.</p></div>
+        <div class="tut-section"><h3><span class="tut-num">6</span>내보내기·구독</h3>
+          <p>시간표를 <b>PNG</b>나 <b>.ics</b>로 저장하거나, <b>개인 구독</b> 링크를 Google/Apple 캘린더에 등록하면 내 회차와 예외가 자동으로 들어옵니다. 멤버·학기·칸 단위는 <b>설정</b> 탭에서 관리합니다.</p></div>
       </div>
     </div>
   </div>`;
@@ -3431,14 +3410,6 @@ function exportCalICS(){
 }
 
 /* 후보 격자 열기 — 같은 조건으로 다시 계산할 수 있게 조건도 함께 담아 둔다 */
-function openFind(mtid,cfg={}){
-  const mt=state.meetings[mtid]; if(!mt) return;
-  const opts={from:cfg.from,to:cfg.to,dur:cfg.dur,maxDays:cfg.maxDays,allDays:cfg.allDays,
-    noClamp:cfg.noClamp,ignoreEventId:cfg.mode==='move'?cfg.evid:undefined,mtid};
-  state.mtFind={mtid,...cfg,...opts,...findMeetingSlots(mt,opts)};
-  state.mtPick=null; render();
-}
-
 /* ---------------- 이벤트 바인딩 ---------------- */
 function bindEvents(){
   const app=$('app'), hbar=$('hbar');
@@ -3460,20 +3431,20 @@ function bindEvents(){
     }
     if(act==='calmode'){
       calSwitchMode(t.dataset.mode); lsSet('vgi.calMode',state.calMode);
-      state.mtFind=null; state.mtPick=null; render();return;
+      if(state.batch?.single) state.batch=null; render();return;
     }
     if(act==='calweekgo'){
       state.calWeek=addDays(state.calWeek,7*(Number(t.dataset.d)||0));
-      state.calPick=null; render();return;
+      state.calPick=null; if(state.batch?.single) state.batch=null; render();return;
     }
     if(act==='caltoday'){
       const td=fmtDate(new Date());
       state.calWeek=weekOf(td)[0]; state.calMonth=td.slice(0,7);
-      state.calPick=null; render();return;
+      state.calPick=null; if(state.batch?.single) state.batch=null; render();return;
     }
     if(act==='calslot'){
       const ds=t.dataset.date, m=Number(t.dataset.min)||cfgDayStart()*60;
-      state.evEdit={title:'',type:'meeting',projectId:'',location:'',participants:{},
+      state.evEdit={title:'',type:'other',projectId:'',location:'',participants:{},
         date:ds,fromMin:m,toMin:Math.min(m+60,cfgDayEnd()*60)};
       state.calPick=null; render();return;
     }
@@ -3483,7 +3454,9 @@ function bindEvents(){
     if(act==='calpickclear'){state.calPick=null;render();return;}
     if(act==='calpng'){exportCalPNG();return;}
     if(act==='calics'){exportCalICS();return;}
-    if(act==='calsub'){if(state.calMember){state.subscribeFor=state.calMember;render();}return;}
+    if(act==='calsub'){const mid=t.dataset.mid||state.calMember||state.me; if(mid){state.subscribeFor=mid;render();}return;}
+    if(act==='calmine'){state.calMember=t.dataset.v==='me'?state.me:''; state.calPick=null; render();return;}
+    if(act==='calweekend'){state.calWeekend=!state.calWeekend; lsSet('vgi.calWeekend',state.calWeekend?'1':'0'); render();return;}
     if(act==='subclose'){state.subscribeFor=null;render();return;}
     if(act==='subcopy'){copyText(t.dataset.url).then(ok=>toast(ok?'구독 링크를 복사했습니다':'복사 실패'));return;}
     if(act==='evedit'){
@@ -3497,7 +3470,7 @@ function bindEvents(){
     }
     if(act==='caladd'){
       const ds=t.dataset.date||fmtDate(new Date());
-      state.evEdit={title:'',type:'meeting',projectId:'',location:'',participants:{},
+      state.evEdit={title:'',type:'other',projectId:'',location:'',participants:{},
         date:ds,fromMin:cfgDayStart()*60+240,toMin:cfgDayStart()*60+300};
       render();return;
     }
@@ -3514,12 +3487,23 @@ function bindEvents(){
     /* Meetings */
     if(act==='mtnew'){
       const today=fmtDate(new Date());
-      state.mtDraft={title:'',type:'meeting',durationMin:60,participants:{},
+      const parts={};
+      membersSorted(false).forEach(mid=>{ if(state.members[mid]?.always) parts[mid]=true; });
+      if(state.me&&state.members[state.me]) parts[state.me]=true;
+      state.mtDraft={title:'',type:'meeting',durationMin:cfgSlot()*2,participants:parts,
         rangeStart:today,rangeEnd:addDays(today,6),projectId:'',location:'',description:'',
         recur:'w1',recurUntil:defaultRecurUntil()};
       render();return;
     }
     if(act==='mtcancel'){state.mtDraft=null;render();return;}
+    if(act==='mtlist'){state.mtListOpen=!state.mtListOpen;render();return;}
+    if(act==='mtboard'){                                 // 목록에서 '보드에 놓기' — 그 블록을 집은 채 보드로
+      const mtid=t.dataset.mtid; if(!state.meetings[mtid])return;
+      if(!state.batch||state.batch.single) state.batch=initBatch();
+      state.batch.pick=mtid; render();
+      document.querySelector('.pz-body')?.scrollIntoView({behavior:'smooth',block:'start'});
+      return;
+    }
     if(act==='mtsave'){syncMtDraft();saveMeetingDraft();return;}
     if(act==='mtmember'){
       const d=state.mtDraft; if(!d)return; syncMtDraft();
@@ -3532,38 +3516,23 @@ function bindEvents(){
       const mt=state.meetings[t.dataset.mtid]; if(!mt)return;
       state.mtDraft={id:t.dataset.mtid,...mt,participants:{...(mt.participants||{})},
         recur:recurKey(mt),recurUntil:mt.recurrence?.until||defaultRecurUntil()};
-      state.mtFind=null; state.mtPick=null; render();
+      render();
       $('mtForm')?.scrollIntoView({behavior:'smooth'});
       return;
     }
     if(act==='mtdelete'){deleteMeeting(t.dataset.mtid);return;}
-    if(act==='mtfind'){
-      const mtid=t.dataset.mtid, mt=state.meetings[mtid]; if(!mt)return;
-      openFind(mtid,{mode:'first',scope:`후보 ${mdLabel(mt.rangeStart)}~${mdLabel(mt.rangeEnd)}`});
-      return;
+    /* 회차 고치기 — 시간표에서 보드 엔진으로 끌어 놓는다 */
+    if(act==='caledit'){openCalEdit(t.dataset.evid,t.dataset.mode||'move');return;}
+    if(act==='wkcancel'){openWeekCancel(t.dataset.week||state.calWeek);return;}
+    if(act==='wkclose'){state.weekCancel=null;render();return;}
+    if(act==='wkapply'){applyWeekCancel();return;}
+    if(act==='wkkeepall'){
+      const wc=state.weekCancel; if(!wc)return;
+      const keep={}; if(t.dataset.v==='all') weekOccurrences(wc.week).forEach(id=>{if(isLive(state.events[id]))keep[id]=true;});
+      wc.keep=keep; render();return;
     }
-    if(act==='mtfindclose'){state.mtFind=null;state.mtPick=null;render();return;}
-    if(act==='mtfindall'||act==='mtfindsem'){
-      const f=state.mtFind, mt=state.meetings[t.dataset.mtid]; if(!f||!mt)return;
-      const all=act==='mtfindall';
-      openFind(f.mtid,{...f,from:undefined,noClamp:all,
-        scope:`후보 ${mdLabel(mt.rangeStart)}~${mdLabel(mt.rangeEnd)}${all?'':' · 학기 안'}`});
-      return;
-    }
-    /* 회차: 그 주 안에서만 다시 고르게 한다 */
-    if(act==='occmove'||act==='occadd'){
-      const mtid=t.dataset.mtid, evid=t.dataset.evid;
-      const mt=state.meetings[mtid], ev=state.events[evid]; if(!mt||!ev)return;
-      const [ws,we]=weekOf(fmtDate(new Date(Number(ev.start))));
-      const move=act==='occmove';
-      const dur=move?(Number(ev.end)-Number(ev.start))/60000:(Number(mt.durationMin)||60);
-      const inCal=t.dataset.cal==='1';
-      if(inCal){ state.calWeek=ws; state.calPick=null; }
-      openFind(mtid,{mode:move?'move':'extra',evid,from:ws,to:we,dur,maxDays:7,allDays:true,inCal,
-        scope:`${mdLabel(ws)}~${mdLabel(we)} 주`,
-        cur:move?{s:Number(ev.start),e:Number(ev.end)}:null});
-      return;
-    }
+    if(act==='pzscope'){if(state.batch?.single){state.batch.single.scope=t.dataset.v;render();}return;}
+    if(act==='pzswap'){pzSwap(t.dataset.swap);return;}
     if(act==='occcancel'){setOccCancel(t.dataset.evid,true);return;}
     if(act==='occrestore'){setOccCancel(t.dataset.evid,false);return;}
     if(act==='occdelete'){deleteOccurrence(t.dataset.evid);return;}
@@ -3574,24 +3543,6 @@ function bindEvents(){
     if(act==='occpast'){
       const k=t.dataset.mtid;
       state.occPast={...state.occPast,[k]:!state.occPast[k]}; render();return;
-    }
-    if(act==='mtpick'){
-      state.mtPick={mtid:t.dataset.mtid,s:Number(t.dataset.s),e:Number(t.dataset.e)};
-      render();return;
-    }
-    if(act==='mtswap'){
-      state.mtPick={mtid:t.dataset.mtid,swap:t.dataset.evid};
-      render();return;
-    }
-    if(act==='mtswapdo'){swapOccurrence(t.dataset.a,t.dataset.b);return;}
-    if(act==='mtpickclear'){state.mtPick=null;render();return;}
-    if(act==='mtapply'){
-      const s=Number(t.dataset.s), e=Number(t.dataset.e), mtid=t.dataset.mtid;
-      const mode=state.mtFind?.mode||'first';
-      if(mode==='move') moveOccurrence(state.mtFind.evid,s,e);
-      else if(mode==='extra') addOccurrence(mtid,s,e);
-      else confirmMeeting(mtid,s,e);
-      return;
     }
     /* 퍼즐 배치 */
     if(act==='batchopen'){openBatch();return;}
@@ -3626,7 +3577,8 @@ function bindEvents(){
     if(act==='pzdrop'){
       const b=state.batch; if(!b||!b.pick)return;
       const mt=state.meetings[b.pick]; if(!mt)return;
-      const s2=Number(t.dataset.s), e2=s2+(Number(mt.durationMin)||60)*60000;
+      const s2=Number(t.dataset.s), e2=s2+pzDurOf(b.pick)*60000;
+      if(b.single){applySingle(s2,e2);return;}
       const was=!!b.placed[b.pick];
       b.placed={...b.placed,[b.pick]:{s:s2,e:e2}};
       if(b.autoFail){b.autoFail=b.autoFail.filter(f=>f.mtid!==b.pick);if(!b.autoFail.length)b.autoFail=null;}
@@ -3637,14 +3589,20 @@ function bindEvents(){
     if(act==='pzlift'){
       const b=state.batch; if(!b)return;
       const id=t.dataset.mtid||b.pick; if(!id||!b.placed[id])return;
+      const prev=b.placed[id];
       const np={...b.placed}; delete np[id]; b.placed=np; b.pick=id;
+      toast(`${esc(state.meetings[id]?.title||'')} 블록을 내렸습니다`,{undo:()=>{
+        const bb=state.batch; if(!bb||bb.single)return; bb.placed={...bb.placed,[id]:prev}; render();}});
       render();return;
     }
     if(act==='pzunpick'){if(state.batch){state.batch.pick=null;render();}return;}
     if(act==='batchauto'){autoPlace();return;}
     if(act==='batchclear'){
       const b=state.batch; if(!b)return;
-      b.placed={}; b.autoFail=null; render();return;
+      const prev=b.placed, n=Object.keys(prev).length; if(!n)return;
+      b.placed={}; b.autoFail=null;
+      toast(`블록 ${n}개를 전부 내렸습니다`,{undo:()=>{const bb=state.batch; if(!bb||bb.single)return; bb.placed={...prev}; render();}});
+      render();return;
     }
     if(act==='batchrepeat'){if(state.batch){state.batch.repeat=!state.batch.repeat;render();}return;}
     if(act==='batchapply'){applyBatch();return;}
@@ -3655,6 +3613,11 @@ function bindEvents(){
     if(act==='memactive'){
       const m=state.members[t.dataset.mid]; if(!m)return;
       updateMember(t.dataset.mid,{active:m.active===false});return;
+    }
+    if(act==='memalways'){
+      const m=state.members[t.dataset.mid]; if(!m)return;
+      state.members[t.dataset.mid]={...m,always:!m.always};
+      updateMember(t.dataset.mid,{always:!m.always}); render(); return;
     }
     if(act==='semadd'){addSemester();return;}
     if(act==='semdelete'){deleteSemester(t.dataset.sid);return;}
@@ -3677,6 +3640,7 @@ function bindEvents(){
       render();return;
     }
     if(act==='xdelete'){deleteException(t.dataset.xid);return;}
+    if(act==='avpick'){state.avMember=t.dataset.mid;render();return;}
     if(act==='xclose'){state.xDraft=null;render();return;}
     if(act==='xsave'){syncXDraft();saveException();return;}
     if(act==='xmodaldelete'){const xid=t.dataset.xid; state.xDraft=null; deleteException(xid); render();return;}
@@ -3730,10 +3694,17 @@ function bindEvents(){
     if($('xTo'))d.toMin=Number($('xTo').value);
   }
 
-  app.addEventListener('change',e=>{
+  /* change는 헤더('나' 셀렉트)에서도 온다 */
+  const handleChange=e=>{
     const t=e.target.closest('[data-act]'); if(!t)return;
     const act=t.dataset.act, v=t.value;
-    if(act==='calmember'){state.calMember=v;render();}
+    if(act==='wkkeep'&&state.weekCancel){const k={...state.weekCancel.keep}; if(t.checked)k[t.dataset.evid]=true; else delete k[t.dataset.evid]; state.weekCancel.keep=k; render();}
+    else if(act==='calmember'){state.calMember=v;render();}
+    else if(act==='setme'){
+      state.me=v; lsSet('vgi.me',v);
+      if(v){ state.calMember=v; state.avMember=v; }
+      render();
+    }
     else if(act==='calproject'){state.calProject=v;render();}
     else if(act==='caltype'){state.calType=v;render();}
     else if(act==='avmember'){state.avMember=v;render();}
@@ -3747,10 +3718,7 @@ function bindEvents(){
     }
     else if(act==='projname'){FB.update(R('projects/'+t.dataset.pid),{name:v.trim()||'이름 없음'}).catch(wErr);}
     else if(act==='mtfield'&&state.mtDraft){state.mtDraft[t.dataset.field]=t.type==='number'?Number(v):v;}
-    else if(act==='mtdur'&&state.mtFind){
-      const f=state.mtFind;
-      openFind(f.mtid,{...f,dur:Number(v)||60});
-    }
+    else if(act==='pzsdur'&&state.batch?.single){state.batch.single.dur=Number(v)||60;render();}
     else if(act==='batchmode'&&state.batch){state.batch.mode=v;}
     else if(act==='pzdur'&&state.batch){
       const id=t.dataset.mtid, n=Number(v)||60;
@@ -3783,7 +3751,9 @@ function bindEvents(){
         if(tm<=fm){tm=fm+cfgSlot();to.value=String(tm);}
         state.xDraft.fromMin=fm;state.xDraft.toMin=tm;}
     }
-  });
+  };
+  app.addEventListener('change',handleChange);
+  hbar.addEventListener('change',handleChange);
 
   /* 텍스트 입력 blur 시 지연된 렌더 반영 */
   app.addEventListener('blur',e=>{
@@ -3797,6 +3767,8 @@ function bindEvents(){
     if(state.xDraft){state.xDraft=null;render();return;}
     if(state.subscribeFor!==null){state.subscribeFor=null;render();return;}
     if(state.showHelp){state.showHelp=false;render();return;}
+    if(state.weekCancel){state.weekCancel=null;render();return;}
+    if(state.batch?.single){state.batch=null;render();return;}
     if(state.batch?.pick){state.batch.pick=null;render();return;}
   });
 
@@ -3815,7 +3787,7 @@ function bindEvents(){
     const t=e.target.closest('[data-act="pzdrop"]'); if(!t)return;
     const b=state.batch; if(!b||!b.pick)return;
     const mt=state.meetings[b.pick]; if(!mt)return;
-    const s2=Number(t.dataset.s), e2=s2+(Number(mt.durationMin)||60)*60000;
+    const s2=Number(t.dataset.s), e2=s2+pzDurOf(b.pick)*60000;
     document.querySelectorAll('#pzgrid td[data-cs]').forEach(td=>{
       const cs=Number(td.dataset.cs);
       td.classList.toggle('span',cs>=s2&&cs<e2);
@@ -3920,7 +3892,7 @@ function bindEvents(){
      PC는 6px 움직이면 드래그, 터치는 long-press 280ms (짧은 탭은 클릭 = 선택).
      매끄럽게 하려고: 포인터 이벤트는 rAF 로 한 프레임에 한 번만 처리하고,
      칸 목록은 드래그 시작 때 한 번만 모으고, 하이라이트는 '지금 칠해진 칸'만 지운다. */
-  let pzP=null, pzGhost=null, pzTarget=null, pzOverSide=false;
+  let pzP=null, pzGhost=null, pzTarget=null, pzOverSide=false, pzSwapT=null, pzSwapEl=null;
   let pzCells=[], pzSpanned=[], pzRaf=0, pzAt=null, pzSideEl=null;
   function pzPaintSpan(startMs){
     pzSpanned.forEach(td=>td.classList.remove('span'));
@@ -3954,7 +3926,7 @@ function bindEvents(){
     pzSpanned=[]; pzSideEl=document.querySelector('.pz-side');
     const cell=pzCells[0]?.td;
     const r=cell?cell.getBoundingClientRect():{width:150,height:26};
-    pzP.dur=Number(mt.durationMin)||60;
+    pzP.dur=pzDurOf(pzP.id);
     pzP.w=r.width; pzP.h=r.height*Math.max(1,Math.round(pzP.dur/cfgSlot()));
     pzGhost=document.createElement('div'); pzGhost.id='pz-ghost';
     pzGhost.style.width=pzP.w+'px'; pzGhost.style.height=pzP.h+'px';
@@ -3974,6 +3946,10 @@ function bindEvents(){
     const td=el?.closest?.('#pzgrid td.cand')||null;
     const tgt=td?Number(td.dataset.cs):null;
     if(tgt!==pzTarget){ pzPaintSpan(tgt); pzTarget=tgt; }
+    /* 회차를 옮기는 중엔 다른 미팅 블록이 '자리 바꾸기' 대상 */
+    const sw=!td?(el?.closest?.('#pzgrid .swappable')||null):null;
+    const swId=sw?sw.dataset.swap:null;
+    if(swId!==pzSwapT){ pzSwapEl?.classList.remove('swap-hover'); pzSwapT=swId; pzSwapEl=sw; sw?.classList.add('swap-hover'); }
     if(tgt!=null){
       const r=td.getBoundingClientRect();
       pzGhost.classList.add('snap');
@@ -3991,7 +3967,8 @@ function bindEvents(){
     pzSideEl?.classList.remove('droptarget');
     if(pzGhost){pzGhost.remove();pzGhost=null;}
     pzDrag=false; exitDrag();
-    pzTarget=null; pzOverSide=false; pzP=null; pzAt=null;
+    pzSwapEl?.classList.remove('swap-hover');
+    pzTarget=null; pzOverSide=false; pzP=null; pzAt=null; pzSwapT=null; pzSwapEl=null;
     pzCells=[]; pzSideEl=null;
     deferRender=false; doRender();
   }
@@ -4022,6 +3999,17 @@ function bindEvents(){
     if(!pzP.started){pzP=null;return;}
     pzDidDrag=true; setTimeout(()=>{pzDidDrag=false;},0);     // 직후의 click 한 번을 무시
     const b=state.batch;
+    if(b&&b.pick&&b.single){                                 // 캘린더에서 회차 하나 — 놓는 순간 저장
+      const dur=pzP.dur, tgt=pzTarget, swT=pzSwapT;
+      pzSwapEl?.classList.remove('swap-hover');
+      pzDrag=false; exitDrag(); pzPaintSpan(null);
+      if(pzGhost){pzGhost.remove();pzGhost=null;}
+      pzTarget=null; pzP=null; pzAt=null; pzSwapT=null; pzSwapEl=null; pzCells=[];
+      if(swT) pzSwap(swT);
+      else if(tgt!=null) applySingle(tgt,tgt+dur*60000);
+      else { deferRender=false; doRender(); }
+      return;
+    }
     if(b&&b.pick){
       if(pzTarget!=null){                                     // 초록 칸에 드랍 → 놓기/옮기기
         const s2=pzTarget, e2=s2+pzP.dur*60000, was=!!b.placed[b.pick];
@@ -4045,6 +4033,9 @@ function bindEvents(){
 async function start(){
   const savedMode=lsGet('vgi.calMode');
   if(savedMode==='month'||savedMode==='week') state.calMode=savedMode;
+  state.me=lsGet('vgi.me')||'';
+  state.calMember=state.me;                        // 시간표는 '내 주간'부터
+  state.calWeekend=lsGet('vgi.calWeekend')==='1';
   bindEvents();
   const h=location.hash.slice(1);
   if(NAV.some(([k])=>k===h)) state.tab=h;

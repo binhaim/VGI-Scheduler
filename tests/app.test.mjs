@@ -43,7 +43,7 @@ function reset(opts = {}) {
         status: "planning", ts: 1,
       },
     },
-    mtDraft: null, mtFind: null, mtPick: null, batch: null,
+    mtDraft: null, batch: null, me: "", calWeekend: false, mtListOpen: false, weekCancel: null,
     calMode: "week", calWeek: WS, calMonth: TODAY.slice(0, 7), calPick: null,
     calMember: "", calProject: "", calType: "", occPast: {},
     evEdit: null, xDraft: null, subscribeFor: null, showHelp: false,
@@ -124,46 +124,7 @@ test("반복 종료일을 늘리면 회차가 이어서 만들어지고 미래 �
   assert.ok(occ.every((id) => state.events[id].location === "304호"));
 });
 
-/* ---------------- 후보 시간 계산 ---------------- */
-test("90분 미팅은 30분 칸 3개가 연속으로 비어야 후보가 된다", () => {
-  reset({ recur: null });
-  state.meetings.mt1.durationMin = 90;
-  state.events.other = { title: "다른 미팅", type: "seminar", start: D(WED, 14), end: D(WED, 15),
-    participants: { m3: true }, ts: 1 };
-  const f = app.findMeetingSlots(state.meetings.mt1, { from: WED, to: WED, allDays: true, maxDays: 7 });
-  const day = f.days[0];
-  assert.equal(f.dur, 90);
-  assert.equal(day.ok[13 * 60], undefined);      // 13:00~14:30 은 겹친다
-  assert.equal(day.ok[13 * 60 + 30], undefined);
-  assert.ok(day.ok[12 * 60 + 30]);               // 12:30~14:00 은 딱 붙어 괜찮다
-  assert.ok(day.ok[19 * 60 + 30]);               // 하루 끝(21:00)에 딱 맞음
-  assert.equal(day.ok[20 * 60], undefined);
-  assert.equal(day.cells[14 * 60].kind, "ev");   // 무엇이 막는지도 담는다
-  assert.equal(day.cells[14 * 60].title, "다른 미팅");
-  assert.equal(day.cells[14 * 60].head, true);
-  assert.equal(day.cells[14 * 60 + 30].head, false);
-});
-
-test("참여자 불가 칸은 누구 때문인지 담는다", () => {
-  reset({ recur: null });
-  const f = app.findMeetingSlots(state.meetings.mt1, { from: WS, to: WE, allDays: true, maxDays: 7 });
-  assert.equal(f.days.length, 7);
-  const mon = f.days.find((d) => d.ds === MON);
-  assert.equal(mon.cells[9 * 60].kind, "na");
-  assert.deepEqual(mon.cells[9 * 60].who, ["m1"]);
-  assert.equal(mon.cells[11 * 60].kind, "free");
-});
-
-test("시간 변경 격자는 자기 자신을 비켜준다", () => {
-  reset({ recur: null });
-  app.confirmMeeting("mt1", D(MON, 14), D(MON, 15));
-  const id = app.occurrencesOf("mt1")[0];
-  const withSelf = app.findMeetingSlots(state.meetings.mt1, { from: WS, to: WE, allDays: true, maxDays: 7 });
-  const ignoring = app.findMeetingSlots(state.meetings.mt1, { from: WS, to: WE, allDays: true, maxDays: 7, ignoreEventId: id });
-  assert.equal(withSelf.days.find((d) => d.ds === MON).ok[14 * 60], undefined);
-  assert.ok(ignoring.days.find((d) => d.ds === MON).ok[14 * 60]);
-});
-
+/* ---------------- 회차 자리 바꾸기 ---------------- */
 test("길이가 같으면 자리를 맞바꾸고, 달라서 겹치면 거부한다", () => {
   reset({ recur: null });
   app.confirmMeeting("mt1", D(MON, 14), D(MON, 15));
@@ -186,35 +147,6 @@ test("길이가 같으면 자리를 맞바꾸고, 달라서 겹치면 거부한�
 });
 
 /* ---------------- '전원 가능'의 진짜 원인 ---------------- */
-test("학기 시작 전 구간은 기본 검색에서 빼고, 왜 뺐는지 알린다", () => {
-  reset({ recur: null });
-  const semStart = A(TODAY, 30);
-  state.semesters.sem1.startDate = semStart;
-  state.meetings.mt1.rangeStart = TODAY;
-  const f = app.findMeetingSlots(state.meetings.mt1, { mtid: "mt1" });
-  assert.equal(f.clamped, TODAY);
-  assert.equal(f.days[0].ds, semStart);
-  assert.equal(f.outTotal, 0);
-  const all = app.findMeetingSlots(state.meetings.mt1, { mtid: "mt1", noClamp: true });
-  assert.equal(all.clamped, null);
-  assert.equal(all.days[0].outSem, true);
-  assert.ok(all.outTotal > 0);
-  const warn = app.viewFindWarn("mt1", f);
-  assert.match(warn, /학기 밖/);
-  assert.match(warn, /data-act="mtfindall"/);
-});
-
-test("반복 불가 시간을 입력하지 않은 참여자를 이름으로 경고한다", () => {
-  reset({ recur: null });
-  const f = app.findMeetingSlots(state.meetings.mt1, { mtid: "mt1" });
-  assert.deepEqual(f.noAvail, ["m3"]);                 // m1만 입력되어 있다
-  assert.match(app.viewFindWarn("mt1", f), /박경문/);
-  state.semesters = {}; state.settings.activeSemester = "";
-  const g = app.findMeetingSlots(state.meetings.mt1, { mtid: "mt1" });
-  assert.equal(g.sem, null);
-  assert.match(app.viewFindWarn("mt1", g), /활성 학기가 없어/);
-});
-
 /* ---------------- 주간 뷰 (Calendar) ---------------- */
 test("주간 뷰는 그 주 배치를 요일×시간 칸에 그리고 종일 예외를 윗줄에 둔다", () => {
   reset({ recur: null });
@@ -252,37 +184,9 @@ test("주간 뷰에서 일정을 고르면 그 회차를 바로 고칠 수 있�
   app.confirmMeeting("mt1", D(MON, 14), D(MON, 15));
   state.calPick = app.occurrencesOf("mt1")[0];
   const { html } = app.viewCalWeek(new Date());
-  assert.match(html, /data-act="occmove"[^>]*data-cal="1"/);
-  assert.match(html, /data-act="occadd"[^>]*data-cal="1"/);
+  assert.match(html, /data-act="caledit"[^>]*data-mode="move"/);
+  assert.match(html, /data-act="caledit"[^>]*data-mode="extra"/);
   assert.match(html, /data-act="occcancel"/);
-});
-
-test("시간 변경 중에는 현재 시간대·후보 칸·자리 바꾸기가 한 화면에 나온다", () => {
-  reset({ recur: null });
-  state.tab = "calendar";
-  app.confirmMeeting("mt1", D(MON, 14), D(MON, 15));
-  const evid = app.occurrencesOf("mt1")[0];
-  state.events.b = { title: "논문 리딩", type: "paper", start: D(WED, 10), end: D(WED, 11),
-    participants: { m1: true }, ts: 2 };
-  app.openFind("mt1", { mode: "move", evid, from: WS, to: WE, dur: 60, maxDays: 7,
-    allDays: true, inCal: "cal", scope: "주", cur: { s: D(MON, 14), e: D(MON, 15) } });
-  const { html } = app.viewCalWeek(new Date());
-  assert.match(html, /현재 14:00~15:00/);
-  assert.match(html, /wk-cell[^"]*cand[^"]*"[^>]*data-act="mtpick"/);
-  assert.match(html, /data-act="mtswap"[^>]*data-evid="b"/);
-  assert.match(html, /data-act="mtdur"/);
-  assert.doesNotMatch(html, /data-act="calslot"/);     // 수정 중엔 빈 칸 추가가 아니다
-});
-
-test("고른 시간은 길이만큼 칸이 통째로 표시된다", () => {
-  reset({ recur: null });
-  state.tab = "calendar";
-  app.openFind("mt1", { mode: "move", evid: "", from: WS, to: WE, dur: 90, maxDays: 7,
-    allDays: true, inCal: "cal", scope: "주" });
-  state.mtPick = { mtid: "mt1", s: D(WED, 13), e: D(WED, 14, 30) };
-  const { html } = app.viewCalWeek(new Date());
-  assert.equal([...html.matchAll(/class="wk-cell[^"]*\bsel\b[^"]*"/g)].length, 3);
-  assert.match(html, /✓ 13:00~14:30/);
 });
 
 /* ---------------- 퍼즐 배치 보드 (Meetings) ---------------- */
@@ -306,10 +210,10 @@ test("보드를 열면 조율 중인 미팅은 트레이에, 확정된 미팅은
   assert.equal(b.placed.mt1.s, D(MON, 14));
   assert.equal(b.pick, "mt2", "안 놓인 블록이 자동 선택된다");
   const html = app.viewBatchCard();
-  assert.match(html, /퍼즐 배치/);
+  assert.match(html, /미팅 배치 보드/);
   assert.match(html, /data-pz="mt1"/);
   assert.match(html, /data-pz="mt2"/);
-  assert.match(html, /뺀 블록 1/);
+  assert.match(html, /아직 안 놓은 블록 1/);
   assert.match(html, /놓은 블록 1/);
 });
 
@@ -384,7 +288,7 @@ test("적용하면 새 블록은 확정되고, 뺀 블록은 회차가 지워져
   assert.equal(app.occurrencesOf("mt1").length, 0, "회차도 지워진다");
   assert.equal(state.meetings.mt2.status, "confirmed");
   assert.equal(Number(state.meetings.mt2.confirmedStart), D(WED, 10));
-  assert.equal(state.batch, null, "적용하면 보드를 닫는다");
+  assert.ok(state.batch && state.batch.placed.mt2, "적용하면 보드가 새 상태로 다시 열린다");
 });
 
 test("남은 블록 자동 배치는 사람이 겹치지 않게 채운다", () => {
@@ -421,6 +325,156 @@ test("칸 단위를 바꾸면 저장된 반복 불가 시간을 새 격자로 �
   assert.deepEqual(app.durChoices(60).slice(0, 3), [20, 40, 60], "길이 후보도 칸 단위의 배수");
 });
 
+/* ---------------- 시간표에서 회차 고치기 — 보드 엔진 한 벌 ---------------- */
+test("시간 변경은 시간표 위 보드로 열리고, 자기 회차는 후보에서 비켜준다", () => {
+  reset({ recur: null });
+  app.confirmMeeting("mt1", D(MON, 14), D(MON, 15));
+  const evid = app.occurrencesOf("mt1")[0];
+  app.openCalEdit(evid, "move");
+  assert.equal(state.tab, "calendar");
+  assert.equal(state.batch.single.evid, evid);
+  assert.equal(state.batch.week, app.mondayOf(MON));
+  const ign = app.pzIgnoreSet();
+  assert.ok(ign.has(evid), "옮기는 회차 자신은 무시");
+  assert.ok(app.pzCanPlace("mt1", D(MON, 14), D(MON, 15), ign), "제자리도 후보");
+  assert.equal(app.pzCanPlace("mt1", D(MON, 9), D(MON, 10), ign), false, "m1 월 오전 불가");
+  const { html } = app.viewCalWeek(new Date());
+  assert.match(html, /id="pzgrid"/);
+  assert.match(html, /data-act="pzdrop"/);
+  assert.doesNotMatch(html, /이번 주부터 매주/, "반복 없는 미팅엔 범위 선택이 없다");
+});
+
+test("이 주만 옮기면 그 회차만, 이번 주부터 매주면 남은 회차가 전부 옮겨진다", () => {
+  reset();
+  state.meetings.mt1.recurrence.until = A(MON, 27);
+  app.confirmMeeting("mt1", D(MON, 14), D(MON, 15));
+  const [o1, o2, o3] = app.occurrencesOf("mt1");
+  app.openCalEdit(o2, "move");
+  assert.match(app.viewCalWeek(new Date()).html, /이번 주부터 매주/);
+  app.applySingle(D(A(MON, 9), 10), D(A(MON, 9), 11));       // 둘째 주 수요일 10시
+  assert.equal(state.batch, null, "놓는 순간 편집이 끝난다");
+  assert.equal(state.events[o2].moved, true);
+  assert.equal(state.events[o1].start, D(MON, 14), "첫 회차는 그대로");
+  assert.equal(state.events[o3].start, D(A(MON, 14), 14), "셋째 회차도 그대로");
+
+  app.openCalEdit(o3, "move");
+  state.batch.single.scope = "series";
+  app.applySingle(D(A(MON, 16), 16), D(A(MON, 16), 17));    // 셋째 주 수요일 16시부터 매주
+  const occ = app.occurrencesOf("mt1");
+  assert.equal(occ.length, 4);
+  assert.equal(state.events[o1].start, D(MON, 14), "지난 회차는 그대로");
+  const later = occ.filter((id) => state.events[id].start >= D(A(MON, 14), 0));
+  assert.deepEqual(later.map((id) => new Date(state.events[id].start).getDay()), [3, 3]);
+  assert.ok(later.every((id) => new Date(state.events[id].start).getHours() === 16));
+  assert.equal(state.meetings.mt1.confirmedStart, D(A(MON, 16), 16));
+});
+
+test("이 주 추가는 초록 칸에 놓으면 extra 회차가 생기고, 기존 회차와는 겹치지 않는다", () => {
+  reset();
+  app.confirmMeeting("mt1", D(MON, 14), D(MON, 15));
+  const evid = app.occurrencesOf("mt1")[0];
+  app.openCalEdit(evid, "extra");
+  assert.equal(app.pzIgnoreSet().size, 0, "추가 모드에선 기존 회차도 남의 일정처럼 막는다");
+  assert.equal(app.pzCanPlace("mt1", D(MON, 14), D(MON, 15)), false);
+  app.applySingle(D(WED, 16), D(WED, 17));
+  const occ = app.occurrencesOf("mt1");
+  assert.equal(occ.length, 5);
+  assert.ok(occ.some((id) => state.events[id].extra && state.events[id].start === D(WED, 16)));
+});
+
+test("옮기는 중 다른 미팅 블록에 놓으면 두 회차의 시간이 맞바뀐다", () => {
+  reset({ recur: null });
+  app.confirmMeeting("mt1", D(MON, 14), D(MON, 15));
+  const a = app.occurrencesOf("mt1")[0];
+  state.meetings.mt2 = { ...state.meetings.mt1, title: "논문 리딩", participants: { m2: true }, status: "planning", ts: 2 };
+  app.confirmMeeting("mt2", D(WED, 10), D(WED, 11));
+  const b = app.occurrencesOf("mt2")[0];
+  app.openCalEdit(a, "move");
+  const r = app.viewCalWeek(new Date());
+  assert.match(r.html, new RegExp(`data-act="pzswap"[^>]*data-swap="${b}"`), "다른 미팅 블록이 자리 바꾸기 대상");
+  app.pzSwap(b);
+  assert.equal(state.events[a].start, D(WED, 10));
+  assert.equal(state.events[b].start, D(MON, 14));
+  assert.equal(state.batch, null);
+});
+
+test("회차를 옮길 땐 미팅 기본 길이가 아니라 그 회차의 길이를 쓰고, 편집 줄에서 바꿀 수 있다", () => {
+  reset({ recur: null });
+  app.confirmMeeting("mt1", D(MON, 14), D(MON, 14, 40));     // 40분 회차 (미팅 기본은 60분)
+  const evid = app.occurrencesOf("mt1")[0];
+  app.openCalEdit(evid, "move");
+  assert.equal(app.pzDurOf("mt1"), 40);
+  assert.match(app.viewCalWeek(new Date()).html, /<option value="40" selected>40분/);
+  state.batch.single.dur = 60;
+  app.applySingle(D(WED, 13), D(WED, 14));
+  assert.equal(state.events[evid].end - state.events[evid].start, 60 * 60000);
+});
+
+test("주간 뷰는 월~금이 기본이고 주말은 토글로 보인다", () => {
+  reset({ recur: null });
+  state.tab = "calendar";
+  let { html } = app.viewCalWeek(new Date());
+  assert.equal((html.match(/<th class="[^"]*">\d+\/\d+<em>/g) || []).length, 5);
+  assert.doesNotMatch(html, /<em>토<\/em>/);
+  state.calWeekend = true;
+  ({ html } = app.viewCalWeek(new Date()));
+  assert.match(html, /<em>토<\/em>/);
+  assert.match(html, /<em>일<\/em>/);
+});
+
+/* ---------------- 되돌리기·이 주 회차 정리·'나' ---------------- */
+test("회차 취소는 바로 화면에 반영되고 되돌릴 수 있다", () => {
+  reset();
+  app.confirmMeeting("mt1", D(MON, 14), D(MON, 15));
+  const id = app.occurrencesOf("mt1")[0];
+  app.setOccCancel(id, true, true);
+  assert.equal(state.events[id].status, "cancelled", "낙관적으로 로컬에도 표시");
+  app.setOccCancel(id, false, true);
+  assert.equal(state.events[id].status, undefined);
+});
+
+test("이 주 회차 정리: 빠지는 사람이 있는 회차만 취소 후보로 두고, 체크 안 한 것만 취소한다", () => {
+  reset();
+  app.confirmMeeting("mt1", D(MON, 14), D(MON, 15));
+  state.meetings.mt2 = { ...state.meetings.mt1, title: "논문 리딩", participants: { m2: true }, status: "planning", ts: 2 };
+  app.confirmMeeting("mt2", D(WED, 10), D(WED, 11));
+  state.exceptions = { x1: { mid: "m1", title: "ECCV", type: "conference", allDay: true, startDate: MON, endDate: MON, ts: 1 } };
+  app.openWeekCancel(WS);
+  const wc = state.weekCancel;
+  const a = app.occurrencesOf("mt1")[0], b = app.occurrencesOf("mt2")[0];
+  assert.equal(app.weekOccurrences(WS).length, 2);
+  assert.equal(wc.keep[a], undefined, "m1이 학회라 mt1 회차는 취소 후보");
+  assert.equal(wc.keep[b], true, "빠지는 사람 없는 mt2는 진행");
+  assert.match(app.viewWeekCancelModal(), /1개 취소하기/);
+  app.applyWeekCancel();
+  assert.equal(state.weekCancel, null);
+  assert.equal(app.isLive(state.events[a]), false);
+  assert.equal(app.isLive(state.events[b]), true);
+  assert.equal(app.occurrencesOf("mt1").length, 4, "취소는 삭제가 아니다");
+});
+
+test("'나'를 고르면 시간표 필터·내 시간·새 미팅 참여자가 나를 따른다", () => {
+  reset();
+  state.me = "m2"; state.members.m3.always = true;
+  state.tab = "calendar"; state.calMember = state.me;
+  const html = app.viewCalendar();
+  assert.match(html, /data-act="calmine" data-v="me"/);
+  assert.match(html, /data-act="calsub" data-mid="m2"/, "개인 구독은 나로 바로 켜진다");
+  state.tab = "availability"; state.avMember = "";
+  app.viewAvailability();
+  assert.equal(state.avMember, "m2");
+  assert.match(app.viewAvailability(), /입력 현황|입력/, "입력 현황 줄");
+});
+
+test("월간 뷰의 미팅 회차는 미팅색을 쓰고 주말 열은 좁다", () => {
+  reset({ recur: null });
+  state.tab = "calendar"; state.calMode = "month"; state.calMonth = MON.slice(0, 7);
+  app.confirmMeeting("mt1", D(MON, 14), D(MON, 15));
+  const { html } = app.viewCalMonth(new Date());
+  assert.match(html, /agg-event mt/);
+  assert.ok(html.includes(`--pc:${app.meetingColor("mt1")}`));
+});
+
 /* ---------------- 렌더 스모크 ---------------- */
 test("모든 탭과 보드/격자 상태가 예외 없이 렌더된다", () => {
   reset();
@@ -441,9 +495,11 @@ test("모든 탭과 보드/격자 상태가 예외 없이 렌더된다", () => {
   state.batch.autoFail = [{ mtid: "mt1", why: "자리가 없습니다" }];
   assert.doesNotThrow(() => app.doRender(), "자동 배치 실패 표시 렌더 실패");
   state.batch = null;
-  app.openFind("mt1", { mode: "first", scope: "후보" });
-  assert.doesNotThrow(() => app.doRender(), "가능 시간 격자 렌더 실패");
-  state.mtFind = null; state.mtPick = null;
+  app.openCalEdit(app.occurrencesOf("mt1")[0], "move");
+  assert.doesNotThrow(() => app.doRender(), "시간표 회차 편집 렌더 실패");
+  state.batch.single.mode = "extra";
+  assert.doesNotThrow(() => app.doRender(), "회차 추가 렌더 실패");
+  state.batch = null; state.tab = "meetings";
   state.calPick = app.occurrencesOf("mt1")[0];
   assert.doesNotThrow(() => app.doRender());
   state.mtDraft = { title: "새 미팅", type: "meeting", durationMin: 60, participants: { m1: true },
@@ -460,32 +516,6 @@ test("길이 선택지는 저장된 값을 그대로 보여준다 — 칸 단위
   assert.deepEqual(app.durChoices(40).slice(0, 3), [30, 40, 60]);
   state.settings.slotMinutes = 20;
   assert.deepEqual(app.durChoices(40).slice(0, 3), [20, 40, 60]);
-});
-
-test("회차 시간 변경 격자의 길이도 그 회차의 실제 길이를 보여주고, 바꾸면 그대로 적용된다", () => {
-  reset({ recur: null });
-  state.meetings.mt1.durationMin = 40;                 // 30분 배수가 아닌 길이
-  app.confirmMeeting("mt1", D(WED, 14), D(WED, 14, 40));
-  const evid = app.occurrencesOf("mt1")[0];
-  assert.equal(state.events[evid].end - state.events[evid].start, 40 * 60000);
-
-  /* 열었을 때 40분이 선택돼 있어야 한다 (선택지에 없으면 30분으로 보이고 조용히 바뀐다) */
-  app.openFind("mt1", { mode: "move", evid, from: WS, to: WE, dur: 40, maxDays: 7,
-    allDays: true, inCal: "cal", scope: "주", cur: { s: D(WED, 14), e: D(WED, 14, 40) } });
-  assert.equal(state.mtFind.dur, 40);
-  let html = app.viewCalWeek(new Date()).html;
-  assert.match(html, /<option value="40" selected>40분<\/option>/);
-  assert.match(html, /현재 14:00~14:40/);
-
-  /* 길이를 60분으로 바꾸면 후보가 다시 잡히고, 옮기면 60분으로 저장된다 */
-  app.openFind("mt1", { ...state.mtFind, dur: 60 });
-  assert.equal(state.mtFind.dur, 60);
-  assert.match(app.viewCalWeek(new Date()).html, /<option value="60" selected>60분<\/option>/);
-  const start = state.mtFind.days.find((d) => d.ds === WED).ok[16 * 60];
-  assert.ok(start, "16:00 시작이 후보여야 한다");
-  app.moveOccurrence(evid, start, start + 60 * 60000);
-  assert.equal(state.events[evid].end - state.events[evid].start, 60 * 60000);
-  assert.equal(new Date(state.events[evid].start).getHours(), 16);
 });
 
 /* ---------------- 퍼즐 보드: 미팅별 색 + 선택 패널 ---------------- */
@@ -571,15 +601,14 @@ test("주간 뷰 보기 모드는 퍼즐 보드처럼 블록으로 그린다 —
   assert.match(html, /bp">오경준, 박경문</);                     // 두 칸 블록엔 참석자 이름
   assert.match(html, /data-act="calevpick"/);
   assert.match(html, /data-act="calslot"/);                     // 빈 칸은 여전히 일정 추가
-  /* 시간 변경을 열면 칸 단위 격자로 돌아간다 (후보를 칸으로 골라야 하므로) */
+  /* 시간 변경을 열면 같은 자리에서 보드 렌더러로 바뀐다 — 블록을 끌어서 놓는다 */
   const evid = app.occurrencesOf("mt1")[0];
-  app.openFind("mt1", { mode: "move", evid, from: WS, to: WE, dur: 60, maxDays: 7,
-    allDays: true, inCal: "cal", scope: "주", cur: { s: D(WED, 14), e: D(WED, 15) } });
+  app.openCalEdit(evid, "move");
   const edit = app.viewCalWeek(new Date()).html;
-  assert.match(edit, /table class="wk"/);
+  assert.match(edit, /id="pzgrid"/);
   assert.doesNotMatch(edit, /blocky/);
-  assert.match(edit, /현재 14:00~15:00/);
-  state.mtFind = null;
+  assert.match(edit, /14:00~15:00/);                            // 편집 줄에 지금 시간
+  state.batch = null;
 });
 
 test("주간↔월간 전환은 보고 있던 날짜를 물려준다", () => {
@@ -613,11 +642,12 @@ test("휴가 기간에도 미팅을 넣을 수 있고, 빠지는 사람만 표�
   assert.equal(app.memberBusy("m1", s, e), false);              // 더는 막지 않는다
   assert.equal(app.memberAway("m1", s, e), "휴가");              // 대신 부재로 잡힌다
   assert.deepEqual(app.awayOf(["m1", "m3"], s, e), ["m1"]);
-  const f = app.findMeetingSlots(state.meetings.mt1, { from: WED, to: WED, allDays: true, maxDays: 7 });
-  const day = f.days[0];
-  assert.ok(day.ok[14 * 60], "휴가 중이어도 후보여야 한다");
-  assert.deepEqual(day.cells[14 * 60].away, ["m1"]);            // 칸에 부재자 정보
-  assert.equal(day.cells[14 * 60].kind, "free");
+  state.batch = app.initBatch(app.mondayOf(WED));
+  state.batch.pick = "mt1";
+  assert.ok(app.pzCanPlace("mt1", s, e), "휴가 중이어도 놓을 수 있어야 한다");
+  const html = app.viewPuzzleGrid();
+  assert.match(html, new RegExp(`data-cs="${s}"><button[^>]*data-act="pzdrop"[^>]*>✈`), "후보 칸에 ✈ 부재 표시");
+  state.batch = null;
 });
 
 test("퍼즐 보드: 휴가 시간에 놓을 수 있고, 후보 칸과 놓인 블록에 ✈ 표시", () => {

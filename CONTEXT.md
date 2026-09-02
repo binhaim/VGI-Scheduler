@@ -1,6 +1,6 @@
 # CONTEXT.md — 개발 인수인계 문서
 
-> 이 문서는 2026-08-13까지의 개발 세션(임하빈 + Claude) 내용을 다음 작업자가 이어받을 수 있게 정리한 것이다.
+> 이 문서는 2026-09-02까지의 개발 세션(임하빈 + Claude, 일부 이태영) 내용을 다음 작업자가 이어받을 수 있게 정리한 것이다.
 > 새 작업을 시작하기 전에 이 문서와 README.md를 먼저 읽을 것.
 
 ## 1. 이 프로젝트는 무엇인가
@@ -68,6 +68,7 @@ events/{evid}        { title, type, start(ms), end(ms), participants:{mid:true},
     (`calendar/generate.js`의 지문에도 `cancelled`가 들어가야 피드가 갱신됨).
   - 미팅 정보를 고치면 `syncSeries()`가 **아직 오지 않은 회차**에만 제목·참여자·장소를 반영하고,
     반복 종료일을 늘렸으면 마지막 회차 뒤로 이어서 만든다. 시간은 회차별 관리라 건드리지 않는다.
+  - _(아래 세 항목은 2026-09-02 개편에서 제거된 '가능 시간 찾기' 격자의 기록이다 — 역사용. 지금은 보드 한 벌이다.)_
   - **후보 격자(`findMeetingSlots` → `viewMeetingFind`)는 "빈 칸 목록"이 아니라 배치표**다. 칸마다
     `{kind:'free'|'ev'|'na'|'past'}`를 담아 기존 일정(제목·타입색)·참여자 불가 이유·지난 시간을 그대로 그린다.
     `ok[분]`은 **길이가 통째로 들어가는 시작 칸**만 담으므로 90분 미팅은 30분 칸 3개가 연속으로 비어야 후보가 된다.
@@ -76,7 +77,7 @@ events/{evid}        { title, type, start(ms), end(ms), participants:{mid:true},
     격자 위 `길이` 선택으로 그 회차만 길이를 조정할 수 있다(`openFind`가 같은 조건으로 재계산).
   - **미팅 순서 바꾸기**: 시간 변경 격자에서 다른 미팅 칸을 누르면 `swapOccurrence(a,b)`로 두 일정의
     시작 시각을 맞바꾼다(각자 길이는 유지). 길이가 달라 서로 겹치게 되면 거부한다.
-  - **Calendar 탭 기본은 주간 뷰**(`state.calMode`, localStorage `vgi.calMode`에 저장. 월간은 `viewCalMonth`로 유지).
+  - **Calendar(시간표) 탭 기본은 주간 뷰**(`state.calMode`, localStorage `vgi.calMode`에 저장. 월간은 `viewCalMonth`로 유지). _(아래 `openFind` 부분은 2026-09-02에 `openCalEdit`로 대체됨.)_
     `viewCalWeek`이 요일(열) x 슬롯(행) 표를 그리고 종일 예외는 맨 윗줄에 둔다. 일정을 누르면 `state.calPick`이 잡히고
     아래 줄에서 그 회차를 바로 고친다(시간 변경/이 주 취소/+이 주 추가/상세 수정). 시간 변경을 누르면
     `openFind(..., {inCal:true})`로 **같은 주간 표 위에** 후보 칸(초록)·현재 시간(주황)·자리 바꾸기 대상이 겹쳐 그려진다
@@ -128,7 +129,35 @@ events/{evid}        { title, type, start(ms), end(ms), participants:{mid:true},
     배정·자동 배치를 막지 않고, 후보 칸·놓인 블록·회차 목록·주간 블록에 ✈(빠지는 사람 이름)로만 표시한다.
     자동 배치(solveBatch.order)는 부재자가 있는 자리를 뒤로 미룬다. 근거: "학회 기간에도 특정 미팅은
     진행한다"는 요구 — 예외를 하드로 막으면 그 미팅을 넣을 수 없다. 주간 반복 불가와 확정 일정은 여전히 하드.
-  - 미구현(다음 단계): 학회 기간 일괄 취소(유지할 미팅만 체크).
+  - **2026-09-02 사용성 개편** (검증 → 계획 → 전부 구현. 계획 문서는 사용자 아티팩트 "VGI Scheduler 개편안").
+    진단은 셋이었다: ① 앱에 '나'가 없다 ② 시간을 만지는 화면이 세 벌 ③ 안 쓰는 것이 자리를 차지.
+    - **'나'** — 헤더의 `me-sel`(localStorage `vgi.me`, `state.me`). 시간표 기본 필터 = 나(`calmine` 나/전체 토글),
+      내 시간 기본 = 나, 새 미팅 참여자에 나 + `members/{mid}.always`(항상 참여, 설정 탭 토글) 자동 체크,
+      개인 구독은 `calMember||me`로 바로 켜짐. 멤버가 지워지면 `doRender`가 풀어 준다.
+    - **탭** — 시간표 / 미팅 / 내 시간 / 설정. Projects 탭은 없앴고(데이터·`viewProjects`는 설정 탭의 접힘 `details.fold`
+      안에 남김), `#projects` 해시는 설정으로 간다. 설정 = 멤버(역할 칸 제거, 항상 참여 추가) / 학기 / 시간표 칸 / 프로젝트(접힘).
+    - **새 미팅 폼 3칸** — 이름·길이·참여자. 반복(기본 매주)·종류·장소·프로젝트·메모는 `details.mt-more`(수정 중 값이 있으면 펼침).
+      후보 시작·종료일은 폼에서 뺐다 — `saveMeetingDraft`가 학기 범위로 채운다(스키마 호환용일 뿐, 이제 아무도 읽지 않는다).
+    - **미팅 탭 = 보드가 첫 화면** — `viewMeetings`가 `state.batch`가 없으면(또는 single이면) `initBatch()`로 연다.
+      카드 목록은 `mtListOpen` 접힘. 카드의 '가능 시간 찾기'는 `mtboard`(그 블록을 집은 채 보드로 스크롤)로 바뀜.
+      `confirmMeeting`/`removeSeriesEvents`/`moveOccurrence`/`addOccurrence`/`swapOccurrence`/`setOccCancel`은 이제 **로컬 state에도
+      낙관적으로 반영**한다 — 보드가 첫 화면이라 서버 에코를 기다리면 깜빡인다.
+    - **시간 화면 한 벌 (P2-1)** — `findMeetingSlots`·`viewMeetingFind`·`viewFindBar`·`openFind`·`chipHtml`·`flatBody`를 지웠다.
+      시간표 주간은 월~금 기본(`state.calWeekend`, localStorage `vgi.calWeekend`로 토·일 열), 블록 클릭 → 조작줄은 그대로.
+      **시간 변경 / + 이 주 추가는 `openCalEdit(evid,mode)`** — `state.batch={...,single:{evid,mtid,mode:'move'|'extra',scope,dur}}`를
+      만들고 시간표 자리에 `viewCalEditBar()+viewPuzzleGrid()`를 그린다. 같은 드래그 엔진이 돈다.
+      single 모드의 규칙: `pzTray()`는 그 미팅 하나, `pzIgnoreSet()`은 move면 그 회차 하나(extra면 없음 — 같은 주 기존 회차와
+      겹치면 안 되니까), `pzDurOf()`가 회차의 실제 길이(편집 줄 `pzsdur`로 바꿈). 놓는 순간 `applySingle` → `moveOccurrence`
+      (이 주만) / `moveSeriesFrom`(이번 주부터 매주: 이 회차 이후를 지우고 `seriesStarts`로 다시 만든다, 지난 회차는 그대로) /
+      `addOccurrence`. 다른 미팅 블록(`.swappable[data-swap]`)에 놓으면 `pzSwap` → `swapOccurrence`.
+    - **되돌리기 토스트** — `toast(msg,{undo})`. 회차 취소(`setOccCancel`), 블록 내리기, 전부 내리기에 적용. 확정 취소·미팅 삭제·
+      회차 삭제·멤버 삭제는 여전히 `confirm()`이되 문구를 "무엇이 사라지는지 → 되돌릴 수 있는지"로 통일.
+    - **이 주 회차 정리** (`openWeekCancel(week)` → `viewWeekCancelModal` → `applyWeekCancel`) — 시간표 힌트 줄과 보드 바에서 연다.
+      체크한 회차는 진행, 나머지는 `setOccCancel(…,true,true)`. 기본값: ✈ 부재자가 있는 회차만 체크 해제. 한 토스트로 전체 되돌리기.
+    - **부하 계기** (`.pz-load`) — 놓인 블록 기준으로 가장 많이 들어가는 사람의 주간 합계 + 요일별. 실데이터에선 교수님 19.8h.
+    - **월간** — 미팅 회차는 미팅색(`agg-event.mt`), 주말 열 `.62fr`. 캘린더 '일정 추가'의 종류 기본은 '기타'(미팅은 미팅 탭에서).
+    - **톤** — 학기 경계 안내는 `.note.info`, 보드의 미입력자 경고는 사이드바 한 줄(`.pz-side-note`), 예외 목록 헤더에 멤버 이름,
+      도움말은 6절로 다시 씀. 미구현으로 남긴 것: 권한 분리(P3-3, 아래 6절).
   - **이태영님의 `viewMeetingBoard`(커밋 6eb91fb)는 이 머지에서 되돌렸다** (2026-08-31, 저장소 주인 결정).
     같은 문제("미팅이 여러 개인데 시간은 한 주 안에서 서로 밀고 당긴다")를 클릭 배정 방식으로 푼 구현이었고,
     이쪽 퍼즐 보드와 화면·CSS가 정면으로 겹쳐 함께 둘 수 없었다. 그 커밋은 히스토리에 남아 있으니
@@ -147,11 +176,14 @@ events/{evid}        { title, type, start(ms), end(ms), participants:{mid:true},
   3. 유틸 (`$`, `esc`, `fmtDate`, `timeList`, `hm`, `overlap`, `sortedIds` …)
   4. 도메인 상수 (`EVENT_TYPES`, `EXC_TYPES`, 타입별 hue)
   5. Firebase (`initFirebase`, `R()`, `wErr`, `watchConnection`(오프라인 배너), `subscribeAll`)
-  6. **가용성 엔진**: `excRange`, `weeklyBusy`, `memberBusy`, `locationBusy`, `findMeetingSlots`
-     + **퍼즐 배치**: `batchDays`, `pzTray`, `pzConflict`/`pzCanPlace`, `batchFreeMap`, `batchCands`, `solveBatch`, `autoPlace`, `applyBatch`
+  6. **가용성 엔진**: `excRange`, `weeklyBusy`, `memberAway`/`awayOf`(소프트), `memberBusy`, `locationBusy`
+     + **배치 보드**: `batchDays`, `pzTray`, `pzIgnoreSet`, `pzDurOf`, `pzConflict`/`pzCanPlace`, `batchFreeMap`, `batchCands`, `solveBatch`, `autoPlace`,
+       `initBatch`, `batchDiff`, `applyBatch` / 캘린더 회차 편집: `openCalEdit`, `applySingle`, `moveSeriesFrom`, `pzSwap` / 이 주 정리: `weekOccurrences`, `openWeekCancel`, `applyWeekCancel`
   7. 쓰기 동작 (member/semester/project/meeting/event/exception CRUD, `confirmMeeting`/`unconfirmMeeting`)
   8. 렌더 (`render`/`doRender` — 포커스·스크롤 보존, `syncScrollLock`)
-  9. 뷰: `viewCalendar`(월간, `.agg-*` 재사용) / `viewMeetings` / `viewBatchCard`(퍼즐 배치: 보드 `viewPuzzleGrid`) / `viewMembers`(+학기+설정) / `viewAvailability`(주간 그리드+예외) / `viewProjects` / 모달 3종 / `viewHelp`
+  9. 뷰: `viewCalendar`(주간 `viewCalWeek` = 블록 보기 / 회차 편집 중엔 `viewCalEditBar`+`viewPuzzleGrid`, 월간 `viewCalMonth`) /
+     `viewMeetings`(보드 `viewBatchCard`→`viewPuzzleGrid` + 접힌 카드 목록) / `viewMembers`(설정: 멤버·학기·칸·프로젝트 접힘) /
+     `viewAvailability`(입력 현황 + 격자 + 예외) / 모달 4종(일정·예외·구독·이 주 회차 정리) / `viewHelp`
   10. PNG(`exportCalPNG`) / ICS(`exportCalICS`)
   11. `bindEvents` — 위임 클릭/체인지 핸들러, draft sync, Escape, **주간 그리드 페인팅 엔진**(박스 드래그, PC 즉시·모바일 long-press 320ms, pointercancel 복구)
   12. `start()` — 해시 라우팅(#calendar 등) + 구독 시작
@@ -172,11 +204,10 @@ events/{evid}        { title, type, start(ms), end(ms), participants:{mid:true},
 
 ## 6. 남은 작업 (우선순위 순)
 
-1. **개인 구독 .ics 피드 포팅** — `calendar/` 디렉토리(calendar.js, generate.js, 테스트)는 아직 밴드 스키마(이름 기반, projects/avail) 그대로다.
-   - 할 일: `vgi/events`+`vgi/exceptions`를 읽어 **memberId별** .ics 생성 (`calendars/{mid}.ics`), manifest로 변경 감지 유지, deploy-pages.yml의 TODO 자리에 생성 단계 복원 (cron 포함).
-   - 앱 쪽은 준비됨: 구독 모달이 `SITE_BASE/calendars/{mid}.ics` URL을 안내 중 (배포 전 경고 문구 표시).
-2. 반복 미팅 (매주 고정 미팅) — §3의 확장 방향 참고.
-3. 사용 가이드 확장, 모바일 실기기 점검 (기본 대응은 되어 있음 — 터치 페인팅·풀블리드·스크롤 잠금 포팅됨).
+1. ~~개인 구독 .ics 피드 포팅~~ — 완료. `calendar/generate.js`가 `vgi/{members,events,exceptions,projects}`를 읽어 memberId별
+   `calendars/{mid}.ics`를 만들고, deploy-pages.yml이 push 시 + 2시간 cron으로 돌린다(manifest 200 확인, 2026-09-02).
+2. ~~반복 미팅~~ — 완료(회차 실체화). ~~학회 주간 일괄 취소~~ — 완료(이 주 회차 정리).
+3. 모바일 실기기 점검 — 사용자가 "모바일은 고려하지 않아도 된다"고 했다(2026-09-02). 기본 대응만 유지.
 4. (선택) **관리자 권한 분리 — 아직 미구현.** 현재는 밴드 앱과 같은 "링크 아는 사람 전부 편집" 모델이다.
    `members/{mid}.role`은 자유 텍스트 표시용일 뿐 권한과 무관하고, 도움말의 "학기 시작 (관리자)"도 안내 문구일 뿐이다.
    실제로 나누려면 Firebase Auth(구글 로그인) + RTDB 규칙에서 `admins/{uid}` 화이트리스트 확인이 필요하다.
