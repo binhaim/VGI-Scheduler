@@ -201,5 +201,5 @@ events/{evid}        { title, type, start(ms), end(ms), participants:{mid:true},
 
 ## 8. 밴드 앱 쪽 참고 (별개 프로젝트, 계속 운영 중)
 
-Talmood-BandScheduler는 이 세션에서 함께 개선됨: UI/UX 개편(TALENDER 리브랜딩, 모바일 풀블리드, 접근성),
+Talmood-BandScheduler는 이 세션에서 함께 개선됨: UI/UX 개편(TALENDAR 리브랜딩, 모바일 풀블리드, 접근성),
 동방 사용표(개인 연습 시트, 한 칸 다중 이름 토글) 추가. 그쪽 DB(talmood-timetable)와 이 프로젝트는 이제 완전 무관하다.
