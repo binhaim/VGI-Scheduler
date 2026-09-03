@@ -685,3 +685,93 @@ test("자동 배치는 휴가가 없는 자리를 먼저 고른다", () => {
   assert.equal(failed.length, 0);
   assert.equal(chosen[0].s, D(A(WED, 1), 14));                  // 휴가 아닌 목요일을 택한다
 });
+
+/* ---------------- 조정자 (수정 권한) ---------------- */
+test("조정자를 지정하면 그 사람만 고칠 수 있다", () => {
+  reset();
+  state.settings.managers = {};
+  assert.equal(app.isManager(), true);                 // 미지정이면 전원
+  state.settings.managers = { m3: true, m2: true };    // 교수님(박경문)·이태영
+  state.me = "";
+  assert.equal(app.isManager(), false);
+  state.me = "m1";
+  assert.equal(app.isManager(), false);
+  state.me = "m2";
+  assert.equal(app.isManager(), true);
+  /* 내 시간은 본인 것만 */
+  state.me = "m1";
+  assert.equal(app.canEditAv("m1"), true);
+  assert.equal(app.canEditAv("m3"), false);
+  state.me = "m2";
+  assert.equal(app.canEditAv("m1"), true);             // 조정자는 남의 것도
+  /* 멤버에서 지워진 id만 남으면 전원으로 복귀 (잠금 사고 방지) */
+  state.settings.managers = { m_ghost: true };
+  state.me = "m1";
+  assert.equal(app.isManager(), true);
+});
+
+test("조정자가 아니면 미팅·설정 탭이 숨고, 직접 들어와도 가림막이 뜬다", () => {
+  reset();
+  state.settings.managers = { m3: true, m2: true };
+  state.me = "m1"; state.tab = "meetings";
+  app.doRender();
+  const hbar = globalThis.document.getElementById("hbar").innerHTML;
+  assert.doesNotMatch(hbar, /data-tab="meetings"/);
+  assert.doesNotMatch(hbar, /data-tab="members"/);
+  let body = globalThis.document.getElementById("app").innerHTML;
+  assert.match(body, /조정자 전용/);
+  assert.match(body, /박경문/); assert.match(body, /이태영/);
+  state.tab = "members"; app.doRender();
+  assert.match(globalThis.document.getElementById("app").innerHTML, /조정자 전용/);
+  state.me = "m2"; app.doRender();
+  assert.match(globalThis.document.getElementById("hbar").innerHTML, /data-tab="meetings"/);
+});
+
+test("조정자가 아니면 시간표는 보기 전용이다", () => {
+  reset({ recur: null });
+  app.confirmMeeting("mt1", D(WED, 14), D(WED, 15));
+  state.settings.managers = { m3: true };
+  state.me = "m1"; state.tab = "calendar"; state.calWeek = WS;
+  let { html } = app.viewCalWeek(new Date());
+  assert.doesNotMatch(html, /data-act="calslot"/);      // 빈 칸 추가 없음
+  assert.match(html, /data-act="calevpick"/);           // 블록 정보 보기는 가능
+  state.calPick = app.occurrencesOf("mt1")[0];
+  html = app.viewCalWeek(new Date()).html;
+  assert.doesNotMatch(html, /data-act="caledit"/);      // 시간 변경 없음
+  assert.doesNotMatch(html, /data-act="evdelete"/);
+  assert.match(html, /data-act="calpickclear"/);        // 닫기는 가능
+  state.calMode = "month"; state.calMonth = WED.slice(0, 7);
+  const month = app.viewCalendar();
+  assert.doesNotMatch(month, /data-act="evedit"/);      // 월간 블록도 클릭 수정 없음
+  assert.doesNotMatch(month, /data-act="caladd"/);
+  /* 조정자에게는 전부 살아 있다 */
+  state.me = "m3"; state.calMode = "week";
+  html = app.viewCalWeek(new Date()).html;
+  assert.match(html, /data-act="caledit"/);
+  assert.match(html, /data-act="calslot"/);
+});
+
+test("조정자가 아니면 내 시간은 본인 것만 입력한다", () => {
+  reset();
+  state.settings.managers = { m3: true };
+  state.me = "m1"; state.avMember = "m3"; state.tab = "availability";
+  const html = app.viewMembers && app.doRender();       // 렌더 경유
+  const body = globalThis.document.getElementById("app").innerHTML;
+  assert.doesNotMatch(body, /data-act="avmember"/);     // 멤버 셀렉트 없음
+  assert.match(body, /본인 것만 입력할 수 있어요/);
+  assert.equal(state.avMember, "m1");                   // 나로 고정
+  assert.doesNotMatch(body, /data-act="avpick"/);       // 미입력자 이름도 클릭 불가
+  /* '나'를 안 고르면 보기 전용 안내 */
+  state.me = ""; app.doRender();
+  assert.match(globalThis.document.getElementById("app").innerHTML, /보기 전용입니다/);
+});
+
+test("설정에 조정자 토글이 있다", () => {
+  reset();
+  state.tab = "members";
+  state.settings.managers = { m3: true };
+  const html = app.viewMembers();
+  assert.match(html, /조정자/);
+  assert.match(html, /data-act="mtmanager" data-mid="m2"/);
+  assert.match(html, /grp-tog on" data-act="mtmanager" data-mid="m3"/);
+});

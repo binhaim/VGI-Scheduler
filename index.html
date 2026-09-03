@@ -1338,6 +1338,9 @@
   .wk-blk.on{border:2px solid var(--ink);}
   .wk-blk.off{opacity:.55;} .wk-blk.off .bn{text-decoration:line-through;}
   .wk-blk.x{background:transparent;border-color:var(--line-2);color:var(--muted);}
+  .wk-blk.ro,.agg-event.ro,.wk-chip.ro{cursor:default;}
+  .chip-btn.ro{cursor:default;opacity:.8;}
+  .mode-fixed{font-size:13px;}
   /* 휴가·부재 표시 — 배정은 막지 않는다 */
   .pz-aw{font-weight:700;opacity:.85;}
   .occ-tag.away{background:transparent;box-shadow:inset 0 0 0 1px var(--line-2);color:var(--muted);}
@@ -1528,6 +1531,20 @@ function durChoices(cur){
   if(c&&!out.includes(c)) out.push(c);
   return out.sort((a,b)=>a-b);
 }
+/* 조정자 — settings.managers에 지정된 사람만 일정을 고칠 수 있다.
+   미팅·설정 탭이 보이고, 시간표에서 회차를 조작하고, 남의 '내 시간'도 대신 입력한다.
+   나머지는 보기 + 본인 '내 시간' 입력만. 비워 두면 예전처럼 전원이 조정자.
+   '나' 선택 기준의 화면 가림이지 보안 권한은 아니다 (RTDB 규칙이 공개 — CONTEXT.md 8절). */
+function managerIds(){
+  const m=state.settings.managers||{};
+  return Object.keys(m).filter(k=>m[k]&&state.members[k]);
+}
+function isManager(){
+  const ids=managerIds();
+  return !ids.length||(!!state.me&&ids.includes(state.me));
+}
+/* 이 멤버의 '내 시간'(반복 불가·예외)을 고칠 수 있나 — 본인 또는 조정자 */
+function canEditAv(mid){ return isManager()||(!!state.me&&state.me===mid); }
 function activeSemesterId(){
   const s=state.settings.activeSemester;
   if(s&&state.semesters[s]) return s;
@@ -2367,6 +2384,7 @@ function renderHeader(){
   let h='<button type="button" class="brand" data-act="nav" data-tab="calendar" aria-label="Calendar로 이동">VGI<span class="dot">.</span>LAB</button>';
   h+='<div class="tabs">';
   NAV.forEach(([k,l])=>{
+    if((k==='meetings'||k==='members')&&!state.loading&&!isManager()) return;   // 조정자에게만
     h+='<button class="tab '+(state.tab===k?'on':'')+'" data-act="nav" data-tab="'+k+'">'+l+'</button>';
   });
   h+='</div>';
@@ -2385,8 +2403,8 @@ function renderBody(){
   else if(state.loading) html='<div class="empty">불러오는 중…</div>';
   else{
     if(state.tab==='calendar') html=viewCalendar();
-    else if(state.tab==='meetings') html=viewMeetings();
-    else if(state.tab==='members'||state.tab==='projects') html=viewMembers();
+    else if(state.tab==='meetings') html=isManager()?viewMeetings():viewManagerGate('미팅 배정·조정');
+    else if(state.tab==='members'||state.tab==='projects') html=isManager()?viewMembers():viewManagerGate('멤버·학기·설정 관리');
     else if(state.tab==='availability') html=viewAvailability();
   }
   if(state.evEdit) html+=viewEventModal();
@@ -2467,7 +2485,7 @@ function viewCalendar(){
           <button class="${week?'on':''}" data-act="calmode" data-mode="week">주간</button>
           <button class="${week?'':'on'}" data-act="calmode" data-mode="month">월간</button>
         </div>
-        <button class="btn sm" data-act="caladd" data-date="">+ 일정 추가</button>
+        ${isManager()?`<button class="btn sm" data-act="caladd" data-date="">+ 일정 추가</button>`:''}
         <button class="btn ghost sm" data-act="calpng" ${view.count?'':'disabled'}>📷 PNG</button>
         <button class="btn ghost sm" data-act="calics" ${view.count?'':'disabled'}>📅 .ics</button>
         <button class="btn ghost sm" data-act="calsub" data-mid="${subFor}" ${subFor?'':'disabled'} title="${subFor?esc(memberName(subFor))+' 개인 구독':'위에서 나를 고르거나 멤버 필터를 선택하세요'}">🔗 개인 구독</button>
@@ -2534,7 +2552,7 @@ function weekBlockBody({days,byDate,rows,slot,startMin,endMin}){
       const cs=base+m*60000;
       const when=`${mdLabel(ds)} (${WD[wdOf(ds)]}) ${hm(cs)}`;
       return `<td class="wk-cell free${cs<now?' past':''}" role="button" tabindex="0"
-        data-act="calslot" data-date="${ds}" data-min="${m}" title="${when} 일정 추가"></td>`;
+        ${isManager()?`role="button" tabindex="0" data-act="calslot" data-date="${ds}" data-min="${m}" title="${when} 일정 추가"`:''}></td>`;
     }).join('');
     return `<tr class="${hr?'hr':''}"><td class="wk-rh${hr?' hour':''}">${hr?minLabel(m):''}</td>${cells}</tr>`;
   }).join('');
@@ -2544,8 +2562,9 @@ function weekBlockBody({days,byDate,rows,slot,startMin,endMin}){
 function weekBlockHtml(o,g){
   const s=Number(o.start), e=Number(o.end), time=`${hm(s)}~${hm(e)}`;
   if(o.kind==='x'){
-    return `<button class="wk-blk x" data-act="xopen" data-xid="${o.id}"
-      title="${esc(memberName(o.mid))} · ${esc(o.title)} (${EXC_LABEL[o.type]||'예외'}) ${time} · 클릭하여 수정">
+    const xEd=canEditAv(o.mid);
+    return `<button class="wk-blk x${xEd?'':' ro'}"${xEd?` data-act="xopen" data-xid="${o.id}"`:''}
+      title="${esc(memberName(o.mid))} · ${esc(o.title)} (${EXC_LABEL[o.type]||'예외'}) ${time}${xEd?' · 클릭하여 수정':''}">
       <span class="bt">${time}</span><span class="bn">${esc(memberName(o.mid))} · ${esc(o.title)}</span></button>`;
   }
   const mtid=o.seriesId||o.meetingId||'';
@@ -2592,7 +2611,7 @@ function viewCalWeek(now){
     count+=items.length;
     return `<td class="wk-all">${items.map(o=>
       `<button class="wk-chip x allday" style="--pc:${typeColor(o.type==='personal'?'other':o.type)};--pcs:${typeColorSoft(o.type==='personal'?'other':o.type)}"
-        data-act="xopen" data-xid="${o.id}" title="${esc(memberName(o.mid))} · ${esc(o.title)} (${EXC_LABEL[o.type]||'예외'}) · 클릭하여 수정"
+        ${canEditAv(o.mid)?`data-act="xopen" data-xid="${o.id}"`:''} title="${esc(memberName(o.mid))} · ${esc(o.title)} (${EXC_LABEL[o.type]||'예외'})${canEditAv(o.mid)?' · 클릭하여 수정':''}"
         ><span class="wk-n">${esc(memberName(o.mid))} · ${esc(o.title)}</span></button>`).join('')||''}</td>`;
   }).join('');
   const r=weekBlockBody({days,byDate,rows,slot,startMin,endMin});
@@ -2629,8 +2648,11 @@ function viewCalEditBar(){
 /* 주간 뷰에서 일정을 고르면 뜨는 조작 줄 */
 function viewWeekSelBar(){
   const evid=state.calPick, ev=evid?state.events[evid]:null;
-  if(!ev) return `<div class="wk-hint"><span>빈 칸을 누르면 일정을 추가하고, 블록을 누르면 그 회차를 바로 고칩니다. 이 배치는 매주 반복됩니다.</span>
-    <button class="btn ghost sm" data-act="wkcancel" data-week="${state.calWeek}" title="학회 주간처럼 이 주 회차를 한꺼번에 취소/유지">이 주 회차 정리</button></div>`;
+  const mgr=isManager();
+  if(!ev) return `<div class="wk-hint"><span>${mgr
+      ?'빈 칸을 누르면 일정을 추가하고, 블록을 누르면 그 회차를 바로 고칩니다. 이 배치는 매주 반복됩니다.'
+      :'블록을 누르면 자세한 내용이 보입니다. 일정 조정은 조정자('+esc(namesOf(managerIds()))+')가 합니다.'}</span>
+    ${mgr?`<button class="btn ghost sm" data-act="wkcancel" data-week="${state.calWeek}" title="학회 주간처럼 이 주 회차를 한꺼번에 취소/유지">이 주 회차 정리</button>`:''}</div>`;
   const s=Number(ev.start), e=Number(ev.end);
   const mtid=ev.seriesId||ev.meetingId;
   const mt=mtid?state.meetings[mtid]:null;
@@ -2642,18 +2664,19 @@ function viewWeekSelBar(){
       <span class="sub">${whenLabel(s,e)} · ${(e-s)/60000}분${ev.location?' · '+esc(ev.location):''}${rk?` · ${RECUR_LABEL[rk]} 반복`:''}${off?' · 취소됨':''}</span>
     </div>
     <div class="wk-sel-act">
-      ${mt&&!off?`<button class="btn sm" data-act="caledit" data-evid="${evid}" data-mode="move">시간 변경</button>
+      ${mgr?`${mt&&!off?`<button class="btn sm" data-act="caledit" data-evid="${evid}" data-mode="move">시간 변경</button>
                   <button class="btn ghost sm" data-act="caledit" data-evid="${evid}" data-mode="extra">+ 이 주 추가</button>`:''}
       ${mt?(off?`<button class="btn ghost sm" data-act="occrestore" data-evid="${evid}">취소 되돌리기</button>`
               :`<button class="btn ghost sm" data-act="occcancel" data-evid="${evid}">이 주 취소</button>`):''}
       <button class="btn ghost sm" data-act="evedit" data-evid="${evid}">상세 수정</button>
-      <button class="btn danger sm" data-act="evdelete" data-evid="${evid}">삭제</button>
+      <button class="btn danger sm" data-act="evdelete" data-evid="${evid}">삭제</button>`:''}
       <button class="btn ghost sm" data-act="calpickclear">선택 해제</button>
     </div>
   </div>`;
 }
 /* ---- 월간 뷰 (기존) ---- */
 function viewCalMonth(now){
+  const mgr=isManager();
   const [year,month]=state.calMonth.split('-').map(Number);
   const monthStart=new Date(year,month-1,1);
   const gridStart=new Date(monthStart); gridStart.setDate(gridStart.getDate()-gridStart.getDay());
@@ -2671,18 +2694,19 @@ function viewCalMonth(now){
         const title=`${o.status==='cancelled'?'[취소] ':''}${esc(o.title)} · ${hm(Number(o.start))}–${hm(Number(o.end))}`+(o.location?` · ${esc(o.location)}`:'')+` · ${namesOf(participantsOf(o))}`;
         const emt=o.seriesId||o.meetingId, isMt=!!(emt&&state.meetings[emt]);
         const st=isMt?`--pc:${meetingColor(emt)};--pcb:${meetingColorPastel(emt)}`:`--pc:${typeColor(o.type)}`;
-        return `<button class="agg-event${isMt?' mt':''}${o.status==='cancelled'?' ev-off':''}" style="${st}" data-act="evedit" data-evid="${o.id}" title="${title}${o.status==='cancelled'?' · 취소됨':''} · 클릭하여 수정">
+        return `<button class="agg-event${isMt?' mt':''}${o.status==='cancelled'?' ev-off':''}${mgr?'':' ro'}" style="${st}"${mgr?` data-act="evedit" data-evid="${o.id}"`:''} title="${title}${o.status==='cancelled'?' · 취소됨':''}${mgr?' · 클릭하여 수정':''}">
           <span class="agg-event-time">${hm(Number(o.start))}~${hm(Number(o.end))}</span>
           <span class="agg-event-song-row"><span class="agg-event-song">${esc(o.title)}</span>${o.location?`<span class="agg-ext">${esc(o.location)}</span>`:''}</span>
         </button>`;
       }
       const lbl=EXC_LABEL[o.type]||'예외';
-      return `<button class="agg-event x-event" style="--pc:${typeColor(o.type==='personal'?'other':o.type)}" data-act="xopen" data-xid="${o.id}" title="${esc(memberName(o.mid))} · ${esc(o.title)} (${lbl}) · 클릭하여 수정">
+      const xEd=canEditAv(o.mid);
+      return `<button class="agg-event x-event${xEd?'':' ro'}" style="--pc:${typeColor(o.type==='personal'?'other':o.type)}"${xEd?` data-act="xopen" data-xid="${o.id}"`:''} title="${esc(memberName(o.mid))} · ${esc(o.title)} (${lbl})${xEd?' · 클릭하여 수정':''}">
         <span class="agg-event-time">${o.allDay?lbl:hm(Number(o.start))+'~'+hm(Number(o.end))}</span>
         <span class="agg-event-song-row"><span class="agg-event-song">${esc(memberName(o.mid))} · ${esc(o.title)}</span></span>
       </button>`;
     }).join('');
-    cells.push(`<div class="agg-cell${inMonth?'':' out'}${dow===0?' sun':dow===6?' sat':''}${isToday?' today':''}" data-act="caladd" data-date="${ds}" title="누르면 ${mdLabel(ds)} 일정 추가">
+    cells.push(`<div class="agg-cell${inMonth?'':' out'}${dow===0?' sun':dow===6?' sat':''}${isToday?' today':''}"${mgr?` data-act="caladd" data-date="${ds}" title="누르면 ${mdLabel(ds)} 일정 추가"`:''}>
       <div class="agg-date-num"><span>${cursor.getDate()}</span></div>
       <div class="agg-events">${html}</div>
     </div>`);
@@ -3132,14 +3156,30 @@ function viewMembers(){
       <div class="agg-edit-field"><label>하루 종료</label><select data-act="setfield" data-field="dayEnd">${hourOpts(cfgDayEnd(),17,23)}</select></div>
     </div>
   </div>
+  <div class="card">
+    <div class="card-head"><div><h2>조정자</h2><div class="sub" style="margin-top:4px">고르면 그 사람들만 <b>미팅·설정 탭</b>을 쓰고 <b>시간표에서 일정을 고칠</b> 수 있습니다. 나머지는 보기 + 본인 <b>내 시간</b> 입력만 가능해요. 아무도 고르지 않으면 전원이 조정자입니다. ('나' 선택 기준의 화면 가림일 뿐 보안 권한은 아닙니다)</div></div></div>
+    <div class="grp-row" style="margin-top:12px">${membersSorted(false).map(mid=>{
+      const on=!!state.settings.managers?.[mid];
+      return `<button type="button" class="grp-tog ${on?'on':''}" data-act="mtmanager" data-mid="${mid}">${on?'✓ ':''}${esc(memberName(mid))}</button>`;
+    }).join('')}</div>
+  </div>
   <details class="card fold"><summary>프로젝트 (선택) <span class="sub">미팅을 분류하는 이름표 — 쓰지 않아도 됩니다</span></summary>
     ${viewProjects()}
   </details>`;
 }
 
+/* 조정자가 아닌 사람이 조정 화면에 들어왔을 때 */
+function viewManagerGate(what){
+  return `<div class="card"><div class="card-head"><div><h2>조정자 전용</h2>
+    <div class="sub" style="margin-top:4px">${what}은 <b>${esc(namesOf(managerIds()))}</b>님만 쓰도록 설정돼 있습니다.
+    ${state.me?'':`오른쪽 위 <b>나</b>에서 본인을 선택하세요.`}
+    확정된 일정은 <b>시간표</b>에서 보고, 내 반복 불가 시간과 예외는 <b>내 시간</b>에서 입력할 수 있어요.</div></div></div></div>`;
+}
+
 /* ======== Availability (주간 반복 + 예외) ======== */
 function viewAvailability(){
   const mids=membersSorted(false);
+  if(!isManager()&&state.me&&state.members[state.me]) state.avMember=state.me;
   if(!state.avMember||!state.members[state.avMember]) state.avMember=(state.me&&state.members[state.me])?state.me:(mids[0]||'');
   const semIds=sortedIds(state.semesters);
   if(!state.avSemester||!state.semesters[state.avSemester]) state.avSemester=activeSemesterId();
@@ -3168,7 +3208,7 @@ function viewAvailability(){
     return `<div class="list-item">
       <span class="x-type" style="--pc:${typeColor(x.type==='personal'?'other':x.type)}">${EXC_LABEL[x.type]||'기타'}</span>
       <span style="flex:1"><b>${esc(x.title)}</b> <span class="sub">${when}</span></span>
-      <button class="btn ghost sm" data-act="xopen" data-xid="${xid}">수정</button>
+      ${canEditAv(state.avMember)?`<button class="btn ghost sm" data-act="xopen" data-xid="${xid}">수정</button>`:''}
       <button class="proj-del" data-act="xdelete" data-xid="${xid}">삭제</button>
     </div>`;
   }).join('');
@@ -3177,23 +3217,29 @@ function viewAvailability(){
   const filled=m=>{const d=semAvAll[m]; return !!d&&Object.values(d).some(sl=>Object.values(sl||{}).some(Boolean));};
   const missing=mids.filter(m=>!filled(m));
   const strip=`<div class="av-status"><b>${mids.length-missing.length}/${mids.length}</b> 입력${
-    missing.length?` · 미입력 ${missing.length}명 ${missing.map(m=>`<button type="button" class="chip-btn" data-act="avpick" data-mid="${m}">${esc(memberName(m))}</button>`).join('')}
+    missing.length?` · 미입력 ${missing.length}명 ${missing.map(m=>isManager()
+        ?`<button type="button" class="chip-btn" data-act="avpick" data-mid="${m}">${esc(memberName(m))}</button>`
+        :`<span class="chip-btn ro">${esc(memberName(m))}</span>`).join('')}
       <span class="sub">— 이름을 누르면 그 사람 격자가 열립니다. 미입력자는 늘 가능한 것으로 계산됩니다.</span>`:' · 전원 입력 완료 🎉'}</div>`;
   return `<div class="card">
     <div class="card-head"><div><h2>주간 반복 일정${state.me===mid?' — 나':''}</h2>
       <div class="sub" style="margin-top:4px">학기 동안 <b>매주 반복되는 안 되는 시간</b>을 칠하세요. 한 학기에 한 번만 입력하면 됩니다. (${esc(sem.startDate||'')} ~ ${esc(sem.endDate||'')})</div></div></div>
     ${strip}
     <div class="mode-row" style="margin-bottom:12px">
-      <span class="mode-lbl">멤버</span><select data-act="avmember">${memberOpts}</select>
+      <span class="mode-lbl">멤버</span>${isManager()
+        ?`<select data-act="avmember">${memberOpts}</select>`
+        :`<b class="mode-fixed">${esc(memberName(mid))}</b><span class="sub" style="margin-left:6px">— 본인 것만 입력할 수 있어요</span>`}
       <span class="mode-lbl" style="margin-left:10px">학기</span><select data-act="avsemester">${semOpts}</select>
     </div>
     <div class="av-wrap scroll grid-touch"><table class="av-grid"><thead>${head}</thead><tbody>${rows}</tbody></table></div>
-    <div class="note">칠해진 칸 = <b>안 되는 시간</b> (수업·랩미팅 외 고정 일정). PC는 드래그, 모바일은 꾹 눌러 드래그. 즉시 저장됩니다.</div>
+    ${canEditAv(mid)
+      ?'<div class="note">칠해진 칸 = <b>안 되는 시간</b> (수업·랩미팅 외 고정 일정). PC는 드래그, 모바일은 꾹 눌러 드래그. 즉시 저장됩니다.</div>'
+      :`<div class="note warn">보기 전용입니다 — 오른쪽 위 <b>나</b>에서 본인을 선택하면 내 시간을 칠할 수 있어요.</div>`}
   </div>
   <div class="card">
     <div class="card-head"><div><h2>예외 일정 — ${esc(memberName(mid))}</h2>
       <div class="sub" style="margin-top:4px">출장·휴가·학회처럼 특정 날짜만 빠지는 일정. 배정을 막지는 않고, 그 시간 미팅에 <b>✈ 빠지는 사람</b>으로 표시됩니다. 다른 멤버 것은 위에서 멤버를 바꿔 보세요.</div></div>
-      <button class="btn sm" data-act="xnew" data-mid="${mid}">+ 예외 추가</button></div>
+      ${canEditAv(mid)?`<button class="btn sm" data-act="xnew" data-mid="${mid}">+ 예외 추가</button>`:''}</div>
     ${xRows||'<div class="empty">등록된 예외 일정이 없습니다.</div>'}
   </div>`;
 }
@@ -3270,7 +3316,7 @@ function viewExceptionModal(){
       <div class="modal-head"><h2>${d.id?'예외 일정 수정':'예외 일정 추가'}</h2><button class="modal-x" data-act="xclose" title="닫기">×</button></div>
       <div class="modal-body">
         <div class="agg-edit-grid">
-          <div class="agg-edit-field"><label for="xMid">멤버</label><select id="xMid" data-act="xfield" data-field="mid">${memberOpts}</select></div>
+          <div class="agg-edit-field"><label for="xMid">멤버</label><select id="xMid" data-act="xfield" data-field="mid" ${isManager()?'':'disabled'}>${memberOpts}</select></div>
           <div class="agg-edit-field"><label for="xType">종류</label><select id="xType" data-act="xfield" data-field="type">${typeOpts}</select></div>
           <div class="agg-edit-field full"><label for="xTitle">제목</label><input id="xTitle" type="text" value="${esc(d.title||'')}" placeholder="예: ECCV 출장" data-act="xfield" data-field="title"></div>
           <div class="agg-edit-field full"><label class="grp-row" style="gap:6px;align-items:center;cursor:pointer"><input type="checkbox" ${d.allDay?'checked':''} data-act="xallday" style="width:auto"> 종일 (여러 날 가능)</label></div>
@@ -3415,10 +3461,30 @@ function bindEvents(){
   const app=$('app'), hbar=$('hbar');
   let pzDidDrag=false;   // 드래그 직후의 click 이벤트를 무시하기 위한 플래그
 
+  /* 쓰기성 동작 — UI에서 이미 숨기지만, 해시·잔상 클릭까지 막는 이중 방어 */
+  const MANAGER_ACTS=new Set(['caladd','calslot','caledit','occcancel','occrestore','occdelete',
+    'evedit','evsave','evdelete','wkcancel','wkapply','wkkeep','wkkeepall','pzscope','pzsdur',
+    'pzdrop','pzdur','pzlift','pzswap','pzunpick','batchopen','batchapply','batchauto','batchclear',
+    'batchmode','batchpick','batchrepeat','batchweek','mtnew','mtedit','mtsave','mtdelete',
+    'mtunconfirm','mtboard','mtlist','memadd','memfield','memdelete','memactive','memalways',
+    'semadd','semfield','semdelete','semactive','setfield','mtmanager',
+    'projadd','projdelete','projmember','projname','avpick']);
+  function actAllowed(act,t){
+    if(MANAGER_ACTS.has(act)&&!isManager()){toast('조정자만 고칠 수 있습니다');return false;}
+    if(act==='xnew'&&!canEditAv(t.dataset.mid||state.avMember)){toast('본인 예외만 추가할 수 있습니다');return false;}
+    if(act==='xopen'&&!canEditAv(state.exceptions[t.dataset.xid]?.mid)){toast('본인 예외만 고칠 수 있습니다');return false;}
+    if(act==='xsave'&&state.xDraft&&!canEditAv(state.xDraft.mid)){toast('본인 예외만 저장할 수 있습니다');return false;}
+    if(act==='xdelete'||act==='xmodaldelete'){
+      const x=state.exceptions[t.dataset.xid]||state.exceptions[state.xDraft?.id];
+      if(x&&!canEditAv(x.mid)){toast('본인 예외만 지울 수 있습니다');return false;}
+    }
+    return true;
+  }
   function handleClick(e){
     if(pzDidDrag){return;}                    // 방금 드래그를 끝냈다 — 이 클릭은 무시
     const t=e.target.closest('[data-act]'); if(!t)return;
     const act=t.dataset.act;
+    if(!actAllowed(act,t)) return;
     if(act==='modal-noop'){e.stopPropagation();return;}
     if(act==='nav'){state.tab=t.dataset.tab; history.replaceState(null,'','#'+state.tab); render();return;}
     if(act==='help'){state.showHelp=true;render();return;}
@@ -3619,6 +3685,19 @@ function bindEvents(){
       state.members[t.dataset.mid]={...m,always:!m.always};
       updateMember(t.dataset.mid,{always:!m.always}); render(); return;
     }
+    if(act==='mtmanager'){
+      const mid=t.dataset.mid;
+      const cur=!!state.settings.managers?.[mid];
+      const next={...(state.settings.managers||{})};
+      if(cur) delete next[mid]; else next[mid]=true;
+      /* 스스로를 잠그는 변경이면 한 번 확인 — 조정자 목록이 생기는 순간 나머지는 설정 탭을 잃는다 */
+      const ids=Object.keys(next).filter(k=>next[k]&&state.members[k]);
+      if(ids.length&&(!state.me||!ids.includes(state.me))
+        &&!confirm(`이렇게 바꾸면 이 브라우저(나: ${state.me?memberName(state.me):'미선택'})에서는 설정·미팅 탭이 잠깁니다.\n계속할까요?`)) return;
+      state.settings.managers=next;
+      FB.update(R('settings/managers'),{[mid]:cur?null:true}).catch(wErr);
+      render(); return;
+    }
     if(act==='semadd'){addSemester();return;}
     if(act==='semdelete'){deleteSemester(t.dataset.sid);return;}
     if(act==='semactive'){FB.update(R('settings'),{activeSemester:t.dataset.sid}).catch(wErr);return;}
@@ -3698,6 +3777,8 @@ function bindEvents(){
   const handleChange=e=>{
     const t=e.target.closest('[data-act]'); if(!t)return;
     const act=t.dataset.act, v=t.value;
+    if(!actAllowed(act,t)){render();return;}
+    if(act==='avmember'&&!isManager()){state.avMember=state.me||v;render();return;}
     if(act==='wkkeep'&&state.weekCancel){const k={...state.weekCancel.keep}; if(t.checked)k[t.dataset.evid]=true; else delete k[t.dataset.evid]; state.weekCancel.keep=k; render();}
     else if(act==='calmember'){state.calMember=v;render();}
     else if(act==='setme'){
@@ -3821,6 +3902,7 @@ function bindEvents(){
     });
   }
   function startPaint(td){
+    if(!canEditAv(state.avMember)) return;   // 본인 또는 조정자만 칠할 수 있다
     pvTarget=!td.classList.contains('no');   // 시작 칸이 비어있으면 칠하기, 칠해져 있으면 지우기
     pvBox={r0:+td.dataset.r,c0:+td.dataset.c,r1:+td.dataset.r,c1:+td.dataset.c};
     avPaint=true; enterDrag(); paintPreview();
