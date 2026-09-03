@@ -25,7 +25,8 @@ const at=(n,h,m)=>{const d=new Date(MON);d.setDate(d.getDate()+n);d.setHours(h,m
 const dsOf=n=>{const d=new Date(MON);d.setDate(d.getDate()+n);return fmtDate(d);};
 Object.assign(state,{
   loading:false, tab:'meetings',
-  settings:{activeSemester:'sem1',slotMinutes:30,dayStart:9,dayEnd:21},
+  settings:{activeSemester:'sem1',slotMinutes:30,dayStart:9,dayEnd:21,
+    managers:{m2:true,m3:true}},   // 조정자: 이태영·박경문 — 가림 동작을 바로 볼 수 있게
   members:{m1:{name:'오경준',active:true,ts:1},m2:{name:'이태영',active:true,ts:2},
            m3:{name:'박경문',active:true,ts:3},m4:{name:'임하빈',active:true,ts:4}},
   semesters:{sem1:{name:'2026-2학기',startDate:dsOf(-14),endDate:dsOf(84),ts:1}},

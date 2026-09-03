@@ -2651,7 +2651,7 @@ function viewWeekSelBar(){
   const mgr=isManager();
   if(!ev) return `<div class="wk-hint"><span>${mgr
       ?'빈 칸을 누르면 일정을 추가하고, 블록을 누르면 그 회차를 바로 고칩니다. 이 배치는 매주 반복됩니다.'
-      :'블록을 누르면 자세한 내용이 보입니다. 일정 조정은 조정자('+esc(namesOf(managerIds()))+')가 합니다.'}</span>
+      :'블록을 누르면 자세한 내용이 보입니다. 오른쪽 위 <b>나</b>에서 본인을 선택해 두세요.'}</span>
     ${mgr?`<button class="btn ghost sm" data-act="wkcancel" data-week="${state.calWeek}" title="학회 주간처럼 이 주 회차를 한꺼번에 취소/유지">이 주 회차 정리</button>`:''}</div>`;
   const s=Number(ev.start), e=Number(ev.end);
   const mtid=ev.seriesId||ev.meetingId;
@@ -3168,11 +3168,11 @@ function viewMembers(){
   </details>`;
 }
 
-/* 조정자가 아닌 사람이 조정 화면에 들어왔을 때 */
+/* 조정자가 아닌 사람이 조정 화면에 들어왔을 때 — 누가 조정자인지는 밝히지 않는다 */
 function viewManagerGate(what){
   return `<div class="card"><div class="card-head"><div><h2>조정자 전용</h2>
-    <div class="sub" style="margin-top:4px">${what}은 <b>${esc(namesOf(managerIds()))}</b>님만 쓰도록 설정돼 있습니다.
-    ${state.me?'':`오른쪽 위 <b>나</b>에서 본인을 선택하세요.`}
+    <div class="sub" style="margin-top:4px">${what}은 조정자만 쓸 수 있습니다.
+    오른쪽 위 <b>나</b>에서 <b>본인을 선택</b>하세요.
     확정된 일정은 <b>시간표</b>에서 보고, 내 반복 불가 시간과 예외는 <b>내 시간</b>에서 입력할 수 있어요.</div></div></div></div>`;
 }
 

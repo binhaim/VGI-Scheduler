@@ -720,7 +720,8 @@ test("조정자가 아니면 미팅·설정 탭이 숨고, 직접 들어와도 �
   assert.doesNotMatch(hbar, /data-tab="members"/);
   let body = globalThis.document.getElementById("app").innerHTML;
   assert.match(body, /조정자 전용/);
-  assert.match(body, /박경문/); assert.match(body, /이태영/);
+  assert.match(body, /본인을 선택/);
+  assert.doesNotMatch(body, /박경문|이태영/);          // 누가 조정자인지는 밝히지 않는다
   state.tab = "members"; app.doRender();
   assert.match(globalThis.document.getElementById("app").innerHTML, /조정자 전용/);
   state.me = "m2"; app.doRender();
