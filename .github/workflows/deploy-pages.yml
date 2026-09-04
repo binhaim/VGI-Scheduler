@@ -4,8 +4,9 @@ on:
   push:
     branches: [main]
   # 2시간마다 재생성 — 미팅을 확정해도 push는 일어나지 않으므로 구독 피드는 이 스케줄로 따라간다
+  # 정각(:00)은 GitHub이 크게 지연·누락시켜서 어중간한 분으로 피한다 (실측: 정각 cron이 2~6시간씩 밀렸다)
   schedule:
-    - cron: "0 */2 * * *"
+    - cron: "23 */2 * * *"
   workflow_dispatch:
 
 permissions:
