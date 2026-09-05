@@ -91,11 +91,15 @@ function eventItem({ evid, event, members, projects, mid }) {
   const project = projectLabel(projects, event.projectId);
   const location = trimmed(event.location);
   const people = participantNames(members, event.participants);
+  const leadMap = event.leads && typeof event.leads === "object"
+    ? event.leads : (trimmed(event.leadId) ? { [trimmed(event.leadId)]: true } : {});
+  const leads = truthyKeys(leadMap).map((id) => memberDisplayName(members, id)).filter(Boolean);
 
   const description = [
     `종류: ${typeLabel}`,
     project ? `프로젝트: ${project}` : "",
     location ? `장소: ${location}` : "",
+    leads.length ? `담당: ${leads.join(", ")}` : "",
     people.length ? `참여: ${people.join(", ")}` : "",
     `일정 페이지: ${SITE_URL}#calendar`,
   ].filter(Boolean).join("\n");

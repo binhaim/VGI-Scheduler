@@ -230,6 +230,7 @@ test("보드에 올라온 미팅은 자기 회차 때문에 막히지 않는다"
 test("블록을 고르면 들어갈 수 있는 칸만 초록으로 켜지고, 불가 시간은 빠진다", () => {
   reset();
   app.openBatch();
+  state.batch.week = app.mondayOf(MON);        // 이번 주는 요일·시각에 따라 다 지났을 수 있다
   state.batch.pick = "mt1";
   const html = app.viewPuzzleGrid();
   assert.match(html, /data-act="pzdrop"/);
@@ -297,6 +298,7 @@ test("남은 블록 자동 배치는 사람이 겹치지 않게 채운다", () =
   for (let k = 2; k <= 5; k++)
     state.meetings["mt" + k] = { ...state.meetings.mt1, title: "미팅" + k, ts: k };
   app.openBatch();
+  state.batch.week = app.mondayOf(MON);        // 다음 주 기준 — 시간 의존 제거
   app.autoPlace();
   const placed = Object.entries(state.batch.placed);
   assert.equal(placed.length, 5, "전부 놓인다");
@@ -775,4 +777,71 @@ test("설정에 조정자 토글이 있다", () => {
   assert.match(html, /조정자/);
   assert.match(html, /data-act="mtmanager" data-mid="m2"/);
   assert.match(html, /grp-tog on" data-act="mtmanager" data-mid="m3"/);
+});
+
+/* ---------------- 격자 밖 시각 (예: 14:30 시작) ---------------- */
+test("상세 수정에서는 칸 단위와 무관하게 10분 간격으로 시각을 고를 수 있다", () => {
+  reset();
+  state.settings.slotMinutes = 20;
+  app.confirmMeeting("mt1", D(WED, 14, 20), D(WED, 15));
+  const evid = app.occurrencesOf("mt1")[0];
+  const ev = state.events[evid];
+  state.evEdit = { id: evid, ...ev, date: WED, fromMin: 14 * 60 + 20, toMin: 15 * 60 };
+  const html = app.viewEventModal();
+  assert.match(html, /<option value="870" >14:30<\/option>/);   // 20분 격자에 없는 14:30
+  assert.match(html, /<option value="860" selected>14:20<\/option>/);
+  state.evEdit = null;
+});
+
+test("격자 밖 시각의 일정도 반복 불가 시간과 겹치면 잡아낸다", () => {
+  reset();
+  state.settings.slotMinutes = 20;
+  /* m1은 WED 14:20~14:40 불가 (20분 격자 키) */
+  const wd = "d" + new Date(WED + "T00:00:00").getDay();
+  state.availability = { sem1: { m1: { [wd]: { "14:20": true } } } };
+  /* 14:30 시작 — 격자 밖. 14:20 칸과 겹치므로 불가로 잡혀야 한다 */
+  assert.ok(app.memberBusy("m1", D(WED, 14, 30), D(WED, 15, 10)), "14:20 칸을 놓쳤다");
+  assert.equal(app.memberBusy("m1", D(WED, 14, 40), D(WED, 15, 20)), false);  // 안 겹치면 통과
+  assert.ok(app.memberBusy("m1", D(WED, 14), D(WED, 15)));       // 격자 정렬 시각은 그대로
+});
+
+/* ---------------- 담당(대표) 학생 ---------------- */
+test("담당 학생은 참여자 중에서 여러 명 체크할 수 있고, 회차에도 복사되며 ★로 표시된다", () => {
+  reset({ recur: null });
+  state.mtDraft = { ...state.meetings.mt1, id: undefined, leads: { m1: true },
+    recur: "", recurUntil: "" };
+  const form = app.viewMeetingForm();
+  assert.match(form, /담당 학생/);
+  assert.match(form, /여러 명 가능/);
+  assert.match(form, /grp-tog on" data-act="mtlead" data-mid="m1">★ 오경준/);
+  assert.match(form, /grp-tog " data-act="mtlead" data-mid="m3">박경문/);
+  state.mtDraft = null;
+
+  state.meetings.mt1.leads = { m1: true, m3: true };             // 두 명 담당
+  assert.equal(app.namesWithLead(state.meetings.mt1), "★오경준, ★박경문");
+  app.confirmMeeting("mt1", D(WED, 14), D(WED, 14, 40));
+  const ev = state.events[app.occurrencesOf("mt1")[0]];
+  assert.deepEqual(ev.leads, { m1: true, m3: true });            // 회차에 복사
+  state.tab = "calendar"; state.calWeek = WS;
+  assert.match(app.viewCalWeek(new Date()).html, /★오경준, ★박경문/);
+  /* 옛 단수 leadId 데이터도 읽힌다 */
+  assert.equal(app.namesWithLead({ participants: { m1: true, m3: true }, leadId: "m3" }),
+    "★박경문, 오경준");
+});
+
+test("담당을 바꾸면 미래 회차에 반영되고, 참여자에서 빠지면 담당도 지워진다", () => {
+  reset({ recur: null });
+  state.meetings.mt1.leads = { m1: true };
+  app.confirmMeeting("mt1", D(WED, 14), D(WED, 14, 40));
+  const evid = app.occurrencesOf("mt1")[0];
+  const obj = { ...state.meetings.mt1, leads: { m3: true } };
+  state.meetings.mt1 = obj;
+  app.syncSeries("mt1", obj);
+  assert.deepEqual(state.events[evid].leads, { m3: true });
+  /* 담당(m3)을 참여자에서 뺀 채 저장 → 담당에서도 걸러진다 */
+  state.mtDraft = { ...obj, id: "mt1", participants: { m1: true }, leads: { m3: true },
+    recur: "", recurUntil: "" };
+  app.saveMeetingDraft();
+  assert.deepEqual(state.meetings.mt1.leads, {});
+  assert.equal(app.namesWithLead(state.meetings.mt1), "오경준");
 });

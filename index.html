@@ -1564,6 +1564,19 @@ function defaultRecurUntil(){
 }
 function participantsOf(o){return Object.keys(o?.participants||{}).filter(mid=>o.participants[mid]);}
 function namesOf(mids){return mids.map(memberName).join(', ');}
+/* 담당(대표) 학생들 — leads 맵이 기본, 옛 단수 leadId도 읽는다. 참여자가 아닌 담당은 무시 */
+function leadIdsOf(o){
+  const mids=participantsOf(o);
+  const raw=o?.leads?Object.keys(o.leads).filter(k=>o.leads[k]):(o?.leadId?[o.leadId]:[]);
+  return mids.filter(m=>raw.includes(m));
+}
+/* 담당은 ★를 붙여 맨 앞에 — 참여자를 나열하는 모든 곳에서 같은 모양 */
+function namesWithLead(o){
+  const mids=participantsOf(o), leads=leadIdsOf(o);
+  if(!leads.length) return namesOf(mids);
+  return leads.map(m=>'★'+memberName(m))
+    .concat(mids.filter(m=>!leads.includes(m)).map(memberName)).join(', ');
+}
 
 /* ---------------- Firebase ---------------- */
 async function initFirebase(){
@@ -1618,7 +1631,12 @@ function weeklyBusy(mid,s,e){
   const semS=new Date(sem.startDate+'T00:00:00').getTime();
   const semE=new Date(sem.endDate+'T00:00:00'); semE.setDate(semE.getDate()+1);
   const step=cfgSlot()*60000;
-  for(let t=s;t<e;t+=step){
+  /* 조회 시각을 격자에 정렬한다 — 14:30처럼 격자 밖에서 시작하는 일정도
+     14:20/14:40 칸에 저장된 불가 시간과 겹치면 잡아야 한다 */
+  const d0=new Date(s); d0.setHours(0,0,0,0);
+  const off=(s-d0.getTime())%step;
+  for(let t=s-off;t<e;t+=step){
+    if(t+step<=s) continue;                       // [s,e)와 안 겹치는 앞쪽 칸
     if(t<semS||t>=semE.getTime()) continue;       // 학기 밖 날짜엔 반복 일정 미적용
     const d=new Date(t);
     const slot=state.availability?.[sid]?.[mid]?.['d'+d.getDay()]?.[hm(t)];
@@ -2143,6 +2161,9 @@ function saveMeetingDraft(){
   const rk=d.recur||'';
   if(rk&&!d.recurUntil){toast('반복 종료일을 정해주세요');return;}
   const obj={title,type:d.type||'meeting',participants:d.participants||{},
+    leads:Object.fromEntries(Object.keys(d.leads||{})
+      .filter(m=>d.leads[m]&&d.participants?.[m]).map(m=>[m,true])),
+    leadId:null,
     durationMin:Number(d.durationMin)||60,rangeStart:d.rangeStart,rangeEnd:d.rangeEnd,
     projectId:d.projectId||'',location:String(d.location||'').trim(),
     description:String(d.description||'').trim(),
@@ -2161,7 +2182,7 @@ function syncSeries(mtid,obj){
   ids.forEach(evid=>{
     if(Number(state.events[evid].start)<now) return;
     FB.update(R('events/'+evid),{title:obj.title,type:obj.type,participants:obj.participants,
-      projectId:obj.projectId,location:obj.location}).catch(wErr);
+      leads:obj.leads||{},leadId:null,projectId:obj.projectId,location:obj.location}).catch(wErr);
   });
   /* 반복 종료일을 늘렸으면 모자란 회차를 이어서 만든다 */
   const rk=recurKey(obj); if(!rk||!ids.length) return;
@@ -2191,7 +2212,8 @@ function deleteMeeting(mtid){
 /* ---- 회차(시리즈) ---- */
 function occEvent(mt,mtid,s,e,extra){
   return {title:mt.title,type:mt.type||'meeting',start:s,end:e,
-    participants:mt.participants||{},projectId:mt.projectId||'',location:mt.location||'',
+    participants:mt.participants||{},leads:mt.leads||{},
+    projectId:mt.projectId||'',location:mt.location||'',
     meetingId:mtid,seriesId:mtid,seriesDate:fmtDate(new Date(s)),ts:Date.now(),...extra};
 }
 /* 한 미팅에 속한 회차 id — 시작 시각 순 */
@@ -2572,7 +2594,7 @@ function weekBlockHtml(o,g){
     ?`--pc:${meetingColor(mtid)};--pcb:${meetingColorPastel(mtid)};--pcs:${meetingColorSoft(mtid)}`
     :`--pc:${typeColor(o.type)};--pcs:${typeColorSoft(o.type)}`;
   const off=o.status==='cancelled';
-  const names=namesOf(participantsOf(o));
+  const names=namesWithLead(o);
   const aw=off?[]:awayOf(participantsOf(o),s,e);
   const tip=`${esc(o.title)} ${time}${o.location?' · '+esc(o.location):''} · ${esc(names)}${off?' · 취소됨':''}${aw.length?` · ✈ ${esc(namesOf(aw))} 휴가·부재`:''} · 클릭하여 회차 조작`;
   return `<button class="wk-blk${off?' off':''}${state.calPick===o.id?' on':''}" style="${style}"
@@ -2748,6 +2770,11 @@ function viewMeetingForm(){
       <div class="agg-edit-field"><label for="mtTitle">이름</label><input id="mtTitle" type="text" value="${esc(d.title||'')}" placeholder="예: FacePlex Weekly" data-act="mtfield" data-field="title" autofocus></div>
       <div class="agg-edit-field"><label for="mtDur">길이</label><select id="mtDur" data-act="mtfield" data-field="durationMin">${durOpts}</select></div>
       <div class="agg-edit-field full"><label>참여자${alwaysN?` <span class="sub">— 항상 참여 멤버${state.me?'와 나':''}는 미리 체크됩니다</span>`:''}</label><div class="grp-row">${memberChips(d.participants,'mtmember')}</div></div>
+      <div class="agg-edit-field full"><label>담당 학생 <span class="sub">— ★로 표시됩니다 · 여러 명 가능</span></label>
+        <div class="grp-row">${participantsOf(d).map(mid=>{
+          const on=!!d.leads?.[mid];
+          return `<button type="button" class="grp-tog ${on?'on':''}" data-act="mtlead" data-mid="${mid}">${on?'★ ':''}${esc(memberName(mid))}</button>`;
+        }).join('')||'<span class="sub">참여자를 먼저 체크하세요.</span>'}</div></div>
     </div>
     <details class="mt-more" ${more?'open':''}>
       <summary>자세히 — 반복 · 종류 · 장소 · 메모</summary>
@@ -2839,7 +2866,7 @@ function viewMeetingCard(mtid){
               ?`🔁 <b>${RECUR_LABEL[rk]} ${WD[new Date(mt.confirmedStart).getDay()]} ${hm(mt.confirmedStart)}~${hm(mt.confirmedEnd)}</b> · ${mdLabel(mt.recurrence.until)}까지${nextEv?` · 다음 ${mdLabel(fmtDate(new Date(Number(nextEv.start))))} (${WD[new Date(Number(nextEv.start)).getDay()]}) ${hm(Number(nextEv.start))}`:' · 남은 회차 없음'}${mt.location?` · ${esc(mt.location)}`:''}`
               :`✅ <b>${mdLabel(fmtDate(new Date(mt.confirmedStart)))} (${WD[new Date(mt.confirmedStart).getDay()]}) ${hm(mt.confirmedStart)}~${hm(mt.confirmedEnd)}</b>${mt.location?` · ${esc(mt.location)}`:''}`)
             :`${Number(mt.durationMin)||60}분${rk?` · ${RECUR_LABEL[rk]}`:''} · 아직 시간 없음${mt.location?` · ${esc(mt.location)}`:''}`}
-          · ${esc(namesOf(mids))}
+          · ${esc(namesWithLead(mt))}
         </div>
         ${mt.description?`<div class="sub" style="margin-top:2px">${esc(mt.description)}</div>`:''}
       </div>
@@ -2931,7 +2958,7 @@ function viewPuzzleGrid(){
             <button type="button" class="pz-fill" data-act="batchpick" data-mtid="${id0}" data-pz="${id0}"
               title="${tip}${aw.length?` · ✈ ${esc(namesOf(aw))} 휴가·부재`:''}" aria-label="${tip}"><span class="pz-ft">${hm(pl.s)}~${hm(pl.e)}${on?' ✓':''}${aw.length?` <span class="pz-aw">✈${aw.length}</span>`:''}</span>
               <span class="pz-fn">${esc(mt0.title||'')}${more?` +${more}`:''}</span>
-              ${g.span>1?`<span class="pz-fp">${esc(namesOf(participantsOf(mt0)))}</span>`:''}</button></td>`;
+              ${g.span>1?`<span class="pz-fp">${esc(namesWithLead(mt0))}</span>`:''}</button></td>`;
         }
         const evid0=g.ids[0], ev=state.events[evid0]||{};
         const more=g.ids.length-1;
@@ -2943,7 +2970,7 @@ function viewPuzzleGrid(){
         const canSwap=swapOK&&!more&&!off&&isLive(ev);
         const tip=`${esc(ev.title||'')} ${hm(g.s)}~${hm(g.e)} · ${esc(namesOf(participantsOf(ev)))}${off?' · 취소됨':''}${canSwap?' · 여기에 놓으면 자리를 바꿉니다':''}`;
         const inner=`<span class="pz-ft">${hm(g.s)}~${hm(g.e)}</span><span class="pz-fn">${esc(ev.title||'')}${more?` +${more}`:''}</span>
-          ${g.span>1?`<span class="pz-fp">${esc(namesOf(participantsOf(ev)))}</span>`:''}`;
+          ${g.span>1?`<span class="pz-fp">${esc(namesWithLead(ev))}</span>`:''}`;
         return canSwap
           ?`<td class="mtg-cell blk ev-bg" rowspan="${g.span}" style="${estyle}"><button type="button" class="pz-fill static swappable"
               data-act="pzswap" data-swap="${evid0}" title="${tip}" aria-label="${tip}">${inner}</button></td>`
@@ -3002,7 +3029,7 @@ function viewBatchCard(){
     return `<div class="pz-item${pl?' done':''}${pick===id?' pick':''}" data-pz="${id}"
       data-act="batchpick" data-mtid="${id}" role="button" tabindex="0"
       style="--pc:${meetingColor(id)};--pcb:${meetingColorPastel(id)};--pcs:${meetingColorSoft(id)}"
-      title="${esc(namesOf(participantsOf(mt)))}${pl?` · ${whenLabel(pl.s,pl.e)}`:''} · 끌어서 놓기">
+      title="${esc(namesWithLead(mt))}${pl?` · ${whenLabel(pl.s,pl.e)}`:''} · 끌어서 놓기">
       <span class="pz-grip">⠿</span>
       <span class="pz-name">${mt.status==='confirmed'?'✓ ':''}${esc(mt.title)}${pl?`<em>${WD[new Date(pl.s).getDay()]} ${hm(pl.s)}~${hm(pl.e)}</em>`:''}</span>
       ${durSel}${pl?`<button type="button" class="pz-x" data-act="pzlift" data-mtid="${id}" title="보드에서 내리기">✕</button>`:''}
@@ -3038,7 +3065,7 @@ function viewBatchCard(){
         <b>${esc(mt.title)}</b>
         <span class="pz-cur-sub">${Number(mt.durationMin)||60}분${mt.location?' · '+esc(mt.location):''}${rk?' · '+RECUR_LABEL[rk]:''}
           · ${pl?`<b>${WD[new Date(pl.s).getDay()]} ${hm(pl.s)}~${hm(pl.e)}</b>에 놓음`:'아직 안 놓음'}</span>
-        <span class="pz-cur-p">참석 ${mids.length}명 — ${esc(namesOf(mids))||'참여자 없음'}</span>
+        <span class="pz-cur-p">참석 ${mids.length}명 — ${esc(namesWithLead(state.meetings[pick]))||'참여자 없음'}</span>
       </div>
       <span class="pz-cur-hint">블록을 끌어오거나 초록 칸을 누르세요${pl?' · 보드의 블록은 끌어서 옮길 수 있어요':''}</span>
       <button class="btn ghost sm" data-act="pzunpick">선택 해제</button>
@@ -3266,8 +3293,8 @@ function viewProjects(){
 }
 
 /* ======== 모달들 ======== */
-function minuteOpts(from,to,sel){
-  let o='';const sm=cfgSlot();
+function minuteOpts(from,to,sel,step){
+  let o='';const sm=step||cfgSlot();
   for(let m=from;m<=to;m+=sm){
     const t=String(Math.floor(m/60)).padStart(2,'0')+':'+String(m%60).padStart(2,'0');
     o+=`<option value="${m}" ${m===Number(sel)?'selected':''}>${t}</option>`;
@@ -3290,8 +3317,8 @@ function viewEventModal(){
           <div class="agg-edit-field"><label for="evType">종류</label><select id="evType" data-act="evfield" data-field="type">${typeOpts}</select></div>
           <div class="agg-edit-field"><label for="evProj">프로젝트</label><select id="evProj" data-act="evfield" data-field="projectId">${projOpts}</select></div>
           <div class="agg-edit-field full"><label for="evDate">날짜</label><input id="evDate" type="date" value="${esc(d.date||'')}" data-act="evfield" data-field="date"></div>
-          <div class="agg-edit-field"><label for="evFrom">시작</label><select id="evFrom" data-act="evdt">${minuteOpts(s,e-cfgSlot(),d.fromMin)}</select></div>
-          <div class="agg-edit-field"><label for="evTo">종료</label><select id="evTo" data-act="evdt">${minuteOpts(s+cfgSlot(),e,d.toMin)}</select></div>
+          <div class="agg-edit-field"><label for="evFrom">시작</label><select id="evFrom" data-act="evdt">${minuteOpts(s,e-10,d.fromMin,10)}</select></div>
+          <div class="agg-edit-field"><label for="evTo">종료</label><select id="evTo" data-act="evdt">${minuteOpts(s+10,e,d.toMin,10)}</select></div>
           <div class="agg-edit-field full"><label for="evLoc">장소 (선택)</label><input id="evLoc" type="text" value="${esc(d.location||'')}" data-act="evfield" data-field="location"></div>
           <div class="agg-edit-field full"><label>참여자</label><div class="grp-row">${memberChips(d.participants,'evmember')}</div></div>
         </div>
@@ -3325,8 +3352,8 @@ function viewExceptionModal(){
           <div class="agg-edit-field"><label for="xToD">종료일</label><input id="xToD" type="date" value="${esc(d.endDate||'')}" data-act="xfield" data-field="endDate"></div>`
           :`
           <div class="agg-edit-field full"><label for="xDate">날짜</label><input id="xDate" type="date" value="${esc(d.startDate||'')}" data-act="xfield" data-field="startDate"></div>
-          <div class="agg-edit-field"><label for="xFrom">시작</label><select id="xFrom" data-act="xdt">${minuteOpts(s,e-cfgSlot(),d.fromMin)}</select></div>
-          <div class="agg-edit-field"><label for="xTo">종료</label><select id="xTo" data-act="xdt">${minuteOpts(s+cfgSlot(),e,d.toMin)}</select></div>`}
+          <div class="agg-edit-field"><label for="xFrom">시작</label><select id="xFrom" data-act="xdt">${minuteOpts(s,e-10,d.fromMin,10)}</select></div>
+          <div class="agg-edit-field"><label for="xTo">종료</label><select id="xTo" data-act="xdt">${minuteOpts(s+10,e,d.toMin,10)}</select></div>`}
         </div>
         <div class="agg-edit-actions">
           ${d.id?`<button class="btn danger sm" data-act="xmodaldelete" data-xid="${d.id}">삭제</button>`:''}
@@ -3574,13 +3601,23 @@ function bindEvents(){
     if(act==='mtmember'){
       const d=state.mtDraft; if(!d)return; syncMtDraft();
       d.participants=d.participants||{};
-      if(d.participants[t.dataset.mid]) delete d.participants[t.dataset.mid];
-      else d.participants[t.dataset.mid]=true;
+      if(d.participants[t.dataset.mid]){
+        delete d.participants[t.dataset.mid];
+        if(d.leads) delete d.leads[t.dataset.mid];    // 참여자에서 빠지면 담당도 아니다
+      }else d.participants[t.dataset.mid]=true;
+      render();return;
+    }
+    if(act==='mtlead'){
+      const d=state.mtDraft; if(!d)return; syncMtDraft();
+      d.leads={...(d.leads||{})};
+      if(d.leads[t.dataset.mid]) delete d.leads[t.dataset.mid];
+      else d.leads[t.dataset.mid]=true;
       render();return;
     }
     if(act==='mtedit'){
       const mt=state.meetings[t.dataset.mtid]; if(!mt)return;
       state.mtDraft={id:t.dataset.mtid,...mt,participants:{...(mt.participants||{})},
+        leads:mt.leads?{...mt.leads}:(mt.leadId?{[mt.leadId]:true}:{}),
         recur:recurKey(mt),recurUntil:mt.recurrence?.until||defaultRecurUntil()};
       render();
       $('mtForm')?.scrollIntoView({behavior:'smooth'});
@@ -3822,14 +3859,14 @@ function bindEvents(){
     else if(act==='evdt'&&state.evEdit){
       const f=$('evFrom'),to=$('evTo');
       if(f&&to){let fm=Number(f.value),tm=Number(to.value);
-        if(tm<=fm){tm=fm+cfgSlot();to.value=String(tm);}
+        if(tm<=fm){tm=fm+10;to.value=String(tm);}
         state.evEdit.fromMin=fm;state.evEdit.toMin=tm;}
     }
     else if(act==='xfield'&&state.xDraft){state.xDraft[t.dataset.field]=v;}
     else if(act==='xdt'&&state.xDraft){
       const f=$('xFrom'),to=$('xTo');
       if(f&&to){let fm=Number(f.value),tm=Number(to.value);
-        if(tm<=fm){tm=fm+cfgSlot();to.value=String(tm);}
+        if(tm<=fm){tm=fm+10;to.value=String(tm);}
         state.xDraft.fromMin=fm;state.xDraft.toMin=tm;}
     }
   };

@@ -32,6 +32,7 @@ const events = {
     type: "meeting",
     start: LAB_MEETING_START,
     end: LAB_MEETING_START + HOUR_MS,
+    leads: { m_jaeho: true, m_habin: true },
     participants: { m_habin: true, m_jaeho: true },
     projectId: "p_percep",
     location: "세미나실",
@@ -140,6 +141,7 @@ test("구독 가능한 .ics를 만들고 종일/시각 일정을 정확히 표�
   assert.equal(parsed[1].location, "세미나실");
   assert.equal(parsed[1].startDate.toJSDate().toISOString(), "2026-09-10T05:00:00.000Z");
   assert.equal(parsed[1].endDate.toJSDate().toISOString(), "2026-09-10T06:00:00.000Z");
+  assert.match(parsed[1].description, /담당: 이재호, 임하빈/);
   assert.match(parsed[1].description, /참여: 이재호, 임하빈/);
   assert.equal(parsed[2].startDate.toJSDate().toISOString(), "2026-09-11T01:00:00.000Z");
 
