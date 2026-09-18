@@ -845,3 +845,45 @@ test("담당을 바꾸면 미래 회차에 반영되고, 참여자에서 빠지�
   assert.deepEqual(state.meetings.mt1.leads, {});
   assert.equal(app.namesWithLead(state.meetings.mt1), "오경준");
 });
+
+/* ---------------- 취소 숨김 토글 ---------------- */
+test("취소 숨김을 켜면 화면에서 취소 회차가 빠지고, 정상 회차와 빈 시간대는 그대로다", () => {
+  reset({ recur: null });
+  state.tab = "calendar"; state.calWeek = WS; state.calWeekend = false;
+  app.confirmMeeting("mt1", D(WED, 14), D(WED, 14, 40));
+  state.meetings.mt2 = { ...state.meetings.mt1, title: "취소될 미팅", ts: 2 };
+  app.confirmMeeting("mt2", D(A(WED, 1), 10), D(A(WED, 1), 10, 40));
+  app.setOccCancel(app.occurrencesOf("mt2")[0], true);
+
+  const shown = app.viewCalWeek(new Date());
+  assert.match(shown.html, /취소될 미팅/);              // 기본은 취소선으로 남는다
+  assert.match(shown.html, /wk-blk off/);
+
+  state.calHideOff = true;
+  const hidden = app.viewCalWeek(new Date());
+  state.calHideOff = false;
+  assert.doesNotMatch(hidden.html, /취소될 미팅/, "취소 회차가 남았다");
+  assert.doesNotMatch(hidden.html, /wk-blk off/);
+  assert.match(hidden.html, /CE 위클리/);               // 정상 회차는 그대로
+  assert.equal(hidden.count, shown.count - 1);          // 건수에서도 빠진다
+  /* 시간대는 자르지 않는다 — 빈 칸이 사라지면 그 시간에 일정을 못 넣는다 */
+  assert.match(hidden.html, />09:00</);
+  assert.match(hidden.html, />20:00</);
+  assert.match(hidden.html, /data-act="calslot"/);
+});
+
+test("취소 숨김은 월간 뷰와 툴바 토글에도 적용된다", () => {
+  reset({ recur: null });
+  state.tab = "calendar"; state.calMonth = WED.slice(0, 7);
+  app.confirmMeeting("mt1", D(WED, 14), D(WED, 14, 40));
+  app.setOccCancel(app.occurrencesOf("mt1")[0], true);
+
+  state.calMode = "month";
+  assert.match(app.viewCalendar(), /ev-off/);           // 월간도 평소엔 취소선
+  assert.match(app.viewCalendar(), /data-act="calhideoff"[^>]*>취소 보기</);
+  state.calHideOff = true;
+  const html = app.viewCalendar();
+  assert.doesNotMatch(html, /ev-off/);
+  assert.match(html, /btn ghost sm on" data-act="calhideoff"[^>]*>취소 숨김</);
+  state.calHideOff = false;
+});

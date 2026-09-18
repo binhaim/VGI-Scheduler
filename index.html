@@ -1426,7 +1426,8 @@ let state={
   settings:{}, members:{}, semesters:{}, projects:{},
   meetings:{}, events:{}, exceptions:{}, availability:{},
   // Calendar 탭
-  calMode:'week',                         // 'week'(기본) | 'month' — start()에서 저장값 복원
+  calMode:'week',
+  calHideOff:false,  // 취소된 회차 숨기기 (설정은 localStorage vgi.calHideOff)                         // 'week'(기본) | 'month' — start()에서 저장값 복원
   calMonth:'', calWeek:'', calPick:null,  // calWeek = 그 주 일요일 "YYYY-MM-DD"
   calMember:'', calProject:'', calType:'',
   calWeekend:false,                       // 주간 뷰에 토·일 열을 보일지 (기본은 월~금)
@@ -2446,6 +2447,7 @@ function calEventsByDate(){
     if(mF&&!ev.participants?.[mF]) continue;
     if(pF&&ev.projectId!==pF) continue;
     if(tF&&ev.type!==tF) continue;
+    if(state.calHideOff&&ev.status==='cancelled') continue;   // '취소 숨김'이면 화면에서도 저장본에서도 뺀다
     const ds=fmtDate(new Date(Number(ev.start)));
     (byDate[ds]=byDate[ds]||[]).push({kind:'ev',id:evid,...ev});
   }
@@ -2521,6 +2523,7 @@ function viewCalendar(){
           <button class="${state.calMember===state.me?'on':''}" data-act="calmine" data-v="me">나</button>
           <button class="${state.calMember?'':'on'}" data-act="calmine" data-v="all">전체</button></div>`:''}
         ${week?`<button class="btn ghost sm${state.calWeekend?' on':''}" data-act="calweekend" title="토·일 열 보이기/숨기기">${state.calWeekend?'주말 숨김':'주말 보기'}</button>`:''}
+        <button class="btn ghost sm${state.calHideOff?' on':''}" data-act="calhideoff" title="취소된 회차를 화면에서 숨깁니다 — PNG로 저장해도 빠진 채로 나갑니다">${state.calHideOff?'취소 숨김':'취소 보기'}</button>
         <select class="agg-member" data-act="calmember" aria-label="멤버 필터">${memberOpts}</select>
         <select class="agg-project" data-act="calproject" aria-label="프로젝트 필터">${projectOpts}</select>
         <select class="agg-member" data-act="caltype" aria-label="종류 필터">${typeOpts}</select>
@@ -3426,10 +3429,10 @@ async function exportCalPNG(){
     const canvas=await h2c(el,{backgroundColor:'#fffdf7',scale:2,width,
       windowWidth:Math.max(width,document.documentElement.clientWidth)});
     const link=document.createElement('a');
-    link.download=`vgi-lab-${state.calMode==='month'?state.calMonth:state.calWeek}.png`;
+    link.download=`vgi-lab-${state.calMode==='month'?state.calMonth:state.calWeek}${state.calHideOff?'-noc':''}.png`;
     link.href=canvas.toDataURL('image/png');
     link.click();
-    toast('PNG를 저장했습니다');
+    toast(state.calHideOff?'PNG를 저장했습니다 (취소 회차 제외)':'PNG를 저장했습니다');
   }catch(e){ console.error(e); toast('PNG 저장 실패'); }
 }
 function escapeICS(s){
@@ -3546,6 +3549,10 @@ function bindEvents(){
     }
     if(act==='calpickclear'){state.calPick=null;render();return;}
     if(act==='calpng'){exportCalPNG();return;}
+    if(act==='calhideoff'){
+      state.calHideOff=!state.calHideOff; lsSet('vgi.calHideOff',state.calHideOff?'1':'');
+      state.calPick=null; render(); return;
+    }
     if(act==='calics'){exportCalICS();return;}
     if(act==='calsub'){const mid=t.dataset.mid||state.calMember||state.me; if(mid){state.subscribeFor=mid;render();}return;}
     if(act==='calmine'){state.calMember=t.dataset.v==='me'?state.me:''; state.calPick=null; render();return;}
@@ -4155,6 +4162,7 @@ async function start(){
   state.me=lsGet('vgi.me')||'';
   state.calMember=state.me;                        // 시간표는 '내 주간'부터
   state.calWeekend=lsGet('vgi.calWeekend')==='1';
+  state.calHideOff=lsGet('vgi.calHideOff')==='1';
   bindEvents();
   const h=location.hash.slice(1);
   if(NAV.some(([k])=>k===h)) state.tab=h;
