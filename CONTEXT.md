@@ -64,8 +64,8 @@ events/{evid}        { title, type, start(ms), end(ms), participants:{mid:true},
   - 그 주만 시간 변경 = 그 event 하나 수정(`moved:true`), 그 주에 회차 추가 = event 추가(`extra:true`),
     학회 등으로 쉬는 주 = `status:'cancelled'` (캘린더에 회색 취소선으로 남고 되돌릴 수 있음).
   - **취소된 회차는 일정으로 치지 않는다** — `isLive(ev)` 헬퍼로 `memberBusy`/`locationBusy`에서 제외.
-    구독 피드는 지우지 않고 `STATUS:CANCELLED`로 내보내야 구독자 캘린더에서도 사라진다
-    (`calendar/generate.js`의 지문에도 `cancelled`가 들어가야 피드가 갱신됨).
+    구독 피드에서는 취소된 회차를 **아예 뺀다** — `STATUS:CANCELLED`는 애플만 숨기고 구글은 구독 피드에서 일반 일정으로 그대로 보여준다(2026-09 실측). 피드에서 빼야 양쪽에서 사라진다
+    (회차가 목록에서 빠지므로 `calendar/generate.js`의 지문도 자동으로 달라져 피드가 갱신된다).
   - 미팅 정보를 고치면 `syncSeries()`가 **아직 오지 않은 회차**에만 제목·참여자·장소를 반영하고,
     반복 종료일을 늘렸으면 마지막 회차 뒤로 이어서 만든다. 시간은 회차별 관리라 건드리지 않는다.
   - _(아래 세 항목은 2026-09-02 개편에서 제거된 '가능 시간 찾기' 격자의 기록이다 — 역사용. 지금은 보드 한 벌이다.)_

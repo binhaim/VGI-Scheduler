@@ -109,7 +109,6 @@ function eventItem({ evid, event, members, projects, mid }) {
     id: evid,
     uid: `ev-${evid}@vgi-scheduler`,
     allDay: false,
-    cancelled: event.status === "cancelled",
     start,
     end,
     summary: project ? `${title} · ${project}` : title,
@@ -128,7 +127,6 @@ function exceptionItem({ xid, exception, mid }) {
     kind: "x",
     id: xid,
     uid: `x-${xid}@vgi-scheduler`,
-    cancelled: false,
     summary,
     description,
     location: "",
@@ -162,6 +160,9 @@ export function buildMemberItems({ members, events, exceptions, projects, mid })
   for (const evid of Object.keys(events || {}).sort(byText)) {
     const event = events[evid];
     if (!event?.participants?.[feedKey]) continue;
+    /* 취소된 회차는 내보내지 않는다. STATUS:CANCELLED를 애플은 숨기지만 구글은
+       구독 피드에서 그냥 일반 일정으로 보여준다 — 피드에서 빼야 양쪽에서 사라진다. */
+    if (event.status === "cancelled") continue;
     const item = eventItem({ evid, event, members, projects, mid: feedKey });
     if (item) items.push(item);
   }
@@ -216,9 +217,8 @@ export function buildMemberCalendar({
       description: item.description,
       location: item.location || null,
       url: SITE_URL,
-      /* 취소된 회차도 내보낸다 — 구독자 캘린더에서 자동으로 지워지도록 */
-      status: item.cancelled ? ICalEventStatus.CANCELLED : ICalEventStatus.CONFIRMED,
-      busystatus: item.cancelled ? ICalEventBusyStatus.FREE : ICalEventBusyStatus.BUSY,
+      status: ICalEventStatus.CONFIRMED,
+      busystatus: ICalEventBusyStatus.BUSY,
     });
   }
 

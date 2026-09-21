@@ -149,7 +149,7 @@ test("구독 가능한 .ics를 만들고 종일/시각 일정을 정확히 표�
   assert.match(result.body, /UID:ev-ev_lab@vgi-scheduler/);
 });
 
-test("취소된 회차는 STATUS:CANCELLED로 나가고 지문도 달라진다", () => {
+test("취소된 회차는 피드에서 빠지고 지문도 달라진다", () => {
   const cancelled = {
     ...events,
     ev_lab: { ...events.ev_lab, seriesId: "mt_lab", status: "cancelled" },
@@ -162,16 +162,15 @@ test("취소된 회차는 STATUS:CANCELLED로 나가고 지문도 달라진다",
     generatedAt: Date.UTC(2026, 8, 1, 0, 0),
   });
   assert.ok(result);
-  /* 지우지 않고 취소 상태로 내보내야 구독자 캘린더에서도 사라진다 */
-  assert.equal(result.eventCount, 3);
-  assert.match(result.body, /STATUS:CANCELLED/);
-  assert.match(result.body, /X-MICROSOFT-CDO-BUSYSTATUS:FREE/);
+  /* STATUS:CANCELLED는 애플은 숨기지만 구글은 일반 일정으로 보여준다 — 아예 뺀다 */
+  assert.equal(result.eventCount, 2);
+  assert.doesNotMatch(result.body, /랩 미팅/);
+  assert.doesNotMatch(result.body, /STATUS:CANCELLED/);
 
   const items = buildMemberItems({ ...data, events: cancelled, mid: "m_habin" }).items;
-  const lab = items.find((item) => item.id === "ev_lab");
-  assert.equal(lab.cancelled, true);
-  const before = buildMemberItems({ ...data, mid: "m_habin" }).items.find((item) => item.id === "ev_lab");
-  assert.equal(before.cancelled, false);
+  assert.equal(items.some((item) => item.id === "ev_lab"), false);
+  const before = buildMemberItems({ ...data, mid: "m_habin" }).items;
+  assert.equal(before.some((item) => item.id === "ev_lab"), true);   // 지문이 달라진다
 });
 
 test("일정이 없는 멤버도 빈 피드를 받는다", () => {

@@ -3381,7 +3381,8 @@ function viewSubscribeModal(){
           <div class="calendar-sub-actions"><button class="btn sm" data-act="subcopy" data-url="${esc(url)}">링크 복사</button>
           <button class="btn ghost sm" data-act="subclose">닫기</button></div></div>
         <div class="note">Google 캘린더 → 다른 캘린더 <b>+</b> → <b>URL로 만들기</b>에 붙여넣으세요 (Apple: 캘린더 → 파일 → 새로운 캘린더 구독).<br>
-          담기는 내용은 <b>확정된 일정</b>과 <b>본인 예외 일정</b>입니다. 피드는 2시간마다 다시 만들어지고, 캘린더 앱이 실제로 다시 읽어오는 주기는 앱마다 다릅니다(구글은 보통 수 시간).</div>
+          담기는 내용은 <b>확정된 일정</b>과 <b>본인 예외 일정</b>이고, <b>취소된 회차는 빠집니다</b>.<br>
+          피드는 2시간마다 다시 만들어집니다. 애플은 구독 설정에서 갱신 주기를 고를 수 있지만, <b>구글은 자체 주기로만 읽어와 반영이 하루 가까이 늦을 수 있습니다</b>(수동 새로고침이 없습니다). 급한 변경은 따로 알려주세요.</div>
       </div>
     </div>
   </div>`;
