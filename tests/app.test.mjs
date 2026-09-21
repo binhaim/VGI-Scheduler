@@ -887,3 +887,53 @@ test("취소 숨김은 월간 뷰와 툴바 토글에도 적용된다", () => {
   assert.match(html, /btn ghost sm on" data-act="calhideoff"[^>]*>취소 숨김</);
   state.calHideOff = false;
 });
+
+/* ---------------- 일정 종류 표시 ---------------- */
+test("시간표 블록에 미팅이 아닌 종류는 꼬리표로 구분해 보여준다", () => {
+  reset({ recur: null });
+  state.tab = "calendar"; state.calWeek = WS; state.calWeekend = false;
+  state.meetings.mt1.type = "paper";                       // 논문 리딩
+  app.confirmMeeting("mt1", D(WED, 14), D(WED, 14, 40));
+  state.meetings.mt2 = { ...state.meetings.mt1, title: "그냥 미팅", type: "meeting", ts: 2 };
+  app.confirmMeeting("mt2", D(WED, 16), D(WED, 16, 40));
+
+  const html = app.viewCalWeek(new Date()).html;
+  assert.match(html, /btag[^>]*>논문</);                    // 논문 리딩은 꼬리표
+  assert.equal((html.match(/btag/g) || []).length, 1, "기본값 '미팅'에는 꼬리표를 달지 않는다");
+  assert.match(html, /\[논문 리딩\] CE 위클리/);             // 툴팁엔 전체 이름
+  assert.match(html, /\[미팅\] 그냥 미팅/);
+  /* 꼬리표는 종류색, 블록은 미팅색 — 둘이 싸우지 않는다 */
+  assert.ok(html.includes(`--tc:${"hsl(300,48%,42%)"}`));   // paper = 300°
+  assert.ok(html.includes(`--pc:${app.meetingColor("mt1")}`));
+});
+
+test("월간 뷰에도 같은 꼬리표가 붙는다", () => {
+  reset({ recur: null });
+  state.tab = "calendar"; state.calMode = "month"; state.calMonth = WED.slice(0, 7);
+  state.meetings.mt1.type = "seminar";
+  app.confirmMeeting("mt1", D(WED, 14), D(WED, 14, 40));
+  const html = app.viewCalendar();
+  assert.match(html, /btag[^>]*>세미나</);
+  assert.match(html, /\[세미나\] CE 위클리/);
+  state.calMode = "week";
+});
+
+test("종류는 무늬로 구분하고, 그 주에 나온 종류만 범례로 알려준다", () => {
+  reset({ recur: null });
+  state.tab = "calendar"; state.calWeek = WS; state.calWeekend = false;
+  state.meetings.mt1.type = "paper";
+  app.confirmMeeting("mt1", D(WED, 14), D(WED, 14, 40));
+  state.meetings.mt2 = { ...state.meetings.mt1, title: "그냥 미팅", type: "meeting", ts: 2 };
+  app.confirmMeeting("mt2", D(WED, 16), D(WED, 16, 40));
+
+  const html = app.viewCalWeek(new Date()).html;
+  assert.match(html, /wk-blk ty-paper/);                    // 논문 리딩엔 무늬 클래스
+  assert.doesNotMatch(html, /wk-blk ty-meeting/, "기본값 미팅은 민무늬");
+  assert.match(html, /ty-legend/);
+  assert.match(html, /ty-key ty-paper[^>]*><\/span>논문 리딩/);
+  assert.equal((html.match(/ty-key/g) || []).length, 1, "그 주에 나온 종류만 범례에 넣는다");
+
+  /* 논문 리딩 회차를 지우면 범례도 사라진다 */
+  app.deleteOccurrence(app.occurrencesOf("mt1")[0]);
+  assert.doesNotMatch(app.viewCalWeek(new Date()).html, /ty-legend/);
+});

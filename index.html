@@ -38,9 +38,12 @@
   .hbar{display:flex;align-items:center;gap:14px;padding:14px 0;flex-wrap:wrap;}
   .brand{font-family:'Bricolage Grotesque',sans-serif;font-weight:800;
     font-size:22px;letter-spacing:-.03em;cursor:pointer;color:var(--ink);
-    transition:opacity var(--t);user-select:none;}
+    transition:opacity var(--t);user-select:none;display:flex;align-items:center;}
   .brand:hover{opacity:.65;}
   .brand .dot{color:var(--accent);}
+  /* 로고 — 원본이 2배 크기라 화면에선 절반으로 (또렷하게) */
+  .brand img{height:28px;width:auto;display:block;}
+  @media(max-width:560px){.brand img{height:24px;}}
   .crumb{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:13px;}
   .crumb .pname{color:var(--ink);font-weight:600;font-size:14px;}
   .crumb .sep{color:var(--muted-2);}
@@ -1338,6 +1341,41 @@
   .wk-blk.on{border:2px solid var(--ink);}
   .wk-blk.off{opacity:.55;} .wk-blk.off .bn{text-decoration:line-through;}
   .wk-blk.x{background:transparent;border-color:var(--line-2);color:var(--muted);}
+  /* 종류 무늬 — 미팅(기본)은 민무늬, 나머지는 한눈에 다르게.
+     블록의 제 색(--pc)을 옅게 깔아 미팅색과 따로 놀지 않는다. */
+  .wk-blk.ty-paper,.agg-event.ty-paper{background-image:repeating-linear-gradient(45deg,
+    transparent 0 5px,color-mix(in srgb,var(--pc) 15%,transparent) 5px 9px);}
+  .wk-blk.ty-seminar,.agg-event.ty-seminar{background-image:radial-gradient(
+    color-mix(in srgb,var(--pc) 22%,transparent) 1.3px,transparent 1.4px);
+    background-size:7px 7px;}
+  .wk-blk.ty-conference,.agg-event.ty-conference{background-image:repeating-linear-gradient(-45deg,
+    transparent 0 4px,color-mix(in srgb,var(--pc) 17%,transparent) 4px 8px);}
+  .wk-blk.ty-travel,.agg-event.ty-travel{background-image:repeating-linear-gradient(0deg,
+    transparent 0 5px,color-mix(in srgb,var(--pc) 14%,transparent) 5px 8px);}
+  .wk-blk.ty-vacation,.agg-event.ty-vacation{background-image:
+    repeating-linear-gradient(45deg,transparent 0 5px,color-mix(in srgb,var(--pc) 11%,transparent) 5px 9px),
+    repeating-linear-gradient(-45deg,transparent 0 5px,color-mix(in srgb,var(--pc) 11%,transparent) 5px 9px);}
+  .wk-blk.ty-other,.agg-event.ty-other{background-image:radial-gradient(
+    color-mix(in srgb,var(--pc) 16%,transparent) 1px,transparent 1.1px);background-size:5px 5px;}
+  /* 무늬 있는 종류는 테두리도 점선 — 작은 블록에서도 구분된다 */
+  .wk-blk[class*=" ty-"]{border-style:dashed;}
+  /* 글자는 무늬 위에 뜨게 — 흰 테두리를 둘러 줄무늬와 섞이지 않게 한다 */
+  .wk-blk[class*=" ty-"] .bt,.wk-blk[class*=" ty-"] .bn,.wk-blk[class*=" ty-"] .bp,
+  .agg-event[class*=" ty-"] .agg-event-time,.agg-event[class*=" ty-"] .agg-event-song,
+  .agg-event[class*=" ty-"] .agg-ext{
+    text-shadow:0 1px 0 rgba(255,255,255,.92),0 -1px 0 rgba(255,255,255,.92),
+      1px 0 0 rgba(255,255,255,.92),-1px 0 0 rgba(255,255,255,.92);}
+  .wk-blk[class*=" ty-"] .bn{font-weight:800;}
+  .ty-legend{display:flex;align-items:center;gap:5px;flex-wrap:wrap;
+    font-size:10.5px;color:var(--muted);margin:2px 0 6px;}
+  .ty-key{display:inline-block;width:16px;height:11px;border-radius:3px;margin-left:8px;
+    border:1.5px dashed var(--pc);background:var(--surface);vertical-align:-1px;}
+  .ty-key:first-child{margin-left:0;}
+  /* 종류 꼬리표 — 블록은 미팅색, 꼬리표만 종류색 */
+  .btag{display:inline-block;margin-left:4px;padding:0 4px;border-radius:999px;
+    font-size:8.5px;font-weight:700;line-height:1.45;vertical-align:1px;white-space:nowrap;
+    background:var(--tcs);color:var(--tc);box-shadow:inset 0 0 0 1px var(--tc);}
+  .agg-event .btag{font-size:8px;margin-left:3px;}
   .wk-blk.ro,.agg-event.ro,.wk-chip.ro{cursor:default;}
   .chip-btn.ro{cursor:default;opacity:.8;}
   .mode-fixed{font-size:13px;}
@@ -1415,6 +1453,8 @@ const firebaseConfig = {
 };
 const FB_VERSION = "10.7.1";
 const DB_ROOT = "vgi";          // 연구실 전용 Firebase 프로젝트로 옮길 때: config와 이 값만 변경
+/* 헤더 로고 (VGI LAB) — 배포가 index.html 한 파일이라 이미지도 함께 싣는다 */
+const LOGO_SRC='data:image/png;base64,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';
 const SITE_BASE = location.origin + location.pathname.replace(/[^/]*$/, "");
 
 /* ---------------- 상태 ---------------- */
@@ -1499,6 +1539,12 @@ const EVENT_TYPES=[
   ['conference','학회',20],['travel','출장',35],['vacation','휴가',140],['other','기타',0],
 ];
 const TYPE_LABEL=Object.fromEntries(EVENT_TYPES.map(([k,l])=>[k,l]));
+/* 종류 구분 — 기본값 '미팅'은 민무늬, 나머지는 무늬 + 짧은 꼬리표.
+   블록 색은 미팅마다 다르므로(정체성), 종류는 무늬로 나눈다. */
+const TYPE_SHORT={seminar:'세미나',paper:'논문',conference:'학회',travel:'출장',vacation:'휴가',other:'기타'};
+const typeClass=t=>TYPE_SHORT[t]?` ty-${t}`:'';
+const typeTag=t=>TYPE_SHORT[t]
+  ?`<span class="btag" style="--tc:${typeColor(t)};--tcs:${typeColorSoft(t)}">${TYPE_SHORT[t]}</span>`:'';
 const TYPE_HUE=Object.fromEntries(EVENT_TYPES.map(([k,,h])=>[k,h]));
 const EXC_TYPES=['conference','travel','vacation','personal','other'];
 const EXC_LABEL={conference:'학회',travel:'출장',vacation:'휴가',personal:'개인',other:'기타'};
@@ -2404,7 +2450,7 @@ function syncScrollLock(){
 
 const NAV=[['calendar','시간표'],['meetings','미팅'],['availability','내 시간'],['members','설정']];
 function renderHeader(){
-  let h='<button type="button" class="brand" data-act="nav" data-tab="calendar" aria-label="Calendar로 이동">VGI<span class="dot">.</span>LAB</button>';
+  let h=`<button type="button" class="brand" data-act="nav" data-tab="calendar" aria-label="시간표로 이동" title="VGI LAB — 시간표로 이동"><img src="${LOGO_SRC}" alt="VGI LAB"></button>`;
   h+='<div class="tabs">';
   NAV.forEach(([k,l])=>{
     if((k==='meetings'||k==='members')&&!state.loading&&!isManager()) return;   // 조정자에게만
@@ -2599,10 +2645,10 @@ function weekBlockHtml(o,g){
   const off=o.status==='cancelled';
   const names=namesWithLead(o);
   const aw=off?[]:awayOf(participantsOf(o),s,e);
-  const tip=`${esc(o.title)} ${time}${o.location?' · '+esc(o.location):''} · ${esc(names)}${off?' · 취소됨':''}${aw.length?` · ✈ ${esc(namesOf(aw))} 휴가·부재`:''} · 클릭하여 회차 조작`;
-  return `<button class="wk-blk${off?' off':''}${state.calPick===o.id?' on':''}" style="${style}"
+  const tip=`[${TYPE_LABEL[o.type]||'미팅'}] ${esc(o.title)} ${time}${o.location?' · '+esc(o.location):''} · ${esc(names)}${off?' · 취소됨':''}${aw.length?` · ✈ ${esc(namesOf(aw))} 휴가·부재`:''} · 클릭하여 회차 조작`;
+  return `<button class="wk-blk${typeClass(o.type)}${off?' off':''}${state.calPick===o.id?' on':''}" style="${style}"
     data-act="calevpick" data-evid="${o.id}" title="${tip}">
-    <span class="bt">${time}${off?' · 취소':''}${aw.length?` <span class="pz-aw">✈${aw.length}</span>`:''}</span><span class="bn">${esc(o.title)}</span>
+    <span class="bt">${time}${off?' · 취소':''}${aw.length?` <span class="pz-aw">✈${aw.length}</span>`:''}${typeTag(o.type)}</span><span class="bn">${esc(o.title)}</span>
     ${g.items.length===1&&g.span>1?`<span class="bp">${esc(names)}</span>`:''}</button>`;
 }
 function viewCalWeek(now){
@@ -2641,11 +2687,17 @@ function viewCalWeek(now){
   }).join('');
   const r=weekBlockBody({days,byDate,rows,slot,startMin,endMin});
   count+=r.count;
+  /* 무늬는 처음 보면 뜻을 모른다 — 이번 주에 나온 종류만 작은 범례로 (없으면 안 그린다) */
+  const seen=[...new Set(days.flatMap(ds=>(byDate[ds]||[])
+    .filter(x=>x.kind==='ev'&&TYPE_SHORT[x.type]).map(x=>x.type)))];
+  const legend=seen.length?`<div class="ty-legend">${seen.map(t=>
+    `<span class="ty-key${typeClass(t)}" style="--pc:${typeColor(t)}"></span>${TYPE_LABEL[t]}`).join('')}</div>`:'';
   const title=`${mdLabel(days[0])}~${mdLabel(last)} VGI Lab Calendar`
     +(state.calMember?` · ${esc(memberName(state.calMember))}`:'')
     +(state.calProject?` · ${esc(projectName(state.calProject))}`:'');
   const html=`${semWarn}<div class="wk-wrap scroll"><div id="cal-export">
       <div class="agg-export-title">${title}</div>
+      ${legend}
       <table class="wk blocky"><colgroup><col class="wk-c0">${days.map(()=>'<col>').join('')}</colgroup>
         <thead>${head}</thead>
         <tbody><tr><td class="wk-rh">종일</td>${allDay}</tr>${r.body}</tbody></table>
@@ -2716,11 +2768,11 @@ function viewCalMonth(now){
     if(inMonth) monthCount+=items.length;
     const html=items.map(o=>{
       if(o.kind==='ev'){
-        const title=`${o.status==='cancelled'?'[취소] ':''}${esc(o.title)} · ${hm(Number(o.start))}–${hm(Number(o.end))}`+(o.location?` · ${esc(o.location)}`:'')+` · ${namesOf(participantsOf(o))}`;
+        const title=`${o.status==='cancelled'?'[취소] ':''}[${TYPE_LABEL[o.type]||'미팅'}] ${esc(o.title)} · ${hm(Number(o.start))}–${hm(Number(o.end))}`+(o.location?` · ${esc(o.location)}`:'')+` · ${namesOf(participantsOf(o))}`;
         const emt=o.seriesId||o.meetingId, isMt=!!(emt&&state.meetings[emt]);
         const st=isMt?`--pc:${meetingColor(emt)};--pcb:${meetingColorPastel(emt)}`:`--pc:${typeColor(o.type)}`;
-        return `<button class="agg-event${isMt?' mt':''}${o.status==='cancelled'?' ev-off':''}${mgr?'':' ro'}" style="${st}"${mgr?` data-act="evedit" data-evid="${o.id}"`:''} title="${title}${o.status==='cancelled'?' · 취소됨':''}${mgr?' · 클릭하여 수정':''}">
-          <span class="agg-event-time">${hm(Number(o.start))}~${hm(Number(o.end))}</span>
+        return `<button class="agg-event${isMt?' mt':''}${typeClass(o.type)}${o.status==='cancelled'?' ev-off':''}${mgr?'':' ro'}" style="${st}"${mgr?` data-act="evedit" data-evid="${o.id}"`:''} title="${title}${o.status==='cancelled'?' · 취소됨':''}${mgr?' · 클릭하여 수정':''}">
+          <span class="agg-event-time">${hm(Number(o.start))}~${hm(Number(o.end))}${typeTag(o.type)}</span>
           <span class="agg-event-song-row"><span class="agg-event-song">${esc(o.title)}</span>${o.location?`<span class="agg-ext">${esc(o.location)}</span>`:''}</span>
         </button>`;
       }
@@ -3372,6 +3424,9 @@ function viewExceptionModal(){
 function viewSubscribeModal(){
   const mid=state.subscribeFor;
   const url=SITE_BASE+'calendars/'+mid+'.ics';
+  /* 구글은 구독 URL 단위로 피드를 캐시해서, 같은 주소로 다시 등록해도 예전 사본을 준다.
+     주소 뒤에 값을 하나 붙이면 다른 주소로 보고 새로 읽어온다 (파일은 그대로). */
+  const fresh=url+'?v='+fmtDate(new Date()).replace(/-/g,'');
   return `<div class="modal-backdrop" data-act="subclose">
     <div class="modal" data-act="modal-noop" style="max-width:560px" role="dialog" aria-modal="true">
       <div class="modal-head"><h2>캘린더 구독 — ${esc(memberName(mid))}</h2><button class="modal-x" data-act="subclose" title="닫기">×</button></div>
@@ -3379,10 +3434,12 @@ function viewSubscribeModal(){
         <p class="sub" style="margin-bottom:10px">이 URL을 Google/Apple/Outlook 캘린더에 구독으로 등록하면 본인이 참여하는 Lab 일정이 자동 반영됩니다.</p>
         <div class="calendar-sub-url"><input type="text" readonly value="${esc(url)}" aria-label="구독 URL">
           <div class="calendar-sub-actions"><button class="btn sm" data-act="subcopy" data-url="${esc(url)}">링크 복사</button>
+          <button class="btn ghost sm" data-act="subcopy" data-url="${esc(fresh)}" title="구글이 예전 내용을 계속 보여줄 때 — 주소 끝에 오늘 날짜를 붙여 새로 읽게 합니다">구글용 새 링크</button>
           <button class="btn ghost sm" data-act="subclose">닫기</button></div></div>
         <div class="note">Google 캘린더 → 다른 캘린더 <b>+</b> → <b>URL로 만들기</b>에 붙여넣으세요 (Apple: 캘린더 → 파일 → 새로운 캘린더 구독).<br>
           담기는 내용은 <b>확정된 일정</b>과 <b>본인 예외 일정</b>이고, <b>취소된 회차는 빠집니다</b>.<br>
-          피드는 2시간마다 다시 만들어집니다. 애플은 구독 설정에서 갱신 주기를 고를 수 있지만, <b>구글은 자체 주기로만 읽어와 반영이 하루 가까이 늦을 수 있습니다</b>(수동 새로고침이 없습니다). 급한 변경은 따로 알려주세요.</div>
+          피드는 2시간마다 다시 만들어집니다. 애플은 구독 설정에서 갱신 주기를 고를 수 있지만, <b>구글은 자체 주기로만 읽어와 반영이 하루 가까이 늦을 수 있습니다</b>(수동 새로고침이 없습니다).<br>
+          구글이 <b>지운 일정을 계속 보여주면</b> 같은 주소로 다시 등록해도 소용없습니다 — 주소째 캐시하기 때문입니다. 그럴 땐 <b>구글용 새 링크</b>로 등록하세요(내용은 같고 주소만 달라 새로 읽어옵니다). 급한 변경은 따로 알려주세요.</div>
       </div>
     </div>
   </div>`;
