@@ -16,7 +16,7 @@ const EXPORTS = [
   "doRender", "namesWithLead", "viewMeetingForm", "saveMeetingDraft", "viewEventModal", "isManager", "managerIds", "canEditAv", "viewMembers", "viewCalEditBar",
   /* 퍼즐 배치 보드 */
   "openBatch", "initBatch", "openWeekCancel", "applyWeekCancel", "weekOccurrences", "viewWeekCancelModal", "viewAvailability", "viewCalMonth", "openCalEdit", "applySingle", "moveSeriesFrom", "pzSwap", "pzDurOf", "pzTray", "pzSeed", "pzIgnoreSet", "pzCanPlace", "pzConflict",
-  "batchDays", "batchDiff", "applyBatch", "autoPlace", "solveBatch",
+  "batchDays", "batchDiff", "applyBatch", "batchGoWeek", "defaultBatchWeek", "regenSeriesFrom", "autoPlace", "solveBatch",
   "viewBatchCard", "viewPuzzleGrid", "mondayOf", "durChoices", "remapAvailability",
   "meetingHue", "meetingColor", "meetingColorPastel", "calSwitchMode",
 ];

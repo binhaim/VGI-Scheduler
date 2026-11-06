@@ -1233,7 +1233,8 @@
   #pzgrid tr.hr td.mtg-rh{border-top:1px solid var(--line-2);}
   #pzgrid td.mtg-rh{color:var(--ink);font-weight:700;font-size:11px;}
   #pzgrid td.mtg-cell{background-clip:padding-box;}
-  #pzgrid td.mtg-cell.past{background:rgba(0,0,0,.028);}
+  #pzgrid td.mtg-cell.past{background:repeating-linear-gradient(135deg,rgba(0,0,0,.07) 0 2px,transparent 2px 7px);}
+  #pzgrid td.blk.off:not(.ev-bg) .pz-fill{opacity:.5;outline:1.5px dashed var(--pc);outline-offset:-3px;}
   /* 블록 — rowspan 한 칸을 통째로 채운다 */
   #pzgrid td.blk{position:relative;padding:0;}
   #pzgrid .pz-fill{position:absolute;inset:1px 2px;border-radius:7px;border:0;
@@ -1740,10 +1741,14 @@ function batchDays(week){
     outSem:!!sem&&(ds<sem.startDate||ds>sem.endDate),
   }));
 }
+/* 보드가 처음 여는 주. 지난 칸에는 놓을 수 없으므로 금·토·일엔 다음 주를 연다 —
+   금요일 오후에 이번 주를 열면 월~목이 통째로 회색이라 "빈 칸이 많은데 안 놓인다"가 된다 */
 function defaultBatchWeek(){
   const today=fmtDate(new Date());
   const sem=state.semesters[activeSemesterId()];
-  return mondayOf(sem&&sem.startDate>today?sem.startDate:today);
+  if(sem&&sem.startDate>today) return mondayOf(sem.startDate);
+  const wd=wdOf(today);
+  return wd===0||wd>=5?mondayOf(addDays(today,wd===0?1:8-wd)):mondayOf(today);
 }
 const locKeyOf=l=>String(l||'').trim().toLocaleLowerCase('ko-KR');
 /* 보드에 올릴 블록 = 모든 미팅. 확정된 것도 빼서 다시 놓을 수 있어야 한다.
@@ -1776,27 +1781,73 @@ function pzIgnoreSet(){
   }
   return out;
 }
-/* 확정된 미팅을 이 주 보드 위에 미리 올려둔다 — 그 주 회차가 있으면 그 시각, 없으면 확정 시각의 요일·시각 */
+/* 확정된 미팅을 이 주 보드 위에 미리 올려둔다 — 시간표에 보이는 그 주 회차와 같아야 한다.
+   ① 그 주 회차(진행) ② 그 주 회차가 취소됐으면 그 자리에 off 표시 — 반복 패턴상 그 시간은 여전히 이 미팅 자리다
+   ③ 그 주에 회차가 없으면 가장 가까운 회차의 요일·시각 (confirmedStart는 첫 회차라 그 뒤 옮긴 게 반영 안 됨) */
 function pzSeed(week){
   const ws=week, we=addDays(week,4), placed={};
+  const dsOf=evid=>fmtDate(new Date(Number(state.events[evid].start)));
   pzTray().forEach(id=>{
     const mt=state.meetings[id];
     if(mt.status!=='confirmed') return;
-    const occ=occurrencesOf(id).find(evid=>{
-      const ev=state.events[evid];
-      if(!isLive(ev)) return false;
-      const ds=fmtDate(new Date(Number(ev.start)));
-      return ds>=ws&&ds<=we;
-    });
-    if(occ){ placed[id]={s:Number(state.events[occ].start),e:Number(state.events[occ].end)}; return; }
-    const cs=Number(mt.confirmedStart)||0; if(!cs) return;
+    const occ=occurrencesOf(id);
+    const inWeek=occ.filter(evid=>{const ds=dsOf(evid); return ds>=ws&&ds<=we;});
+    const live=inWeek.find(evid=>isLive(state.events[evid]));
+    const hit=live||inWeek[0];
+    if(hit){
+      const ev=state.events[hit];
+      placed[id]={s:Number(ev.start),e:Number(ev.end),...(live?{}:{off:true})};
+      return;
+    }
+    /* 그 주 밖 — 앞쪽 마지막 회차, 없으면 뒤쪽 첫 회차의 요일·시각을 빌린다 */
+    const before=occ.filter(evid=>dsOf(evid)<ws), after=occ.filter(evid=>dsOf(evid)>we);
+    const near=(before.filter(evid=>isLive(state.events[evid])).pop()||before.pop()
+      ||after.find(evid=>isLive(state.events[evid]))||after[0]);
+    const ref=near?state.events[near]:null;
+    const cs=ref?Number(ref.start):Number(mt.confirmedStart)||0; if(!cs) return;
+    const ce=ref?Number(ref.end):Number(mt.confirmedEnd)||cs+3600000;
     const d=new Date(cs), wd=d.getDay();
     if(wd===0||wd===6) return;                          // 주말은 월~금 보드 밖
     const base=new Date(addDays(week,wd-1)+'T00:00:00').getTime();
     const s2=base+(d.getHours()*60+d.getMinutes())*60000;
-    placed[id]={s:s2,e:s2+((Number(mt.confirmedEnd)||cs+3600000)-cs)};
+    placed[id]={s:s2,e:s2+(ce-cs)};
   });
   return placed;
+}
+/* 주를 넘길 때 — 손대지 않은 확정 블록은 새 주의 실제 회차 자리로 다시 올리고,
+   이번에 놓거나 옮긴 블록만 같은 요일·시각으로 따라간다. 보드에서 내린 확정 블록은 계속 내린 채로 둔다.
+   (예전엔 전부 7일씩 밀었다 — 그러면 그 주에만 옮긴/취소한 회차가 보드와 시간표에서 서로 다르게 보였다) */
+function batchGoWeek(nw){
+  const b=state.batch; if(!b||nw===b.week) return [];
+  const deltaMs=new Date(nw+'T00:00:00')-new Date(b.week+'T00:00:00');
+  const seed=pzSeed(nw), ign=pzIgnoreSet(), now=Date.now();
+  const placed={}, dropped=[];
+  for(const id in seed){
+    if(b.seed[id]&&!b.placed[id]) continue;            // 내려둔 확정 블록
+    const pl=b.placed[id], sd=b.seed[id];
+    if(!pl||(sd&&sd.s===pl.s&&sd.e===pl.e)) placed[id]=seed[id];
+  }
+  const fits=(id,s,e)=>{
+    if(s<now) return false;
+    const mt=state.meetings[id];
+    if(participantsOf(mt).some(mid=>memberBusy(mid,s,e,{ignoreSet:ign}))) return false;
+    const loc=String(mt.location||'').trim();
+    return !(loc&&locationBusy(loc,s,e,null,ign));
+  };
+  for(const id in b.placed){
+    if(id in placed||!state.meetings[id]) continue;
+    const pl=b.placed[id], sd=b.seed[id];
+    if(sd&&sd.s===pl.s&&sd.e===pl.e) continue;          // 손대지 않은 블록 — 새 주 seed가 없으면 그대로 빠진다
+    const s2=pl.s+deltaMs, e2=pl.e+deltaMs;
+    if(fits(id,s2,e2)) placed[id]={s:s2,e:e2};
+    else{
+      dropped.push(state.meetings[id].title);
+      if(seed[id]) placed[id]=seed[id];                 // 확정 미팅은 내리지 않고 원래 자리로 (내리면 '확정 취소'가 된다)
+    }
+  }
+  b.placed=placed; b.seed=seed; b.week=nw; b.autoFail=null;
+  if(b.pick&&!state.meetings[b.pick]) b.pick=null;
+  return dropped;
 }
 /* 보드 위 다른 블록과 부딪히나 — 시간이 겹치고 (같은 사람 | 같은 장소)면 충돌.
    참여자가 겹치지 않으면 같은 시간에 나란히 놓을 수 있다. */
@@ -1969,9 +2020,9 @@ function applySingle(s,e){
   state.batch=null; render();
 }
 /* 이번 주부터 남은 회차를 전부 같은 요일·시각으로 — 지난 회차는 그대로 둔다 */
-function moveSeriesFrom(mtid,evid,s,e){
-  const mt=state.meetings[mtid], ev=state.events[evid]; if(!mt||!ev) return;
-  const from=Number(ev.start);
+/* from 이후 회차를 지우고 [s,e)부터 반복 규칙대로 다시 만든다. 그 전 회차(지난 기록)는 그대로 */
+function regenSeriesFrom(mtid,from,s,e){
+  const mt=state.meetings[mtid]; if(!mt) return 0;
   occurrencesOf(mtid).forEach(id=>{
     if(Number(state.events[id].start)<from) return;
     FB.remove(R('events/'+id)).catch(wErr); delete state.events[id];
@@ -1981,9 +2032,14 @@ function moveSeriesFrom(mtid,evid,s,e){
     const id=genId('ev'), obj=occEvent(mt,mtid,st,st+dur);
     state.events[id]=obj; FB.set(R('events/'+id),obj).catch(wErr);
   });
-  const upd={confirmedStart:s,confirmedEnd:e,confirmedEventId:occurrencesOf(mtid)[0]||null};
+  const upd={status:'confirmed',confirmedStart:s,confirmedEnd:e,confirmedEventId:occurrencesOf(mtid)[0]||null};
   state.meetings[mtid]={...mt,...upd}; FB.update(R('meetings/'+mtid),upd).catch(wErr);
-  toast(`${mt.title} — 이번 주부터 회차 ${starts.length}개를 ${whenLabel(s,e)}로 옮겼습니다`);
+  return starts.length;
+}
+function moveSeriesFrom(mtid,evid,s,e){
+  const mt=state.meetings[mtid], ev=state.events[evid]; if(!mt||!ev) return;
+  const n=regenSeriesFrom(mtid,Number(ev.start),s,e);
+  toast(`${mt.title} — 이번 주부터 회차 ${n}개를 ${whenLabel(s,e)}로 옮겼습니다`);
 }
 /* 옮기는 중 다른 미팅 블록에 놓으면 두 회차의 시간을 맞바꾼다 */
 function pzSwap(targetEvid){
@@ -2065,7 +2121,7 @@ function batchDiff(){
     else if(pl&&on){
       const sd=b.seed[id];
       if(!sd||sd.s!==pl.s||sd.e-sd.s!==pl.e-pl.s) out.move.push(id);
-    }else if(!pl&&on) out.drop.push(id);
+    }else if(!pl&&on&&b.seed[id]) out.drop.push(id);   // 보드에 올라왔다가 내린 것만 (주말 미팅처럼 처음부터 안 올라온 건 아님)
   });
   return out;
 }
@@ -2079,9 +2135,11 @@ function applyBatch(){
   if(add.length) lines.push(`새로 확정 ${add.length}개`);
   if(move.length) lines.push(`시간 변경 ${move.length}개`);
   if(drop.length) lines.push(`확정 취소 ${drop.length}개`);
+  /* 시간 변경은 '보고 있는 주부터'다 — 그 전 회차(지난 기록 포함)는 그대로 둔다 */
+  const fromMs=Math.max(new Date(b.week+'T00:00:00').getTime(),Date.now());
   if(!confirm(`${lines.join(' · ')}\n\n`
     +(add.length&&b.repeat?`새로 확정하는 미팅은 ${mdLabel(until)}까지 매주 회차가 만들어집니다.\n`:'')
-    +(move.length?`시간을 바꾼 미팅은 회차를 다시 만듭니다 — 그 주만 조정·취소했던 내용은 사라집니다.\n`:'')
+    +(move.length?`시간을 바꾼 미팅은 ${mdLabel(b.week)} 주부터 회차를 다시 만듭니다 — 그 전 회차는 그대로이고, 이후에 그 주만 조정·취소했던 내용은 사라집니다.\n`:'')
     +(drop.length?`보드에서 뺀 ${drop.map(id=>state.meetings[id].title).join(', ')}은(는) 회차가 지워지고 조율 상태로 돌아갑니다.`:''))) return;
   add.forEach(id=>{
     const mt=state.meetings[id], pl=b.placed[id];
@@ -2095,10 +2153,9 @@ function applyBatch(){
     }
     confirmMeeting(id,pl.s,pl.e,true);
   });
-  move.forEach(id=>{                                    // 시간이 바뀐 확정 미팅 — 회차를 다시 만든다
+  move.forEach(id=>{                                    // 시간이 바뀐 확정 미팅 — 이 주부터 회차를 다시 만든다
     const pl=b.placed[id];
-    removeSeriesEvents(id);
-    confirmMeeting(id,pl.s,pl.e,true);
+    regenSeriesFrom(id,fromMs,pl.s,pl.e);
   });
   drop.forEach(id=>{
     removeSeriesEvents(id);
@@ -2106,8 +2163,8 @@ function applyBatch(){
     FB.update(R('meetings/'+id),{status:'planning',confirmedEventId:null,
       confirmedStart:null,confirmedEnd:null}).catch(wErr);
   });
-  state.batch=null;
-  toast(lines.join(' · ')+' 반영했습니다');
+  state.batch=initBatch(b.week);                       // 보던 주 그대로 — 반영된 결과를 바로 확인
+  toast(lines.join(' · ')+' 반영했습니다 — 시간표에도 같은 자리로 들어갔습니다');
   render();
 }
 
@@ -3008,10 +3065,11 @@ function viewPuzzleGrid(){
           const tip=g.ids.map(id=>{const q=b.placed[id],m0=state.meetings[id]||{};
             return `${esc(m0.title||'')} ${hm(q.s)}~${hm(q.e)}`;}).join(' · ')+' · 끌어서 옮기기';
           const aw=awayOf(participantsOf(mt0),pl.s,pl.e);
-          return `<td class="mtg-cell blk${pick===id0?' cur':''}" rowspan="${g.span}"
+          const pOff=!!pl.off&&!more;                     // 이 주 회차는 취소 — 반복 자리라 보드엔 남긴다
+          return `<td class="mtg-cell blk${pick===id0?' cur':''}${pOff?' off':''}" rowspan="${g.span}"
             style="--pc:${meetingColor(id0)};--pcb:${meetingColorPastel(id0)};--pcs:${meetingColorSoft(id0)}">
             <button type="button" class="pz-fill" data-act="batchpick" data-mtid="${id0}" data-pz="${id0}"
-              title="${tip}${aw.length?` · ✈ ${esc(namesOf(aw))} 휴가·부재`:''}" aria-label="${tip}"><span class="pz-ft">${hm(pl.s)}~${hm(pl.e)}${on?' ✓':''}${aw.length?` <span class="pz-aw">✈${aw.length}</span>`:''}</span>
+              title="${tip}${pOff?' · 이 주 회차는 취소됨 (매주 자리는 유지)':''}${aw.length?` · ✈ ${esc(namesOf(aw))} 휴가·부재`:''}" aria-label="${tip}"><span class="pz-ft">${hm(pl.s)}~${hm(pl.e)}${pOff?' · 이 주 취소':on?' ✓':''}${aw.length?` <span class="pz-aw">✈${aw.length}</span>`:''}</span>
               <span class="pz-fn">${esc(mt0.title||'')}${more?` +${more}`:''}</span>
               ${g.span>1?`<span class="pz-fp">${esc(namesWithLead(mt0))}</span>`:''}</button></td>`;
         }
@@ -3043,9 +3101,9 @@ function viewPuzzleGrid(){
       const cls=['mtg-cell']; let tip='';
       if(pmt){
         const who=pmids.filter(mid=>memberBusy(mid,cs,ce,{ignoreSet:ign}));
-        if(who.length){cls.push('na');tip=`${namesOf(who)} 불가`;}
-        else if(cs<now) cls.push('past');
-      }else if(cs<now) cls.push('past');
+        if(cs<now){cls.push('past');tip='지난 시간 — 놓을 수 없습니다';}
+        else if(who.length){cls.push('na');tip=`${namesOf(who)} 불가`;}
+      }else if(cs<now){cls.push('past');tip='지난 시간';}
       return `<td class="${cls.join(' ')}" data-cs="${cs}"${tip?` title="${esc(tip)}"`:''}></td>`;
     }).join('');
     return `<tr class="${hr?'hr':''}"><td class="mtg-rh${hr?' hour':''}">${hr?minLabel(m):''}</td>${cells}</tr>`;
@@ -3072,6 +3130,10 @@ function viewBatchCard(){
     return !Object.values(d).some(sl=>Object.values(sl||{}).some(Boolean));
   });
   const warn=[];
+  const nowMs=Date.now(), lastDay=days[days.length-1];
+  const pastTxt=lastDay&&days[0].base+cfgDayStart()*3600000<nowMs
+    ?(lastDay.base+cfgDayEnd()*3600000<=nowMs?'이 주는 이미 다 지났습니다'
+      :`이 주는 ${mdLabel(fmtDate(new Date(nowMs)))} ${hm(nowMs)}까지 지나서 그 앞 칸(빗금)에는 놓을 수 없습니다`):'';
   if(!sem) warn.push('활성 학기가 없어 반복 불가 시간이 전혀 적용되지 않습니다 — <b>설정</b> 탭에서 학기를 지정하세요.');
   const sideNote=noAvail.length
     ?`<div class="pz-side-note" title="${esc(namesOf(noAvail))}">반복 불가 미입력 <b>${noAvail.length}명</b> — 늘 가능으로 계산됩니다
@@ -3152,6 +3214,8 @@ function viewBatchCard(){
       ${side}
       <div class="pz-main">
         ${hint}
+        ${pastTxt&&!b.single?`<div class="note info">${pastTxt} — 매주 반복 자리를 정하는 거라면 다음 주에서 놓으세요.
+          <button type="button" class="btn ghost sm" data-act="batchweek" data-d="1">다음 주 보기 →</button></div>`:''}
         ${load}
         ${viewPuzzleGrid()}
         ${warn.length?`<div class="note warn">${warn.join('<br>')}</div>`:''}
@@ -3718,23 +3782,10 @@ function bindEvents(){
     if(act==='batchweek'){
       const b=state.batch; if(!b)return;
       const d=Number(t.dataset.d)||0;
-      const nw=d?addDays(b.week,7*d):defaultBatchWeek();
+      const nw=d?addDays(b.week,7*d):mondayOf(fmtDate(new Date()));
       if(nw===b.week){render();return;}
-      /* 놓인 블록은 주와 함께 이동 — 새 주에서 안 되는 블록만 내려놓는다 */
-      const deltaMs=new Date(nw+'T00:00:00')-new Date(b.week+'T00:00:00');
-      const ign=pzIgnoreSet();
-      const np={}, dropped=[];
-      for(const id in b.placed){
-        const mt=state.meetings[id]; if(!mt) continue;
-        const s2=b.placed[id].s+deltaMs, e2=b.placed[id].e+deltaMs;
-        const bad=participantsOf(mt).some(mid=>memberBusy(mid,s2,e2,{ignoreSet:ign}))
-          ||(String(mt.location||'').trim()&&locationBusy(mt.location,s2,e2,null,ign))||s2<Date.now();
-        if(bad) dropped.push(mt.title); else np[id]={s:s2,e:e2};
-      }
-      const ns={};
-      for(const id in b.seed) ns[id]={s:b.seed[id].s+deltaMs,e:b.seed[id].e+deltaMs};
-      b.placed=np; b.seed=ns; b.week=nw; b.autoFail=null;
-      if(dropped.length) toast(`${dropped.join(', ')} — 새 주에서는 그 시간이 안 되어 내려놓았습니다`);
+      const dropped=batchGoWeek(nw);
+      if(dropped.length) toast(`${dropped.join(', ')} — 새 주에서는 그 시간이 안 되어 되돌렸습니다`);
       render();return;
     }
     if(act==='batchpick'){

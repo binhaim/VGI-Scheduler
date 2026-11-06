@@ -200,7 +200,9 @@ test("보드를 열면 조율 중인 미팅은 트레이에, 확정된 미팅은
     recurrence: null, participants: { m2: true }, ts: 2 };
   app.openBatch();
   const b = state.batch;
-  assert.equal(b.week, app.mondayOf(TODAY), "기준 주는 이번 주 월요일");
+  const wd = new Date(`${TODAY}T00:00:00`).getDay();
+  assert.equal(b.week, wd === 0 || wd >= 5 ? app.mondayOf(A(TODAY, wd === 0 ? 1 : 8 - wd)) : app.mondayOf(TODAY),
+    "기준 주는 이번 주 월요일 — 금·토·일엔 이번 주 월~금이 다 지나가므로 다음 주");
   assert.equal(new Date(b.week).getDay(), 1);
   /* 확정 미팅이 잡힌 주를 보면 그 회차 시각 그대로 올라온다 */
   b.week = app.mondayOf(MON);
@@ -290,6 +292,62 @@ test("적용하면 새 블록은 확정되고, 뺀 블록은 회차가 지워져
   assert.equal(state.meetings.mt2.status, "confirmed");
   assert.equal(Number(state.meetings.mt2.confirmedStart), D(WED, 10));
   assert.ok(state.batch && state.batch.placed.mt2, "적용하면 보드가 새 상태로 다시 열린다");
+});
+
+test("주를 넘기면 손대지 않은 확정 블록은 그 주의 실제 회차 자리로 올라온다", () => {
+  reset();
+  app.confirmMeeting("mt1", D(MON, 14), D(MON, 15));
+  const occ = app.occurrencesOf("mt1");
+  /* 둘째 주만 수 10시로 옮기고, 셋째 주는 취소 */
+  app.moveOccurrence(occ[1], D(A(WED, 7), 10), D(A(WED, 7), 11));
+  app.setOccCancel(occ[2], true, true);
+  state.meetings.mt2 = { ...state.meetings.mt1, title: "논문 리딩", status: "planning",
+    recurrence: null, participants: { m2: true }, location: "", ts: 2 };
+  app.openBatch();
+  app.batchGoWeek(app.mondayOf(MON));
+  state.batch.placed.mt2 = { s: D(MON, 11), e: D(MON, 12) };          // 새로 놓은 블록
+  assert.equal(state.batch.placed.mt1.s, D(MON, 14));
+  app.batchGoWeek(A(app.mondayOf(MON), 7));
+  assert.equal(state.batch.placed.mt1.s, D(A(WED, 7), 10), "그 주만 옮긴 시각 그대로 (7일 민 자리가 아님)");
+  assert.equal(state.batch.placed.mt2.s, D(A(MON, 7), 11), "이번에 놓은 블록은 같은 요일·시각으로 따라간다");
+  assert.deepEqual(app.batchDiff(), { add: ["mt2"], move: [], drop: [] }, "그대로 둔 확정 블록은 변경으로 치지 않는다");
+  app.batchGoWeek(A(app.mondayOf(MON), 14));
+  assert.equal(state.batch.placed.mt1.off, true, "취소된 주는 그 자리에 취소 표시로");
+  assert.match(app.viewPuzzleGrid(), /이 주 취소/);
+  /* 내린 확정 블록은 주를 넘겨도 내린 채 */
+  delete state.batch.placed.mt1;
+  app.batchGoWeek(A(app.mondayOf(MON), 21));
+  assert.equal(state.batch.placed.mt1, undefined);
+  assert.deepEqual(app.batchDiff().drop, ["mt1"]);
+});
+
+test("보드에서 시간을 바꾸면 보던 주부터만 다시 만들고, 그 전 회차는 그대로 둔다", () => {
+  reset();
+  app.confirmMeeting("mt1", D(MON, 14), D(MON, 15));
+  const [first, second] = app.occurrencesOf("mt1");
+  app.moveOccurrence(first, D(MON, 16), D(MON, 17));                  // 첫 주만 조정해 둔 것
+  app.openBatch();
+  app.batchGoWeek(A(app.mondayOf(MON), 7));
+  assert.equal(state.batch.placed.mt1.s, Number(state.events[second].start));
+  state.batch.placed.mt1 = { s: D(A(WED, 7), 10), e: D(A(WED, 7), 11) };
+  app.applyBatch();
+  const occ = app.occurrencesOf("mt1").map((id) => state.events[id]);
+  assert.equal(Number(occ[0].start), D(MON, 16), "보던 주 앞의 회차(그 주 조정 포함)는 그대로");
+  /* 반복 종료일은 MON+21(월) — 수요일 패턴은 두 번 더 들어간다 */
+  assert.deepEqual(occ.slice(1).map((e) => ds(new Date(Number(e.start)))), [A(WED, 7), A(WED, 14)]);
+  assert.equal(state.batch.week, A(app.mondayOf(MON), 7), "적용 후에도 보던 주에 머문다");
+  assert.equal(state.batch.placed.mt1.s, D(A(WED, 7), 10));
+  assert.deepEqual(app.batchDiff(), { add: [], move: [], drop: [] });
+});
+
+test("주말에 확정된 미팅은 보드에 안 올라오지만 '확정 취소'로 세지 않는다", () => {
+  reset();
+  const SAT = A(MON, 5);
+  app.confirmMeeting("mt1", D(SAT, 14), D(SAT, 15));
+  app.openBatch();
+  app.batchGoWeek(app.mondayOf(MON));
+  assert.equal(state.batch.placed.mt1, undefined);
+  assert.deepEqual(app.batchDiff(), { add: [], move: [], drop: [] });
 });
 
 test("남은 블록 자동 배치는 사람이 겹치지 않게 채운다", () => {
