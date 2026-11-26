@@ -1330,6 +1330,9 @@
   .wk.blocky tr.hr td.wk-rh{border-top:1px solid var(--line-2);}
   .wk.blocky thead+tbody tr:first-child td{border-top:0;}
   .wk td.wk-stack{position:relative;padding:0;}
+  /* 블록(.wk-stackwrap)은 absolute라 칸 높이를 만들지 않는다 — 한 줄이 전부 블록으로 덮이면
+     줄 높이를 잡는 칸이 시간 칸뿐이라, 빈 칸과 같은 높이를 여기도 고정한다 */
+  .wk td.wk-rh.slot{height:26px;}
   .wk-stackwrap{position:absolute;inset:1px 2px;display:flex;flex-direction:column;gap:2px;}
   .wk-blk{flex:1;min-height:0;display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:1px;
     border:1.5px solid var(--pc);border-radius:7px;padding:2px 7px;overflow:hidden;text-align:left;cursor:pointer;
@@ -1396,7 +1399,7 @@
     font-size:12px;font-weight:600;padding:5px 12px;border-radius:5px;
     font-family:'Bricolage Grotesque',sans-serif;}
   .cal-mode button.on{color:var(--ink);background:var(--surface);box-shadow:var(--shadow-sm);}
-  @media(pointer:coarse){.wk td.wk-cell{height:34px;} .wk-mark{line-height:34px;}}
+  @media(pointer:coarse){.wk td.wk-cell,.wk td.wk-rh.slot{height:34px;} .wk-mark{line-height:34px;}}
 
   /* 회차 목록 */
   .occ-wrap{margin-top:12px;padding-top:12px;border-top:1px dashed var(--line-2);
@@ -2684,7 +2687,7 @@ function weekBlockBody({days,byDate,rows,slot,startMin,endMin}){
       return `<td class="wk-cell free${cs<now?' past':''}" role="button" tabindex="0"
         ${isManager()?`role="button" tabindex="0" data-act="calslot" data-date="${ds}" data-min="${m}" title="${when} 일정 추가"`:''}></td>`;
     }).join('');
-    return `<tr class="${hr?'hr':''}"><td class="wk-rh${hr?' hour':''}">${hr?minLabel(m):''}</td>${cells}</tr>`;
+    return `<tr class="${hr?'hr':''}"><td class="wk-rh slot${hr?' hour':''}">${hr?minLabel(m):''}</td>${cells}</tr>`;
   }).join('');
   return {body,count};
 }
