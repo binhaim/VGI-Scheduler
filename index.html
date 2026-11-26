@@ -1231,7 +1231,9 @@
   #pzgrid td{border-bottom:0;}
   #pzgrid tr.hr td{border-top:1px solid var(--line);}
   #pzgrid tr.hr td.mtg-rh{border-top:1px solid var(--line-2);}
-  #pzgrid td.mtg-rh{color:var(--ink);font-weight:700;font-size:11px;}
+  /* 블록(.pz-fill)은 absolute라 칸 높이를 만들지 않는다 — 한 줄이 전부 블록으로 덮이면
+     그 줄 높이를 잡아주는 칸이 시간 칸뿐이라, 여기서도 빈 칸과 같은 26px을 고정해 둔다 */
+  #pzgrid td.mtg-rh{color:var(--ink);font-weight:700;font-size:11px;height:26px;}
   #pzgrid td.mtg-cell{background-clip:padding-box;}
   #pzgrid td.mtg-cell.past{background:repeating-linear-gradient(135deg,rgba(0,0,0,.07) 0 2px,transparent 2px 7px);}
   #pzgrid td.blk.off:not(.ev-bg) .pz-fill{opacity:.5;outline:1.5px dashed var(--pc);outline-offset:-3px;}
