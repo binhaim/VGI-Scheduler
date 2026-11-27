@@ -1400,6 +1400,19 @@
     font-family:'Bricolage Grotesque',sans-serif;}
   .cal-mode button.on{color:var(--ink);background:var(--surface);box-shadow:var(--shadow-sm);}
   @media(pointer:coarse){.wk td.wk-cell,.wk td.wk-rh.slot{height:34px;} .wk-mark{line-height:34px;}}
+  /* 10분 칸 — 줄 수가 두 배라 줄 높이를 반쯤으로 (doRender가 <html>에 slot-fine을 붙인다).
+     JS의 roomForNames()가 이 14px을 기준으로 참석자 줄을 넣을지 정한다 */
+  .slot-fine .wk td.wk-cell,.slot-fine .wk td.wk-rh.slot,
+  .slot-fine .mtg td.mtg-cell,.slot-fine #pzgrid td.mtg-rh,.slot-fine .mtg-btn,.slot-fine .mtg-ev,
+  .slot-fine .av-grid td.av-cell{height:14px;}
+  .slot-fine .wk td.wk-rh.slot,.slot-fine .mtg td.mtg-rh,.slot-fine .av-grid td.av-rh{line-height:1;font-size:10px;}
+  .slot-fine .wk-mark,.slot-fine .wk-cell.cand.aw::after{line-height:14px;}
+  .slot-fine .mtg-in{font-size:9px;}
+  @media(pointer:coarse){
+    .slot-fine .wk td.wk-cell,.slot-fine .wk td.wk-rh.slot,
+    .slot-fine .mtg td.mtg-cell,.slot-fine #pzgrid td.mtg-rh,.slot-fine .mtg-btn,.slot-fine .mtg-ev,
+    .slot-fine .av-grid td.av-cell{height:20px;}
+    .slot-fine .wk-mark,.slot-fine .wk-cell.cand.aw::after{line-height:20px;}}
 
   /* 회차 목록 */
   .occ-wrap{margin-top:12px;padding-top:12px;border-top:1px dashed var(--line-2);
@@ -1573,6 +1586,8 @@ const recurStepDays=k=>k==='w2'?14:7;
 
 /* ---------------- 설정/파생 ---------------- */
 const cfgSlot=()=>Number(state.settings.slotMinutes)||30;
+/* 블록에 참석자 줄까지 들어가나 — 시간·이름·참석자 세 줄이 들어갈 높이 (CSS의 줄 높이와 맞춘다) */
+const roomForNames=span=>span*(cfgSlot()<20?14:26)>=48;
 const cfgDayStart=()=>Number.isFinite(Number(state.settings.dayStart))?Number(state.settings.dayStart):9;
 const cfgDayEnd=()=>Number.isFinite(Number(state.settings.dayEnd))?Number(state.settings.dayEnd):21;
 const daySlots=()=>timeList(cfgDayStart(),cfgDayEnd(),cfgSlot());
@@ -2203,10 +2218,13 @@ function deleteSemester(sid){
 }
 /* 칸 단위를 바꾸면 저장된 '반복 불가 시간'이 새 격자에 어긋난다 (예: 30분 격자의 09:30은
    20분 격자에서 아예 조회되지 않아 '가능'으로 보인다). 겹치는 칸을 불가로 옮겨 맞춘다 —
-   경계는 불가 쪽으로 넓어진다. 사람을 잘못 넣는 것보다 넓게 막는 편이 안전하다. */
+   경계는 불가 쪽으로 넓어진다. 사람을 잘못 넣는 것보다 넓게 막는 편이 안전하다.
+   눈금이 맞아도 잘게 쪼개면 옮겨야 한다 — 20분 격자의 09:00(09:00~09:20)은 10분 격자에서
+   09:00·09:10 두 칸이라, 그대로 두면 09:10이 '가능'으로 보인다.
+   off = 저장값이 바뀐다(옮겨 써야 함), widen = 경계가 불가 쪽으로 넓어진다(사용자 확인) */
 function remapAvailability(cur,next){
   const sM=cfgDayStart()*60, eM=cfgDayEnd()*60;
-  const writes=[]; let from=0, to=0, off=false;
+  const writes=[]; let from=0, to=0, off=false, widen=false;
   for(const sid in state.availability){
     for(const mid in state.availability[sid]||{}){
       const days=state.availability[sid][mid]||{}, node={};
@@ -2214,18 +2232,23 @@ function remapAvailability(cur,next){
         const keys=Object.keys(days[dk]||{}).filter(k=>days[dk][k]);
         if(!keys.length) continue;
         from+=keys.length;
-        if(keys.some(k=>parseTime(k)<sM||(parseTime(k)-sM)%next!==0)) off=true;
         const busy=keys.map(k=>[parseTime(k),parseTime(k)+cur]);
+        const covered=t=>busy.some(([bs,be])=>bs<=t&&t<be);   // 10분 조각 단위 — 모든 칸 단위의 공약수
         const map={};
-        for(let m=sM;m<eM;m+=next)
-          if(busy.some(([bs,be])=>m<be&&bs<m+next)) map[minLabel(m)]=true;
-        to+=Object.keys(map).length;
+        for(let m=sM;m<eM;m+=next){
+          if(!busy.some(([bs,be])=>m<be&&bs<m+next)) continue;
+          map[minLabel(m)]=true;
+          for(let t=m;t<m+next;t+=10) if(!covered(t)) widen=true;
+        }
+        const nk=Object.keys(map);
+        if(nk.length!==keys.length||nk.some(k=>!days[dk][k])) off=true;
+        to+=nk.length;
         node[dk]=map;
       }
       if(Object.keys(node).length) writes.push([sid,mid,node]);
     }
   }
-  return {off,from,to,write(){
+  return {off,widen,from,to,write(){
     writes.forEach(([sid,mid,node])=>{
       FB.set(R(`availability/${sid}/${mid}`),node).catch(wErr);
       state.availability[sid][mid]=node;                 // 낙관적 반영
@@ -2238,7 +2261,7 @@ function changeSlot(next){
   const cur=cfgSlot();
   if(next===cur) return true;
   const plan=remapAvailability(cur,next);
-  if(plan.off&&!confirm(
+  if(plan.widen&&!confirm(
       `칸 단위를 ${cur}분 → ${next}분으로 바꿉니다.\n\n`
      +`저장된 반복 불가 시간 ${plan.from}칸이 새 격자에 맞지 않아 ${plan.to}칸으로 옮겨집니다.\n`
      +`경계에 걸치는 부분은 불가 쪽으로 넓어집니다 — 정확히 하려면 Availability 탭에서 다시 칠하세요.`)) return false;
@@ -2496,6 +2519,8 @@ function doRender(){
   const scrolls=[...$('app').querySelectorAll('.scroll')]
     .map(sc=>({sl:sc.scrollLeft,st:sc.scrollTop}));
   const ws=window.scrollY||0;
+  /* 10분 칸은 줄 수가 두 배 — 줄 높이를 줄여 화면 길이를 20분 격자와 비슷하게 유지 */
+  document.documentElement.classList?.toggle('slot-fine',cfgSlot()<20);
   renderHeader(); renderBody();
   const newScrolls=[...$('app').querySelectorAll('.scroll')];
   newScrolls.forEach((sc,i)=>{ const s=scrolls[i]; if(!s)return; sc.scrollLeft=s.sl; sc.scrollTop=s.st; });
@@ -2711,7 +2736,7 @@ function weekBlockHtml(o,g){
   return `<button class="wk-blk${typeClass(o.type)}${off?' off':''}${state.calPick===o.id?' on':''}" style="${style}"
     data-act="calevpick" data-evid="${o.id}" title="${tip}">
     <span class="bt">${time}${off?' · 취소':''}${aw.length?` <span class="pz-aw">✈${aw.length}</span>`:''}${typeTag(o.type)}</span><span class="bn">${esc(o.title)}</span>
-    ${g.items.length===1&&g.span>1?`<span class="bp">${esc(names)}</span>`:''}</button>`;
+    ${g.items.length===1&&roomForNames(g.span)?`<span class="bp">${esc(names)}</span>`:''}</button>`;
 }
 function viewCalWeek(now){
   const ws=state.calWeek;
@@ -3076,7 +3101,7 @@ function viewPuzzleGrid(){
             <button type="button" class="pz-fill" data-act="batchpick" data-mtid="${id0}" data-pz="${id0}"
               title="${tip}${pOff?' · 이 주 회차는 취소됨 (매주 자리는 유지)':''}${aw.length?` · ✈ ${esc(namesOf(aw))} 휴가·부재`:''}" aria-label="${tip}"><span class="pz-ft">${hm(pl.s)}~${hm(pl.e)}${pOff?' · 이 주 취소':on?' ✓':''}${aw.length?` <span class="pz-aw">✈${aw.length}</span>`:''}</span>
               <span class="pz-fn">${esc(mt0.title||'')}${more?` +${more}`:''}</span>
-              ${g.span>1?`<span class="pz-fp">${esc(namesWithLead(mt0))}</span>`:''}</button></td>`;
+              ${roomForNames(g.span)?`<span class="pz-fp">${esc(namesWithLead(mt0))}</span>`:''}</button></td>`;
         }
         const evid0=g.ids[0], ev=state.events[evid0]||{};
         const more=g.ids.length-1;
@@ -3088,7 +3113,7 @@ function viewPuzzleGrid(){
         const canSwap=swapOK&&!more&&!off&&isLive(ev);
         const tip=`${esc(ev.title||'')} ${hm(g.s)}~${hm(g.e)} · ${esc(namesOf(participantsOf(ev)))}${off?' · 취소됨':''}${canSwap?' · 여기에 놓으면 자리를 바꿉니다':''}`;
         const inner=`<span class="pz-ft">${hm(g.s)}~${hm(g.e)}</span><span class="pz-fn">${esc(ev.title||'')}${more?` +${more}`:''}</span>
-          ${g.span>1?`<span class="pz-fp">${esc(namesWithLead(ev))}</span>`:''}`;
+          ${roomForNames(g.span)?`<span class="pz-fp">${esc(namesWithLead(ev))}</span>`:''}`;
         return canSwap
           ?`<td class="mtg-cell blk ev-bg" rowspan="${g.span}" style="${estyle}"><button type="button" class="pz-fill static swappable"
               data-act="pzswap" data-swap="${evid0}" title="${tip}" aria-label="${tip}">${inner}</button></td>`
@@ -3302,7 +3327,7 @@ function viewMembers(){
     <div class="card-head"><div><h2>시간표 칸</h2><div class="sub" style="margin-top:4px">칸 단위를 바꾸면 저장된 반복 불가 시간을 새 격자로 옮깁니다.</div></div></div>
     <div class="agg-edit-grid" style="margin-top:12px">
       <div class="agg-edit-field"><label>칸 단위</label><select data-act="setfield" data-field="slotMinutes">
-        ${[20,30,60].map(v=>`<option value="${v}" ${cfgSlot()===v?'selected':''}>${v}분</option>`).join('')}</select></div>
+        ${[10,20,30,60].map(v=>`<option value="${v}" ${cfgSlot()===v?'selected':''}>${v}분</option>`).join('')}</select></div>
       <div class="agg-edit-field"><label>하루 시작</label><select data-act="setfield" data-field="dayStart">${hourOpts(cfgDayStart(),7,12)}</select></div>
       <div class="agg-edit-field"><label>하루 종료</label><select data-act="setfield" data-field="dayEnd">${hourOpts(cfgDayEnd(),17,23)}</select></div>
     </div>
@@ -3717,7 +3742,7 @@ function bindEvents(){
       const parts={};
       membersSorted(false).forEach(mid=>{ if(state.members[mid]?.always) parts[mid]=true; });
       if(state.me&&state.members[state.me]) parts[state.me]=true;
-      state.mtDraft={title:'',type:'meeting',durationMin:cfgSlot()*2,participants:parts,
+      state.mtDraft={title:'',type:'meeting',durationMin:Math.max(cfgSlot()*2,40),participants:parts,
         rangeStart:today,rangeEnd:addDays(today,6),projectId:'',location:'',description:'',
         recur:'w1',recurUntil:defaultRecurUntil()};
       render();return;

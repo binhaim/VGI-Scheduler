@@ -385,6 +385,44 @@ test("칸 단위를 바꾸면 저장된 반복 불가 시간을 새 격자로 �
   assert.deepEqual(app.durChoices(60).slice(0, 3), [20, 40, 60], "길이 후보도 칸 단위의 배수");
 });
 
+test("10분 칸으로 잘게 쪼개도 불가 시간을 옮긴다 — 눈금이 맞아도 사이 칸이 비면 '가능'으로 보인다", () => {
+  reset();
+  state.settings.slotMinutes = 20;
+  state.availability.sem1.m1.d1 = { "09:00": true, "09:20": true };   // 09:00~09:40 불가
+  const plan = app.remapAvailability(20, 10);
+  assert.ok(plan.off, "09:10·09:30 칸이 새로 생겨야 한다");
+  assert.equal(plan.widen, false, "쪼개기만 하므로 넓어지지 않는다 — 확인창 없이 옮긴다");
+  plan.write();
+  assert.deepEqual(Object.keys(state.availability.sem1.m1.d1).sort(),
+    ["09:00", "09:10", "09:20", "09:30"]);
+  state.settings.slotMinutes = 10;
+  const mon = MON;   // 학기 안의 월요일
+  assert.ok(app.memberBusy("m1", D(mon, 9, 10), D(mon, 9, 20)), "09:10~09:20도 불가");
+  assert.equal(app.memberBusy("m1", D(mon, 9, 40), D(mon, 9, 50)), false, "09:40부터는 가능");
+});
+
+test("10분 → 20분으로 넓히면 걸친 칸이 불가 쪽으로 넓어져 확인을 받는다", () => {
+  reset();
+  state.settings.slotMinutes = 10;
+  state.availability.sem1.m1.d1 = { "09:10": true };
+  const plan = app.remapAvailability(10, 20);
+  assert.ok(plan.off && plan.widen);
+  plan.write();
+  assert.deepEqual(Object.keys(state.availability.sem1.m1.d1), ["09:00"]);
+});
+
+test("구간이 그대로면 확인 없이 옮기고, 키까지 같으면 쓰지 않는다", () => {
+  reset();
+  const plan = app.remapAvailability(30, 60);           // 09:00·09:30 → 09:00 (같은 09:00~10:00)
+  assert.equal(plan.widen, false);
+  assert.ok(plan.off, "키가 09:00 하나로 줄어드니 옮겨 쓴다");
+  reset();
+  state.availability.sem1.m1.d1 = { "09:00": true, "10:00": true };
+  const same = app.remapAvailability(60, 20 * 3);      // 단위가 같으면 바꿀 게 없다
+  assert.equal(same.off, false);
+  assert.equal(same.widen, false);
+});
+
 /* ---------------- 시간표에서 회차 고치기 — 보드 엔진 한 벌 ---------------- */
 test("시간 변경은 시간표 위 보드로 열리고, 자기 회차는 후보에서 비켜준다", () => {
   reset({ recur: null });

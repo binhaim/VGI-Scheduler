@@ -33,7 +33,7 @@
 ## 3. 데이터 모델 (RTDB, 전부 `vgi/` 아래)
 
 ```
-settings/            { activeSemester, slotMinutes(20 — 20/30/60 선택), dayStart(9), dayEnd(21) }
+settings/            { activeSemester, slotMinutes(20 — 10/20/30/60 선택), dayStart(9), dayEnd(21) }
 members/{mid}        { name, email, role, active, ts }
 semesters/{sid}      { name, startDate:"YYYY-MM-DD", endDate, ts }
 availability/{sid}/{mid}/d{0..6}/{HH:MM} = true     ← 주간 반복 "불가" 슬롯 (d+요일번호, 일=0)
